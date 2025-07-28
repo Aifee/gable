@@ -18,6 +18,39 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+    <DockPanel VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Open..." />
+                <Separator />
+                <MenuItem Header="_Exit" />
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="Copy" />
+                <MenuItem Header="Paste" />
+            </MenuItem>
+        </Menu>
+        <Grid Width="48" DockPanel.Dock="Left">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
+            <Rectangle Grid.Row="0" Fill="Red" Height="48" />
+            <Rectangle Grid.Row="1" Fill="Blue" Height="48" />
+            <Rectangle Grid.Row="2" Fill="Black" />
+            <Rectangle Grid.Row="3" Fill="Yellow" Height="48" Margin="0,0,0,10" />
+        </Grid>
+        <Grid ColumnDefinitions="200, 1, *">
+            <Rectangle Grid.Column="0" Fill="Blue" />
+            <GridSplitter Grid.Column="1" Background="Black" ResizeDirection="Columns" />
+            <Grid Grid.Column="2" RowDefinitions="*, 1, 100">
+                <Rectangle Grid.Row="0" Fill="Blue" />
+                <GridSplitter Grid.Row="1" Background="Black" ResizeDirection="Rows" />
+                <Rectangle Grid.Row="2" Fill="Red" />
+            </Grid>
+        </Grid>
+    </DockPanel>
 </Window>

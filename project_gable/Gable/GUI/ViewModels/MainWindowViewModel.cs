@@ -1,17 +1,23 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using Avalonia;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.Input;
+using Gable.Core.Common;
+using Gable.Core.Enums;
+using Gable.Core.Settings;
 using Gable.GUI.Models;
 
 namespace Gable.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    public ObservableCollection<Node> Nodes { get; }
-    private Node? _selectedNode;
-    public Node? SelectedNode
+    public ObservableCollection<TreeNodeBase> Nodes { get; } =
+        new ObservableCollection<TreeNodeBase>();
+    private TreeNodeBase? _selectedNode;
+    public TreeNodeBase? SelectedNode
     {
         get => _selectedNode;
         set
@@ -23,11 +29,65 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public MainWindowViewModel()
     {
-        Nodes = new ObservableCollection<Node>();
-        Node root = new Node("Root");
-        Nodes.Add(root);
-        root.addNode(new Node("Folder 1"));
+        Debug.WriteLine(GableSetting.BuildSettings.WorkspacePath);
     }
+
+    #region Explorer TreeView
+    private bool AddTreeNode(ETreeItemType type, string fullPath)
+    {
+        bool exists = HasNode(fullPath);
+        if (exists)
+        {
+            return false;
+        }
+        string parentPath = PathUtil.GetParentPath(fullPath);
+        TreeNodeBase? parent = GetNode(parentPath);
+        TreeNodeBase? node = null;
+        switch (type)
+        {
+            case ETreeItemType.FOLDER:
+                node = new TreeNodeFolder(fullPath);
+                break;
+            case ETreeItemType.TABLE:
+                node = new TreeNodeTable(fullPath);
+                break;
+            case ETreeItemType.SHEET:
+                node = new TreeNodeSheet(fullPath);
+                break;
+        }
+        if (node == null)
+        {
+            return false;
+        }
+
+        // 添加到根节点或选中节点下
+        if (parent != null)
+        {
+            parent.AddSubNode(node);
+        }
+        else
+        {
+            Nodes.Add(node);
+        }
+        return true;
+    }
+
+    private bool HasNode(string fullPath)
+    {
+        return Nodes.Any(n => n.FullPath.Equals(fullPath, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private TreeNodeBase? GetNode(string fullPath)
+    {
+        if (HasNode(fullPath))
+        {
+            return null;
+        }
+        return Nodes.FirstOrDefault(n =>
+            n.FullPath.Equals(fullPath, StringComparison.OrdinalIgnoreCase)
+        );
+    }
+    #endregion
 
     #region  Menu Commands
     [RelayCommand]
@@ -107,21 +167,19 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void AddFolderNode()
     {
-        Debug.WriteLine("VIEWMODELS add folder");
-
         if (SelectedNode != null)
         {
             // 在指定节点下添加文件夹
-            Node node = new Node("New Folder");
-            SelectedNode.SubNodes.Add(node);
-            SelectedNode = node;
+            // TreeNodeBase node = new TreeNodeBase("New Folder");
+            // SelectedNode.SubNodes.Add(node);
+            // SelectedNode = node;
         }
         else
         {
             // 添加到根节点
-            Node node = new Node("New Folder");
-            Nodes.Add(node);
-            SelectedNode = node;
+            // Node node = new Node("New Folder");
+            // Nodes.Add(node);
+            // SelectedNode = node;
         }
     }
 
@@ -133,14 +191,14 @@ public partial class MainWindowViewModel : ViewModelBase
         if (SelectedNode != null)
         {
             // 在指定节点下添加文件
-            Node newFile = new Node("New File");
-            SelectedNode.SubNodes.Add(newFile);
+            // Node newFile = new Node("New File");
+            // SelectedNode.SubNodes.Add(newFile);
         }
         else
         {
             // 添加到根节点
-            Node newFile = new Node("New File");
-            Nodes.Add(newFile);
+            // Node newFile = new Node("New File");
+            // Nodes.Add(newFile);
         }
     }
 
@@ -152,8 +210,8 @@ public partial class MainWindowViewModel : ViewModelBase
         if (SelectedNode != null)
         {
             // 从父节点中删除
-            RemoveNode(Nodes, SelectedNode);
-            SelectedNode = null;
+            // RemoveNode(Nodes, SelectedNode);
+            // SelectedNode = null;
         }
     }
 

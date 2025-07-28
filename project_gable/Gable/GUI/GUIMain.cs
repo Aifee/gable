@@ -1,4 +1,5 @@
 using Avalonia;
+using Gable.Core.Settings;
 
 namespace Gable.GUI
 {
@@ -6,6 +7,7 @@ namespace Gable.GUI
     {
         public static void Start(string[] args)
         {
+            GableSetting.InitBuildSettings();
             AppBuilder
                 .Configure<App>()
                 .UsePlatformDetect()

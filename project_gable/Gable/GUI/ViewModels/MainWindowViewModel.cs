@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using Avalonia;
 using Avalonia.Styling;
@@ -29,10 +30,84 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public MainWindowViewModel()
     {
-        Debug.WriteLine(GableSetting.BuildSettings.WorkspacePath);
+        ResetWorkspace();
     }
 
     #region Explorer TreeView
+
+    /// <summary>
+    /// 重置工作区
+    /// </summary>
+    private void ResetWorkspace()
+    {
+        Nodes.Clear();
+        TraverseDirectory(GableSetting.BuildSettings.WorkspacePath);
+    }
+
+    /// <summary>
+    /// 递归遍历指定目录下的所有文件和文件夹
+    /// </summary>
+    /// <param name="directoryPath">要遍历的目录路径</param>
+    /// <param name="parentNode">父级树节点，如果为null则添加到根节点</param>
+    private void TraverseDirectory(string directoryPath)
+    {
+        try
+        {
+            // 获取目录信息
+            DirectoryInfo dirInfo = new DirectoryInfo(directoryPath);
+            // 遍历所有子目录
+            foreach (DirectoryInfo subDir in dirInfo.GetDirectories())
+            {
+                if (Global.IGNORE_PATH.Contains(subDir.Name))
+                {
+                    continue; // 跳过忽略的目录
+                }
+                AddTreeNode(ETreeItemType.FOLDER, subDir.FullName);
+                // 递归遍历子目录
+                TraverseDirectory(subDir.FullName);
+            }
+
+            // 遍历所有文件
+            foreach (FileInfo file in dirInfo.GetFiles())
+            {
+                if (PathUtil.FiltrationSystemFiles(file.FullName))
+                {
+                    continue; // 跳过系统文件
+                }
+                if (
+                    !file.Extension.Equals(
+                        Global.GABLE_FILE_TYPE,
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
+                {
+                    continue; // 只处理特定类型的文件
+                }
+                if (!file.Name.Contains("@"))
+                {
+                    continue; // 跳过包含@的文件
+                }
+                string[] sprits = file.Name.Split("@");
+                if (sprits.Length != 2)
+                {
+                    continue; // 跳过名称过短的文件
+                }
+                string alias = sprits[0];
+                string fullPath = Path.Join(directoryPath, alias);
+                if (!HasNode(fullPath))
+                {
+                    AddTreeNode(ETreeItemType.TABLE, fullPath);
+                }
+                AddTreeNode(ETreeItemType.SHEET, file.FullName);
+            }
+        }
+        catch (Exception ex)
+        {
+            // 处理异常，如权限不足等
+            Debug.WriteLine($"遍历目录时出错: {ex.Message}");
+        }
+    }
+
     private bool AddTreeNode(ETreeItemType type, string fullPath)
     {
         bool exists = HasNode(fullPath);
@@ -74,12 +149,23 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private bool HasNode(string fullPath)
     {
-        return Nodes.Any(n => n.FullPath.Equals(fullPath, StringComparison.OrdinalIgnoreCase));
+        if (Nodes.Count <= 0)
+        {
+            return false;
+        }
+        foreach (var node in Nodes)
+        {
+            if (fullPath == node.FullPath)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private TreeNodeBase? GetNode(string fullPath)
     {
-        if (HasNode(fullPath))
+        if (!HasNode(fullPath))
         {
             return null;
         }

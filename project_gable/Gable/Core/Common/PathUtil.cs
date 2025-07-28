@@ -21,6 +21,14 @@ namespace Gable.Core.Common
             {
                 return GableSetting.BuildSettings.WorkspacePath;
             }
+            if (fullPath.Contains("@"))
+            {
+                int index = fullPath.IndexOf("@");
+                if (index > 0)
+                {
+                    return fullPath.Substring(0, index);
+                }
+            }
 
             var directoryInfo = new DirectoryInfo(fullPath);
             if (directoryInfo.Parent == null)
@@ -51,6 +59,30 @@ namespace Gable.Core.Common
         public static string GetApplicationDirectory()
         {
             return AppDomain.CurrentDomain.BaseDirectory;
+        }
+
+        /// <summary>
+        /// 过滤系统文件
+        /// </summary>
+        /// <param name="fullPath"></param>
+        /// <returns></returns>
+        public static bool FiltrationSystemFiles(string fullPath)
+        {
+            if (string.IsNullOrEmpty(fullPath))
+            {
+                return false;
+            }
+
+            var fileInfo = new FileInfo(fullPath);
+            if (
+                fileInfo.Attributes.HasFlag(FileAttributes.Hidden)
+                || fileInfo.Attributes.HasFlag(FileAttributes.System)
+            )
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

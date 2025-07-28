@@ -6,7 +6,8 @@ namespace Gable.GUI
     {
         public static void Start(string[] args)
         {
-            AppBuilder.Configure<App>()
+            AppBuilder
+                .Configure<App>()
                 .UsePlatformDetect()
                 .WithInterFont()
                 .LogToTrace()

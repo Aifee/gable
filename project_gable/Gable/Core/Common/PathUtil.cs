@@ -53,6 +53,22 @@ namespace Gable.Core.Common
             return basename;
         }
 
+        public static string GetSheetName(string fullPath)
+        {
+            if (string.IsNullOrEmpty(fullPath))
+            {
+                return string.Empty;
+            }
+            string basename = Path.GetFileNameWithoutExtension(fullPath);
+            if (basename.Contains("@"))
+            {
+                int index = basename.IndexOf("@") + 1;
+                int Length = basename.Length;
+                basename = basename.Substring(index, Length - index);
+            }
+            return basename;
+        }
+
         /// <summary>
         /// 获取应用程序所在目录
         /// </summary>
@@ -97,7 +113,7 @@ namespace Gable.Core.Common
             {
                 return ESheetType.DATA;
             }
-            if (fullPath.StartsWith(GableSetting.BuildSettings.WorkspacePath))
+            if (!fullPath.StartsWith(GableSetting.BuildSettings.WorkspacePath))
             {
                 return ESheetType.DATA;
             }
@@ -115,7 +131,7 @@ namespace Gable.Core.Common
             // 检查是否在枚举表目录中
             if (
                 Array.IndexOf(components, Global.ENUM_TABLE_FOLDER) >= 0
-                && Array.IndexOf(components, Global.ENUM_TABLE_FOLDER) < components.Length - 1
+                && Array.IndexOf(components, Global.ENUM_TABLE_FOLDER) <= components.Length - 1
             )
             {
                 return ESheetType.ENUM;
@@ -124,7 +140,7 @@ namespace Gable.Core.Common
             // 检查是否在KV表目录中
             if (
                 Array.IndexOf(components, Global.KV_TABLE_FOLDER) >= 0
-                && Array.IndexOf(components, Global.KV_TABLE_FOLDER) < components.Length - 1
+                && Array.IndexOf(components, Global.KV_TABLE_FOLDER) <= components.Length - 1
             )
             {
                 return ESheetType.KV;

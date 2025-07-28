@@ -110,11 +110,6 @@ namespace Gable.GUI.ViewModels
 
         private bool AddTreeNode(ETreeItemType type, string fullPath)
         {
-            bool exists = HasNode(fullPath);
-            if (exists)
-            {
-                return false;
-            }
             string parentPath = PathUtil.GetParentPath(fullPath);
             TreeNodeBase? parent = GetNode(parentPath);
             TreeNodeBase? node = null;
@@ -149,29 +144,25 @@ namespace Gable.GUI.ViewModels
 
         private bool HasNode(string fullPath)
         {
-            if (Nodes.Count <= 0)
-            {
-                return false;
-            }
-            foreach (var node in Nodes)
-            {
-                if (fullPath == node.FullPath)
-                {
-                    return true;
-                }
-            }
-            return false;
+            TreeNodeBase? subNode = GetNode(fullPath);
+            return subNode != null;
         }
 
         private TreeNodeBase? GetNode(string fullPath)
         {
-            if (!HasNode(fullPath))
+            if (Nodes.Count <= 0)
             {
                 return null;
             }
-            return Nodes.FirstOrDefault(n =>
-                n.FullPath.Equals(fullPath, StringComparison.OrdinalIgnoreCase)
-            );
+            foreach (var node in Nodes)
+            {
+                TreeNodeBase? subNode = node.GetNode(fullPath);
+                if (subNode != null)
+                {
+                    return subNode;
+                }
+            }
+            return null;
         }
         #endregion
 

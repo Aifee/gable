@@ -93,6 +93,34 @@ namespace Gable.GUI.Models
             SubNodes.Add(node);
         }
 
+        /// <summary>
+        /// 获取指定路径的节点
+        /// </summary>
+        /// <param name="fullPath"></param>
+        /// <returns></returns>
+        public TreeNodeBase? GetNode(string fullPath)
+        {
+            if (string.IsNullOrEmpty(fullPath))
+            {
+                return null;
+            }
+
+            if (FullPath == fullPath)
+            {
+                return this;
+            }
+
+            foreach (var subNode in SubNodes)
+            {
+                var foundNode = subNode.GetNode(fullPath);
+                if (foundNode != null)
+                {
+                    return foundNode;
+                }
+            }
+            return null;
+        }
+
         public void Rename(string newName)
         {
             FullPath = Path.GetFullPath(newName);

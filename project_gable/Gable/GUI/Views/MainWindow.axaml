@@ -38,8 +38,58 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Rectangle Grid.Row="0" Fill="Red" Height="48" />
-            <Rectangle Grid.Row="1" Fill="Blue" Height="48" />
+            <TabControl>
+                <TabControl.Styles>
+                    <Style Selector="TabControl">
+                        <Setter Property="TabStripPlacement" Value="Left" />
+                    </Style>
+
+                    <!-- 完全自定义 TabItem 样式 -->
+                    <Style Selector="TabItem">
+                        <Setter Property="Width" Value="50" />
+                        <Setter Property="Height" Value="50" />
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="HorizontalContentAlignment" Value="Center" />
+                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="Template">
+                            <ControlTemplate>
+                                <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}">
+                                    <ContentPresenter Content="{TemplateBinding Header}"
+                                        ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                        Margin="{TemplateBinding Padding}"
+                                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                </Border>
+                            </ControlTemplate>
+                        </Setter>
+                    </Style>
+
+                    <Style Selector="TabItem:not(:selected) PathIcon">
+                        <Setter Property="Foreground" Value="Gray" />
+                    </Style>
+                    <Style Selector="TabItem:selected PathIcon">
+                        <Setter Property="Foreground" Value="Blue" />
+                    </Style>
+                </TabControl.Styles>
+                <TabItem>
+                    <TabItem.Header>
+                        <PathIcon Data="{StaticResource home_regular}"
+                            Width="24"
+                            Height="24" />
+                    </TabItem.Header>
+                </TabItem>
+
+                <TabItem>
+                    <TabItem.Header>
+                        <PathIcon Data="{StaticResource search_square_regular}"
+                            Width="24"
+                            Height="24" />
+                    </TabItem.Header>
+                </TabItem>
+            </TabControl>
             <Rectangle Grid.Row="2" Fill="Black" />
             <Rectangle Grid.Row="3" Fill="Yellow" Height="48" Margin="0,0,0,10" />
         </Grid>

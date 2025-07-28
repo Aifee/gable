@@ -43,6 +43,32 @@ namespace Gable.GUI.Models
 
         public ObservableCollection<TreeNodeBase> SubNodes { get; }
 
+        public string IconPath
+        {
+            get
+            {
+                switch (TreeType)
+                {
+                    case ETreeItemType.FOLDER:
+                        ESheetType st = PathUtil.PathToSheetType(FullPath);
+                        if (st == ESheetType.DATA)
+                        {
+                            return Res.ICON_FOLDER_NORMAL;
+                        }
+                        else
+                        {
+                            return Res.ICON_FOLDER_SPECIAL;
+                        }
+                    case ETreeItemType.TABLE:
+                        return Res.ICON_TABLE;
+                    case ETreeItemType.SHEET:
+                        return Res.ICON_SHEET;
+                    default:
+                        return Res.ICON_DEFUALT;
+                }
+            }
+        }
+
         public TreeNodeBase(ETreeItemType treeType, string fullPath)
         {
             TreeType = treeType;

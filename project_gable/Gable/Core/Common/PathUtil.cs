@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Gable.Core.Enums;
 using Gable.Core.Settings;
 
 namespace Gable.Core.Common
@@ -83,6 +84,54 @@ namespace Gable.Core.Common
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// 检测文件路径是否中数据结构
+        /// </summary>
+        /// <param name="fullPath"></param>
+        /// <returns></returns>
+        public static ESheetType PathToSheetType(string fullPath)
+        {
+            if (string.IsNullOrEmpty(fullPath))
+            {
+                return ESheetType.DATA;
+            }
+            if (fullPath.StartsWith(GableSetting.BuildSettings.WorkspacePath))
+            {
+                return ESheetType.DATA;
+            }
+            // 获取相对路径部分
+            string relativePath = fullPath
+                .Substring(GableSetting.BuildSettings.WorkspacePath.Length)
+                .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            // 分割路径为组件
+            string[] components = relativePath.Split(
+                new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar },
+                StringSplitOptions.RemoveEmptyEntries
+            );
+
+            // 检查是否在枚举表目录中
+            if (
+                Array.IndexOf(components, Global.ENUM_TABLE_FOLDER) >= 0
+                && Array.IndexOf(components, Global.ENUM_TABLE_FOLDER) < components.Length - 1
+            )
+            {
+                return ESheetType.ENUM;
+            }
+
+            // 检查是否在KV表目录中
+            if (
+                Array.IndexOf(components, Global.KV_TABLE_FOLDER) >= 0
+                && Array.IndexOf(components, Global.KV_TABLE_FOLDER) < components.Length - 1
+            )
+            {
+                return ESheetType.KV;
+            }
+
+            // 默认返回数据类型
+            return ESheetType.DATA;
         }
     }
 }

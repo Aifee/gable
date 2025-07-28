@@ -9,7 +9,8 @@
     Icon="/Assets/avalonia-logo.ico"
     Title="Gable"
     Width="800"
-    Height="450">
+    Height="450"
+    x:Name="GableView">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -94,7 +95,43 @@
             <Rectangle Grid.Row="3" Fill="Yellow" Height="48" Margin="0,0,0,10" />
         </Grid>
         <Grid ColumnDefinitions="200, 1, *">
-            <Rectangle Grid.Column="0" Fill="Blue" />
+            <TreeView Grid.Column="0" ItemsSource="{Binding Nodes}"
+                SelectedItem="{Binding SelectedNode}"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+                <TreeView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Add Folder" Command="{Binding AddFolderNodeCommand}" />
+                        <MenuItem Header="Add File" Command="{Binding AddFileNodeCommand}" />
+                    </ContextMenu>
+                </TreeView.ContextMenu>
+                <TreeView.ItemTemplate>
+                    <TreeDataTemplate ItemsSource="{Binding SubNodes}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Image Height="16" Width="16" Source="/Assets/avalonia-logo.ico" />
+                            <TextBlock Grid.Column="1" Text="{Binding Title}" />
+                            <Grid.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Add Folder"
+                                        Command="{Binding DataContext.AddFolderNodeCommand, ElementName=GableView}"
+                                        CommandParameter="{Binding}" />
+                                    <MenuItem Header="Add File"
+                                        Command="{Binding DataContext.AddFileNodeCommand, ElementName=GableView}"
+                                        CommandParameter="{Binding}" />
+                                    <Separator />
+                                    <MenuItem Header="Delete"
+                                        Command="{Binding DataContext.DeleteNodeCommand, ElementName=GableView}"
+                                        CommandParameter="{Binding}" />
+                                </ContextMenu>
+                            </Grid.ContextMenu>
+                        </Grid>
+                    </TreeDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
             <GridSplitter Grid.Column="1" Background="Black" ResizeDirection="Columns" />
             <Grid Grid.Column="2" RowDefinitions="*, 1, 100">
                 <Rectangle Grid.Row="0" Fill="Blue" />

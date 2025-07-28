@@ -10,7 +10,8 @@
     Title="Gable"
     Width="800"
     Height="450"
-    x:Name="GableView">
+    x:Name="GableView"
+    Background="{DynamicResource WindowBackgroundBrush}">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -21,14 +22,29 @@
 
     <DockPanel VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
         <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_File">
-                <MenuItem Header="_Open..." />
+            <MenuItem Header="文件">
+                <MenuItem Header="新建文件" Command="{Binding Menu_NewFileCommand}" />
+                <MenuItem Header="新建文件夹" Command="{Binding Menu_NewFolderCommand}" />
                 <Separator />
-                <MenuItem Header="_Exit" />
+                <MenuItem Header="打开工程目录" Command="{Binding Menu_OpenProjectCommand}" />
+                <Separator />
+                <MenuItem Header="设置" Command="{Binding Menu_SettingCommand}" />
+                <MenuItem Header="退出" Command="{Binding Menu_ExitCommand}" />
             </MenuItem>
-            <MenuItem Header="_Edit">
-                <MenuItem Header="Copy" />
-                <MenuItem Header="Paste" />
+            <MenuItem Header="编译">
+                <MenuItem Header="编译设置" Command="{Binding Menu_CompileSettingCommand}" />
+                <MenuItem Header="快速编译" Command="{Binding Menu_QuickCompileCommand}" />
+            </MenuItem>
+            <MenuItem Header="选择">
+                <MenuItem Header="导入Excel" Command="{Binding Menu_ImportExcelCommand}" />
+            </MenuItem>
+            <MenuItem Header="帮助">
+                <MenuItem Header="关于" Command="{Binding Menu_AboutCommand}" />
+                <MenuItem Header="主题">
+                    <MenuItem Header="跟随系统" Command="{Binding Menu_ThemeFollowSystemCommand}" />
+                    <MenuItem Header="亮色" Command="{Binding Menu_ThemeLightCommand}" />
+                    <MenuItem Header="暗色" Command="{Binding Menu_ThemeDarkCommand}" />
+                </MenuItem>
             </MenuItem>
         </Menu>
         <Grid Width="48" DockPanel.Dock="Left">
@@ -43,6 +59,10 @@
                 <TabControl.Styles>
                     <Style Selector="TabControl">
                         <Setter Property="TabStripPlacement" Value="Left" />
+                        <Setter Property="Background"
+                            Value="{DynamicResource NavigationBackgroundBrush}" />
+                        <Setter Property="Foreground"
+                            Value="{DynamicResource NavigationForegroundBrush}" />
                     </Style>
 
                     <!-- 完全自定义 TabItem 样式 -->
@@ -91,14 +111,16 @@
                     </TabItem.Header>
                 </TabItem>
             </TabControl>
-            <Rectangle Grid.Row="2" Fill="Black" />
+            <Rectangle Grid.Row="2" Fill="{DynamicResource NavigationBackgroundBrush}" />
             <Rectangle Grid.Row="3" Fill="Yellow" Height="48" Margin="0,0,0,10" />
         </Grid>
         <Grid ColumnDefinitions="200, 1, *">
             <TreeView Grid.Column="0" ItemsSource="{Binding Nodes}"
                 SelectedItem="{Binding SelectedNode}"
                 HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch">
+                VerticalAlignment="Stretch"
+                Background="{DynamicResource TreeViewBackgroundBrush}"
+                Foreground="{DynamicResource TreeViewForegroundBrush}">
                 <TreeView.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="Add Folder" Command="{Binding AddFolderNodeCommand}" />
@@ -140,4 +162,24 @@
             </Grid>
         </Grid>
     </DockPanel>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key='Light'>
+                    <SolidColorBrush x:Key='WindowBackgroundBrush'>#EAEAEA</SolidColorBrush>
+                    <SolidColorBrush x:Key='NavigationBackgroundBrush'>#EAEAEA</SolidColorBrush>
+                    <SolidColorBrush x:Key='NavigationForegroundBrush'>Black</SolidColorBrush>
+                    <SolidColorBrush x:Key='TreeViewBackgroundBrush'>#EAEAEA</SolidColorBrush>
+                    <SolidColorBrush x:Key='TreeViewForegroundBrush'>White</SolidColorBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key='Dark'>
+                    <SolidColorBrush x:Key='WindowBackgroundBrush'>#202020</SolidColorBrush>
+                    <SolidColorBrush x:Key='NavigationBackgroundBrush'>#202020</SolidColorBrush>
+                    <SolidColorBrush x:Key='NavigationForegroundBrush'>White</SolidColorBrush>
+                    <SolidColorBrush x:Key='TreeViewBackgroundBrush'>#21252B</SolidColorBrush>
+                    <SolidColorBrush x:Key='TreeViewForegroundBrush'>White</SolidColorBrush>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
 </Window>

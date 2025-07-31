@@ -1,15 +1,16 @@
 use eframe::egui;
-use eframe::egui::accesskit::Tree;
 use std::sync::Arc;
 
 use crate::common::global;
 use crate::common::setting;
-use crate::gui::tree_item::{ItemType, TreeItem};
+use crate::gui::datas::gables;
+use crate::gui::datas::gables::{ItemType, TreeItem};
 
 pub(crate) struct GableApp {
     /// 当前选中的导航索引
     selected_navigation_index: u8,
-    tree_items: Vec<TreeItem>,
+    /// 当前选中的treeItem，以fullpath为key
+    selected_tree_item: Option<String>,
 }
 
 impl GableApp {
@@ -32,45 +33,52 @@ impl GableApp {
 
         // 应用字体定义
         cc.egui_ctx.set_fonts(fonts);
+        let mut app = Self {
+            selected_navigation_index: 0,
+            selected_tree_item: None,
+        };
+        app.init_gables();
+        app
+    }
+
+    fn init_gables(&self) {
         let tree_items = vec![TreeItem {
-            id: "project_a".to_string(),
-            name: "项目A".to_string(),
+            display_name: "项目A".to_string(),
             item_type: ItemType::Folder,
+            is_open: true,
+            fullpath: "项目A".to_string(),
             children: vec![
                 TreeItem {
-                    id: "main_rs".to_string(),
-                    name: "main.rs".to_string(),
+                    display_name: "main.rs".to_string(),
                     item_type: ItemType::Excel,
-                    children: vec![],
                     is_open: false,
+                    fullpath: "项目A/main.rs".to_string(),
+                    children: vec![],
                 },
                 TreeItem {
-                    id: "lib_rs".to_string(),
-                    name: "lib.rs".to_string(),
+                    display_name: "lib.rs".to_string(),
                     item_type: ItemType::Excel,
-                    children: vec![],
                     is_open: false,
+                    fullpath: "项目A/lib.rs".to_string(),
+                    children: vec![],
                 },
                 TreeItem {
-                    id: "modules".to_string(),
-                    name: "modules".to_string(),
+                    display_name: "modules".to_string(),
                     item_type: ItemType::Folder,
-                    children: vec![TreeItem {
-                        id: "mod_rs".to_string(),
-                        name: "mod.rs".to_string(),
-                        item_type: ItemType::Excel,
-                        children: vec![],
-                        is_open: false,
-                    }],
                     is_open: false,
+                    fullpath: "项目A/modules".to_string(),
+                    children: vec![TreeItem {
+                        display_name: "mod.rs".to_string(),
+                        item_type: ItemType::Excel,
+                        is_open: false,
+                        fullpath: "项目A/modules/mod.rs".to_string(),
+                        children: vec![],
+                    }],
                 },
             ],
-            is_open: true,
         }];
-        Self {
-            selected_navigation_index: 0,
-            tree_items,
-        }
+        // 使用 lock 安全更新 TREE_ITEMS
+        *gables::TREE_ITEMS.lock().unwrap() = tree_items;
     }
     fn get_title(&self) -> String {
         let workspace = setting::WORKSPACE.lock().unwrap();
@@ -128,7 +136,7 @@ impl GableApp {
             });
         });
     }
-    /// GUI导航栏
+    /// 绘制 导航栏
     fn gui_navigation_bar(&mut self, ctx: &egui::Context) {
         egui::SidePanel::left("my_left_panel")
             .default_width(40.0)
@@ -192,44 +200,133 @@ impl GableApp {
                 );
             });
     }
-    fn gui_tree_item(ui: &mut egui::Ui, item: &TreeItem) {
+
+    /// 绘制 treeview
+    fn gui_tree_view(&mut self, ctx: &egui::Context) {
+        egui::SidePanel::left("my_gables_panel")
+            .min_width(150.0) // 设置最小宽度
+            .max_width(800.0) // 设置最大宽度
+            .resizable(true)
+            .frame(egui::Frame::side_top_panel(&ctx.style()).inner_margin(10.0))
+            .show(ctx, |ui| {
+                egui::ScrollArea::vertical()
+                    .auto_shrink([false; 2])
+                    .show(ui, |ui| {
+                        let tree_items = gables::TREE_ITEMS.lock().unwrap();
+                        for item in tree_items.iter() {
+                            Self::gui_tree_item(ui, item, &mut self.selected_tree_item);
+                        }
+                    });
+            });
+    }
+
+    /// 带右键菜单的树形结构绘制
+    fn gui_tree_item(ui: &mut egui::Ui, item: &TreeItem, selected_id: &mut Option<String>) {
         let icon = match item.item_type {
             ItemType::Folder => "📁",
             ItemType::Excel => "📄",
             ItemType::Sheet => "📊",
         };
 
-        let header_text = format!("{} {}", icon, item.name);
-
-        if item.item_type == ItemType::Folder && !item.children.is_empty() {
-            egui::CollapsingHeader::new(header_text)
+        let header_text = format!("{} {}", icon, item.display_name);
+        let header_text_clone = header_text.clone();
+        // 检查当前项是否被选中
+        let is_selected = selected_id
+            .as_ref()
+            .map_or(false, |id| id == &item.fullpath);
+        if !item.children.is_empty() {
+            egui::CollapsingHeader::new(header_text_clone)
                 .default_open(item.is_open)
                 .show(ui, |ui| {
+                    let label_response = ui.label(&header_text);
+                    if label_response.clicked() {
+                        *selected_id = Some(item.fullpath.clone());
+                        println!("Clicked: {}", item.fullpath.clone())
+                    }
+                    if is_selected {
+                        ui.painter().rect_filled(
+                            label_response.rect,
+                            egui::Rounding::ZERO,
+                            egui::Color32::from_rgb(0, 120, 200).linear_multiply(0.2),
+                        );
+                    }
+                    label_response.context_menu(|ui| {
+                        Self::show_context_menu(ui, item);
+                    });
                     for child in &item.children {
-                        Self::gui_tree_item(ui, child);
+                        Self::gui_tree_item(ui, child, selected_id);
                     }
                 });
         } else {
-            ui.label(header_text);
+            let response = ui.label(header_text);
+            // 处理点击事件
+            if response.clicked() {
+                *selected_id = Some(item.fullpath.clone());
+            }
+            // 添加选中状态的视觉反馈
+            if is_selected {
+                ui.painter().rect_filled(
+                    response.rect,
+                    egui::Rounding::ZERO,
+                    egui::Color32::from_rgb(0, 120, 200).linear_multiply(0.2),
+                );
+            }
+            // 为文件添加右键菜单
+            response.context_menu(|ui| {
+                Self::show_context_menu(ui, item);
+            });
         }
     }
-    fn gui_tree_view(&mut self, ctx: &egui::Context) {
-        egui::SidePanel::left("my_gables_panel")
-            .resizable(true)
-            .frame(egui::Frame::side_top_panel(&ctx.style()).inner_margin(10.0))
-            .show(ctx, |ui| {
-                egui::ScrollArea::vertical().show(ui, |ui| {
-                    for item in &mut self.tree_items {
-                        Self::gui_tree_item(ui, item);
-                    }
-                });
-            });
+
+    /// 显示右键菜单
+    fn show_context_menu(ui: &mut egui::Ui, item: &TreeItem) {
+        match item.item_type {
+            ItemType::Folder => {
+                if ui.button("新建文件").clicked() {
+                    // TODO: 实现新建文件逻辑
+                    ui.close_menu();
+                }
+                if ui.button("新建文件夹").clicked() {
+                    // TODO: 实现新建文件夹逻辑
+                    ui.close_menu();
+                }
+            }
+            ItemType::Excel => {
+                if ui.button("新建文件").clicked() {
+                    // TODO: 实现新建文件逻辑
+                    ui.close_menu();
+                }
+                if ui.button("编辑").clicked() {
+                    // TODO: 实现打开文件逻辑
+                    ui.close_menu();
+                }
+                ui.separator();
+                if ui.button("重命名").clicked() {
+                    // TODO: 实现重命名逻辑
+                    ui.close_menu();
+                }
+                if ui.button("删除").clicked() {
+                    // TODO: 实现打开文件逻辑
+                    ui.close_menu();
+                }
+            }
+            ItemType::Sheet => {
+                if ui.button("编辑").clicked() {
+                    // TODO: 实现打开文件逻辑
+                    ui.close_menu();
+                }
+                ui.separator();
+                if ui.button("删除").clicked() {
+                    // TODO: 实现打开文件逻辑
+                    ui.close_menu();
+                }
+            }
+        }
     }
 }
 
 impl eframe::App for GableApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // 调用独立的函数来更新窗口标题
         self.gui_title(ctx);
         self.gui_menu(ctx);
         self.gui_navigation_bar(ctx);

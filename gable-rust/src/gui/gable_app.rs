@@ -86,13 +86,8 @@ impl GableApp {
             });
         });
     }
-}
-
-impl eframe::App for GableApp {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // 调用独立的函数来更新窗口标题
-        self.gui_title(ctx);
-        self.gui_menu(ctx);
+    /// GUI导航栏
+    fn gui_navigation_bar(&mut self, ctx: &egui::Context) {
         egui::SidePanel::left("my_left_panel")
             .default_width(40.0)
             .resizable(false)
@@ -111,7 +106,7 @@ impl eframe::App for GableApp {
                             )
                             .fill(if self.selected_mode == 0 {
                                 // 选中状态背景色
-                                egui::Color32::from_rgb(0, 120, 255)
+                                egui::Color32::from_rgb(0, 120, 200)
                             } else {
                                 // 未选中状态背景色
                                 egui::Color32::TRANSPARENT
@@ -128,7 +123,7 @@ impl eframe::App for GableApp {
                             )
                             .fill(if self.selected_mode == 1 {
                                 // 选中状态背景色
-                                egui::Color32::from_rgb(0, 120, 255)
+                                egui::Color32::from_rgb(0, 120, 200)
                             } else {
                                 // 未选中状态背景色
                                 egui::Color32::TRANSPARENT
@@ -154,6 +149,15 @@ impl eframe::App for GableApp {
                     },
                 );
             });
+    }
+}
+
+impl eframe::App for GableApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // 调用独立的函数来更新窗口标题
+        self.gui_title(ctx);
+        self.gui_menu(ctx);
+        self.gui_navigation_bar(ctx);
         egui::SidePanel::left("my_gables_panel")
             .resizable(true)
             .frame(egui::Frame::side_top_panel(&ctx.style()).inner_margin(10.0))

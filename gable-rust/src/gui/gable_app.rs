@@ -63,49 +63,10 @@ impl GableApp {
             selected_navigation_index: 0,
             selected_tree_item: None,
         };
-        app.init_gables();
+        gables::refresh_gables();
         app
     }
 
-    fn init_gables(&self) {
-        let tree_items = vec![TreeItem {
-            display_name: "项目A".to_string(),
-            item_type: ItemType::Folder,
-            is_open: true,
-            fullpath: "项目A".to_string(),
-            children: vec![
-                TreeItem {
-                    display_name: "main.rs".to_string(),
-                    item_type: ItemType::Excel,
-                    is_open: false,
-                    fullpath: "项目A/main.rs".to_string(),
-                    children: vec![],
-                },
-                TreeItem {
-                    display_name: "lib.rs".to_string(),
-                    item_type: ItemType::Excel,
-                    is_open: false,
-                    fullpath: "项目A/lib.rs".to_string(),
-                    children: vec![],
-                },
-                TreeItem {
-                    display_name: "modules".to_string(),
-                    item_type: ItemType::Folder,
-                    is_open: false,
-                    fullpath: "项目A/modules".to_string(),
-                    children: vec![TreeItem {
-                        display_name: "mod.rs".to_string(),
-                        item_type: ItemType::Excel,
-                        is_open: false,
-                        fullpath: "项目A/modules/mod.rs".to_string(),
-                        children: vec![],
-                    }],
-                },
-            ],
-        }];
-        // 使用 lock 安全更新 TREE_ITEMS
-        *gables::TREE_ITEMS.lock().unwrap() = tree_items;
-    }
     fn get_title(&self) -> String {
         let workspace = setting::WORKSPACE.lock().unwrap();
         format!(

@@ -55,7 +55,17 @@ impl GableApp {
                     if ui.button("新建文件").clicked() {}
                     if ui.button("新建文件夹").clicked() {}
                     ui.separator();
-                    if ui.button("打开工程目录").clicked() {}
+                    if ui.button("打开工程目录").clicked() {
+                        // 打开文件选择对话框
+                        if let Some(path) = rfd::FileDialog::new()
+                            .set_title("选择工程目录")
+                            .pick_folder()
+                        {
+                            let path_str = path.to_string_lossy().to_string();
+                            // 设置 WORKSPACE 值
+                            setting::set_workspace(path_str);
+                        }
+                    }
                     ui.separator();
                     if ui.button("设置").clicked() {}
                     if ui.button("退出").clicked() {

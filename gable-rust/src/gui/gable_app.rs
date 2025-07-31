@@ -4,12 +4,10 @@ use std::sync::Arc;
 use crate::common::global;
 use crate::common::setting;
 
-pub(crate) struct GableApp {
-    title: String,
-}
+pub(crate) struct GableApp {}
 
 impl GableApp {
-    pub fn new(cc: &eframe::CreationContext<'_>, title: String) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         // 加载自定义字体
         let mut fonts = egui::FontDefinitions::default();
 
@@ -28,26 +26,21 @@ impl GableApp {
 
         // 应用字体定义
         cc.egui_ctx.set_fonts(fonts);
-        Self { title: title }
+        Self {}
     }
     fn get_title(&self) -> String {
         let workspace = setting::WORKSPACE.lock().unwrap();
         format!(
-            "{} - {}",
-            self.title,
+            "Gable - {}",
             workspace.as_ref().unwrap_or(&"Unknown".to_string())
         )
     }
 
-    // 添加设置标题的方法
-    pub fn set_title(&mut self, new_title: String) {
-        self.title = new_title;
-    }
-    // 绘制窗口标题
+    /// 绘制窗口标题
     fn gui_title(&mut self, ctx: &egui::Context) {
         ctx.send_viewport_cmd(egui::ViewportCommand::Title(self.get_title().to_string()));
     }
-    // 绘制菜单
+    /// 绘制菜单
     fn gui_menu(&mut self, ctx: &egui::Context) {
         egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
@@ -99,7 +92,7 @@ impl eframe::App for GableApp {
         self.gui_title(ctx);
         self.gui_menu(ctx);
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading(&self.title);
+            ui.heading("Gable Tools");
             ui.label("Hello World!");
         });
     }

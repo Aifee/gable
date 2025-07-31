@@ -1,6 +1,6 @@
 use std::sync::Mutex;
 
-// static mut WORKSPACE: &str = "";
+/// 工程目录
 pub(crate) static WORKSPACE: Mutex<Option<String>> = Mutex::new(None);
 
 // 提供一个安全的设置方法

@@ -2,7 +2,6 @@
 
 mod common;
 mod gui;
-use common::global;
 use eframe::egui;
 use gui::gable_app::GableApp;
 
@@ -13,10 +12,10 @@ fn main() -> Result<(), eframe::Error> {
         ..Default::default()
     };
     eframe::run_native(
-        global::TITLE, // 固定的窗口标题
+        "Gable", // 固定的窗口标题
         options,
         Box::new(|cc| {
-            let app = GableApp::new(cc, "Gable".to_string());
+            let app = GableApp::new(cc);
             Ok(Box::new(app))
         }),
     )

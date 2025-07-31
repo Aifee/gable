@@ -229,36 +229,42 @@ impl GableApp {
         };
 
         let header_text = format!("{} {}", icon, item.display_name);
-        let header_text_clone = header_text.clone();
         // 检查当前项是否被选中
         let is_selected = selected_id
             .as_ref()
             .map_or(false, |id| id == &item.fullpath);
         if !item.children.is_empty() {
-            egui::CollapsingHeader::new(header_text_clone)
+            let header_response = egui::CollapsingHeader::new(&header_text)
                 .default_open(item.is_open)
                 .show(ui, |ui| {
-                    let label_response = ui.label(&header_text);
-                    if label_response.clicked() {
-                        *selected_id = Some(item.fullpath.clone());
-                        println!("Clicked: {}", item.fullpath.clone())
-                    }
-                    if is_selected {
-                        ui.painter().rect_filled(
-                            label_response.rect,
-                            egui::Rounding::ZERO,
-                            egui::Color32::from_rgb(0, 120, 200).linear_multiply(0.2),
-                        );
-                    }
-                    label_response.context_menu(|ui| {
-                        Self::show_context_menu(ui, item);
-                    });
+                    // 显示子项
                     for child in &item.children {
                         Self::gui_tree_item(ui, child, selected_id);
                     }
-                });
+                })
+                .header_response;
+
+            // 只有点击header文本区域时才选中
+            if header_response.clicked() {
+                *selected_id = Some(item.fullpath.clone());
+                println!("Clicked: {}", item.fullpath.clone())
+            }
+
+            // 添加选中状态的视觉反馈
+            if is_selected {
+                ui.painter().rect_filled(
+                    header_response.rect,
+                    egui::Rounding::ZERO,
+                    egui::Color32::from_rgb(0, 120, 200).linear_multiply(0.2),
+                );
+            }
+
+            // 为header添加右键菜单
+            header_response.context_menu(|ui| {
+                Self::show_context_menu(ui, item);
+            });
         } else {
-            let response = ui.label(header_text);
+            let response = ui.label(&header_text);
             // 处理点击事件
             if response.clicked() {
                 *selected_id = Some(item.fullpath.clone());

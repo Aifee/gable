@@ -31,8 +31,34 @@ impl GableApp {
             .or_default()
             .insert(0, "chinese_font".to_owned());
 
-        // 应用字体定义
         cc.egui_ctx.set_fonts(fonts);
+        // 设置全局样式，调整字体大小
+        let mut style = (*cc.egui_ctx.style()).clone();
+        style.text_styles = [
+            (
+                egui::TextStyle::Small,
+                egui::FontId::new(14.0, egui::FontFamily::Proportional),
+            ),
+            (
+                egui::TextStyle::Body,
+                egui::FontId::new(16.0, egui::FontFamily::Proportional),
+            ),
+            (
+                egui::TextStyle::Button,
+                egui::FontId::new(16.0, egui::FontFamily::Proportional),
+            ),
+            (
+                egui::TextStyle::Heading,
+                egui::FontId::new(20.0, egui::FontFamily::Proportional),
+            ),
+            (
+                egui::TextStyle::Monospace,
+                egui::FontId::new(16.0, egui::FontFamily::Monospace),
+            ),
+        ]
+        .into();
+        cc.egui_ctx.set_style(style);
+        // 应用字体定义
         let mut app = Self {
             selected_navigation_index: 0,
             selected_tree_item: None,

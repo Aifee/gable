@@ -10,9 +10,7 @@ fn main() -> Result<(), eframe::Error> {
         viewport: egui::ViewportBuilder::default().with_inner_size([320.0, 240.0]),
         ..Default::default()
     };
-    eframe::run_native(
-        Box::<GableApp>::default().title(),
-        options,
-        Box::new(|_cc| Ok(Box::<GableApp>::default())),
-    )
+    let app = GableApp::new("Gable".to_string());
+    let title = app.title().to_string(); // 克隆title避免借用
+    eframe::run_native(&title, options, Box::new(|_cc| Ok(Box::new(app))))
 }

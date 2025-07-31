@@ -2,6 +2,7 @@ use eframe::egui;
 use std::sync::Arc;
 
 use crate::common::global;
+use crate::common::setting;
 
 pub(crate) struct GableApp {
     title: String,
@@ -30,7 +31,12 @@ impl GableApp {
         Self { title: title }
     }
     fn get_title(&self) -> String {
-        format!("{} Project Path", self.title)
+        let workspace = setting::WORKSPACE.lock().unwrap();
+        format!(
+            "{} - {}",
+            self.title,
+            workspace.as_ref().unwrap_or(&"Unknown".to_string())
+        )
     }
 
     // 添加设置标题的方法

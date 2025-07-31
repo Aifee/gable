@@ -1,20 +1,49 @@
 use eframe::egui;
+use std::sync::Arc;
 
 pub(crate) struct GableApp {
     title: String,
 }
 
 impl GableApp {
-    pub fn new(title: String) -> Self {
-        Self { title }
+    pub fn new(cc: &eframe::CreationContext<'_>, title: String) -> Self {
+        // 加载自定义字体
+        let mut fonts = egui::FontDefinitions::default();
+
+        // 从文件加载字体（示例使用系统字体路径）
+        fonts.font_data.insert(
+            "chinese_font".to_owned(),
+            Arc::new(egui::FontData::from_static(include_bytes!(
+                "../assets/fonts/NotoSansSC-VariableFont_wght.ttf"
+            ))),
+        );
+
+        // 设置字体族，优先使用中文字体
+        fonts
+            .families
+            .entry(egui::FontFamily::Proportional)
+            .or_default()
+            .insert(0, "chinese_font".to_owned());
+
+        // 应用字体定义
+        cc.egui_ctx.set_fonts(fonts);
+        Self { title: title }
     }
-    pub fn title(&self) -> &str {
-        &self.title
+    pub fn title(&self) -> String {
+        format!("{} Project Path", self.title)
+    }
+
+    // 添加设置标题的方法
+    pub fn set_title(&mut self, new_title: String) {
+        self.title = new_title;
     }
 }
 
 impl eframe::App for GableApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // 动态更新窗口标题
+        ctx.send_viewport_cmd(egui::ViewportCommand::Title(self.title().to_string()));
+
         egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("文件", |ui| {

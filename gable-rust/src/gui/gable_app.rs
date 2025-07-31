@@ -1,11 +1,15 @@
 use eframe::egui;
+use eframe::egui::accesskit::Tree;
 use std::sync::Arc;
 
 use crate::common::global;
 use crate::common::setting;
+use crate::gui::tree_item::{ItemType, TreeItem};
 
 pub(crate) struct GableApp {
-    selected_mode: u8,
+    /// 当前选中的导航索引
+    selected_navigation_index: u8,
+    tree_items: Vec<TreeItem>,
 }
 
 impl GableApp {
@@ -28,7 +32,45 @@ impl GableApp {
 
         // 应用字体定义
         cc.egui_ctx.set_fonts(fonts);
-        Self { selected_mode: 0 }
+        let tree_items = vec![TreeItem {
+            id: "project_a".to_string(),
+            name: "项目A".to_string(),
+            item_type: ItemType::Folder,
+            children: vec![
+                TreeItem {
+                    id: "main_rs".to_string(),
+                    name: "main.rs".to_string(),
+                    item_type: ItemType::Excel,
+                    children: vec![],
+                    is_open: false,
+                },
+                TreeItem {
+                    id: "lib_rs".to_string(),
+                    name: "lib.rs".to_string(),
+                    item_type: ItemType::Excel,
+                    children: vec![],
+                    is_open: false,
+                },
+                TreeItem {
+                    id: "modules".to_string(),
+                    name: "modules".to_string(),
+                    item_type: ItemType::Folder,
+                    children: vec![TreeItem {
+                        id: "mod_rs".to_string(),
+                        name: "mod.rs".to_string(),
+                        item_type: ItemType::Excel,
+                        children: vec![],
+                        is_open: false,
+                    }],
+                    is_open: false,
+                },
+            ],
+            is_open: true,
+        }];
+        Self {
+            selected_navigation_index: 0,
+            tree_items,
+        }
     }
     fn get_title(&self) -> String {
         let workspace = setting::WORKSPACE.lock().unwrap();
@@ -101,36 +143,36 @@ impl GableApp {
                             let button_size = egui::Vec2::new(40.0, 40.0);
 
                             // Tab1 - 房子图标
-                            let tab1_button = egui::Button::new(
-                                egui::RichText::new("🏠").size(24.0),
-                            )
-                            .fill(if self.selected_mode == 0 {
-                                // 选中状态背景色
-                                egui::Color32::from_rgb(0, 120, 200)
-                            } else {
-                                // 未选中状态背景色
-                                egui::Color32::TRANSPARENT
-                            });
+                            let tab1_button =
+                                egui::Button::new(egui::RichText::new("🏠").size(24.0)).fill(
+                                    if self.selected_navigation_index == 0 {
+                                        // 选中状态背景色
+                                        egui::Color32::from_rgb(0, 120, 200)
+                                    } else {
+                                        // 未选中状态背景色
+                                        egui::Color32::TRANSPARENT
+                                    },
+                                );
 
                             if ui.add_sized(button_size, tab1_button).clicked() {
-                                self.selected_mode = 0;
+                                self.selected_navigation_index = 0;
                                 // Tab1 点击处理逻辑
                             }
 
                             // Tab2 - 搜索图标
-                            let tab2_button = egui::Button::new(
-                                egui::RichText::new("🔍").size(24.0),
-                            )
-                            .fill(if self.selected_mode == 1 {
-                                // 选中状态背景色
-                                egui::Color32::from_rgb(0, 120, 200)
-                            } else {
-                                // 未选中状态背景色
-                                egui::Color32::TRANSPARENT
-                            });
+                            let tab2_button =
+                                egui::Button::new(egui::RichText::new("🔍").size(24.0)).fill(
+                                    if self.selected_navigation_index == 1 {
+                                        // 选中状态背景色
+                                        egui::Color32::from_rgb(0, 120, 200)
+                                    } else {
+                                        // 未选中状态背景色
+                                        egui::Color32::TRANSPARENT
+                                    },
+                                );
 
                             if ui.add_sized(button_size, tab2_button).clicked() {
-                                self.selected_mode = 1;
+                                self.selected_navigation_index = 1;
                                 // Tab2 点击处理逻辑
                             }
                         });
@@ -150,6 +192,39 @@ impl GableApp {
                 );
             });
     }
+    fn gui_tree_item(ui: &mut egui::Ui, item: &TreeItem) {
+        let icon = match item.item_type {
+            ItemType::Folder => "📁",
+            ItemType::Excel => "📄",
+            ItemType::Sheet => "📊",
+        };
+
+        let header_text = format!("{} {}", icon, item.name);
+
+        if item.item_type == ItemType::Folder && !item.children.is_empty() {
+            egui::CollapsingHeader::new(header_text)
+                .default_open(item.is_open)
+                .show(ui, |ui| {
+                    for child in &item.children {
+                        Self::gui_tree_item(ui, child);
+                    }
+                });
+        } else {
+            ui.label(header_text);
+        }
+    }
+    fn gui_tree_view(&mut self, ctx: &egui::Context) {
+        egui::SidePanel::left("my_gables_panel")
+            .resizable(true)
+            .frame(egui::Frame::side_top_panel(&ctx.style()).inner_margin(10.0))
+            .show(ctx, |ui| {
+                egui::ScrollArea::vertical().show(ui, |ui| {
+                    for item in &mut self.tree_items {
+                        Self::gui_tree_item(ui, item);
+                    }
+                });
+            });
+    }
 }
 
 impl eframe::App for GableApp {
@@ -158,38 +233,21 @@ impl eframe::App for GableApp {
         self.gui_title(ctx);
         self.gui_menu(ctx);
         self.gui_navigation_bar(ctx);
-        egui::SidePanel::left("my_gables_panel")
-            .resizable(true)
-            .frame(egui::Frame::side_top_panel(&ctx.style()).inner_margin(10.0))
-            .show(ctx, |ui| {
-                // ui.vertical(|ui| {
-                //     ui.heading("Left Panel");
-                //     if ui.button("按钮1").clicked() {}
-                //     if ui.button("按钮2").clicked() {}
-                // });
-                ui.heading("LeftPanelLeftPanelLeftPanelLeftPanelLeftPanel");
-                if ui.button("按钮1").clicked() {}
-                if ui.button("按钮2").clicked() {}
-            });
+        self.gui_tree_view(ctx);
         egui::TopBottomPanel::bottom("my_log_panel")
             .resizable(true)
             .frame(egui::Frame::side_top_panel(&ctx.style()).inner_margin(10.0))
             .show_animated(ctx, true, |ui| {
-                // ui.vertical(|ui| {
-                //     ui.heading("Left Panel");
-                //     if ui.button("按钮1").clicked() {}
-                //     if ui.button("按钮2").clicked() {}
-                // });
                 ui.heading("LeftPanelLeftPanelLeftPanelLeftPanelLeftPanel");
                 if ui.button("按钮1").clicked() {}
                 if ui.button("按钮2").clicked() {}
             });
         // 中央主内容面板
         egui::CentralPanel::default().show(ctx, |ui| {
-            // ui.vertical(|ui| {
-            //     ui.heading("Main Content");
-            //     ui.label("这是中央主要内容区域");
-            // });
+            ui.vertical(|ui| {
+                ui.heading("Main Content");
+                ui.label("这是中央主要内容区域");
+            });
         });
     }
 }

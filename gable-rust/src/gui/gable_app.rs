@@ -29,7 +29,7 @@ impl GableApp {
         cc.egui_ctx.set_fonts(fonts);
         Self { title: title }
     }
-    pub fn title(&self) -> String {
+    fn get_title(&self) -> String {
         format!("{} Project Path", self.title)
     }
 
@@ -37,13 +37,12 @@ impl GableApp {
     pub fn set_title(&mut self, new_title: String) {
         self.title = new_title;
     }
-}
-
-impl eframe::App for GableApp {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // 动态更新窗口标题
-        ctx.send_viewport_cmd(egui::ViewportCommand::Title(self.title().to_string()));
-
+    // 绘制窗口标题
+    fn gui_title(&mut self, ctx: &egui::Context) {
+        ctx.send_viewport_cmd(egui::ViewportCommand::Title(self.get_title().to_string()));
+    }
+    // 绘制菜单
+    fn gui_menu(&mut self, ctx: &egui::Context) {
         egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("文件", |ui| {
@@ -75,6 +74,14 @@ impl eframe::App for GableApp {
                 });
             });
         });
+    }
+}
+
+impl eframe::App for GableApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // 调用独立的函数来更新窗口标题
+        self.gui_title(ctx);
+        self.gui_menu(ctx);
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading(&self.title);
             ui.label("Hello World!");

@@ -65,9 +65,12 @@ impl eframe::App for GableApp {
                 ui.menu_button("帮助", |ui| {
                     if ui.button("关于").clicked() {}
                     ui.menu_button("主题", |ui| {
-                        if ui.button("Auto").clicked() {}
-                        if ui.button("Light").clicked() {}
-                        if ui.button("Dark").clicked() {}
+                        if ui.button("Light").clicked() {
+                            ctx.set_visuals(egui::Visuals::light());
+                        }
+                        if ui.button("Dark").clicked() {
+                            ctx.set_visuals(egui::Visuals::dark());
+                        }
                     });
                 });
             });

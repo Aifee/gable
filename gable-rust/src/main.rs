@@ -1,8 +1,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod gable_app;
+mod common;
+mod gui;
+use common::global;
 use eframe::egui;
-use gable_app::GableApp;
+use gui::gable_app::GableApp;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> Result<(), eframe::Error> {
@@ -11,7 +13,7 @@ fn main() -> Result<(), eframe::Error> {
         ..Default::default()
     };
     eframe::run_native(
-        "Gable", // 固定的窗口标题
+        global::TITLE, // 固定的窗口标题
         options,
         Box::new(|cc| {
             let app = GableApp::new(cc, "Gable".to_string());

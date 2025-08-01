@@ -99,16 +99,35 @@ impl GableExplorer {
                 .as_ref()
                 .map_or(false, |id| id == &item.fullpath);
 
-            // 对于所有项目，统一使用 CollapsingHeader 来保持一致的缩进和布局
-            let header_response = egui::CollapsingHeader::new(&header_text)
-                .default_open(item.is_open)
-                .show(ui, |ui| {
-                    // 显示子项（如果有的话）
-                    for child in &item.children {
-                        Self::gui_tree_item(ui, child, selected_id, renaming_item, renaming_text);
-                    }
-                })
-                .header_response;
+            let header_response = match item.item_type {
+                ItemType::Sheet => {
+                    // 使用 CollapsingHeader 但禁用展开功能以保持一致的外观和交互
+                    egui::CollapsingHeader::new(&header_text)
+                        .default_open(item.is_open)
+                        .open(Some(false)) // 禁用展开状态
+                        .icon(|_, _, _| {}) // 隐藏箭头图标
+                        .show(ui, |ui| {})
+                        .header_response
+                }
+                _ => {
+                    // 其他类型使用CollapsingHeader
+                    egui::CollapsingHeader::new(&header_text)
+                        .default_open(item.is_open)
+                        .show(ui, |ui| {
+                            // 显示子项（如果有的话）
+                            for child in &item.children {
+                                Self::gui_tree_item(
+                                    ui,
+                                    child,
+                                    selected_id,
+                                    renaming_item,
+                                    renaming_text,
+                                );
+                            }
+                        })
+                        .header_response
+                }
+            };
 
             // 只有点击header文本区域时才选中
             if header_response.clicked() {

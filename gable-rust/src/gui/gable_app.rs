@@ -345,6 +345,20 @@ impl GableApp {
             return;
         }
 
+        // 进行合法性校验
+        if !Self::is_valid_filename(&new_name) {
+            println!("文件名包含非法字符");
+            // 保留编辑状态，让用户重新输入
+            return;
+        }
+
+        // 检查同名文件/文件夹是否已存在
+        if Self::is_name_exists(item, &new_name) {
+            println!("同名文件或文件夹已存在");
+            // 保留编辑状态，让用户重新输入
+            return;
+        }
+
         let result = match item.item_type {
             ItemType::Excel => {
                 // 重命名Excel文件及其所有sheet文件
@@ -354,7 +368,10 @@ impl GableApp {
                 // 重命名单个sheet
                 Self::rename_sheet_item(item, &new_name)
             }
-            _ => Ok(()),
+            ItemType::Folder => {
+                // 重命名文件夹
+                Self::rename_folder_item(item, &new_name)
+            }
         };
 
         // 清理重命名状态
@@ -370,6 +387,74 @@ impl GableApp {
             std::thread::sleep(std::time::Duration::from_millis(100));
             gables::refresh_gables();
         });
+    }
+
+    /// 重命名文件夹项
+    fn rename_folder_item(item: &TreeItem, new_folder_name: &str) -> Result<(), std::io::Error> {
+        let path = std::path::Path::new(&item.fullpath);
+        if let Some(parent_path) = path.parent() {
+            let new_path = parent_path.join(new_folder_name);
+
+            // 检查目标文件夹是否已存在
+            if new_path.exists() && path != new_path {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::AlreadyExists,
+                    "目标文件夹已存在",
+                ));
+            }
+
+            // 重命名文件夹
+            if path.to_string_lossy() != new_path.to_string_lossy() {
+                std::fs::rename(&path, &new_path)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// 检查文件名是否合法
+    fn is_valid_filename(name: &str) -> bool {
+        // 检查是否为空
+        if name.is_empty() {
+            return false;
+        }
+
+        // 检查是否包含非法字符
+        let invalid_chars = ['/', '\\', ':', '*', '?', '"', '<', '>', '|'];
+        for c in name.chars() {
+            if invalid_chars.contains(&c) || c.is_control() {
+                return false;
+            }
+        }
+
+        // 检查是否以点或空格结尾
+        if name.ends_with('.') || name.ends_with(' ') {
+            return false;
+        }
+
+        // 检查是否是保留名称
+        let reserved_names = [
+            "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7",
+            "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+        ];
+
+        let upper_name = name.to_uppercase();
+        for reserved in &reserved_names {
+            if &upper_name == reserved {
+                return false;
+            }
+        }
+        true
+    }
+
+    /// 检查同名文件/文件夹是否已存在
+    fn is_name_exists(item: &TreeItem, new_name: &str) -> bool {
+        let path = std::path::Path::new(&item.fullpath);
+        if let Some(parent_path) = path.parent() {
+            let new_path = parent_path.join(new_name);
+            new_path.exists()
+        } else {
+            false
+        }
     }
 
     /// 重命名Excel项及所有相关sheet文件
@@ -479,48 +564,92 @@ impl GableApp {
             ItemType::Folder => {
                 if ui.button("新建文件").clicked() {
                     // TODO: 实现新建文件逻辑
-                    ui.close_menu();
+                    ui.close();
                 }
                 if ui.button("新建文件夹").clicked() {
-                    // TODO: 实现新建文件夹逻辑
-                    ui.close_menu();
+                    Self::create_new_folder_and_edit(item, renaming_item, renaming_text);
+                    ui.close();
                 }
             }
             ItemType::Excel => {
                 if ui.button("新建文件").clicked() {
                     // TODO: 实现新建文件逻辑
-                    ui.close_menu();
+                    ui.close();
                 }
                 if ui.button("编辑").clicked() {
                     // TODO: 实现打开文件逻辑
-                    ui.close_menu();
+                    ui.close();
                 }
                 ui.separator();
                 if ui.button("重命名").clicked() {
                     *renaming_item = Some(item.fullpath.clone());
                     *renaming_text = item.display_name.clone();
-                    ui.close_menu();
+                    ui.close();
                 }
                 if ui.button("删除").clicked() {
                     // TODO: 实现打开文件逻辑
-                    ui.close_menu();
+                    ui.close();
                 }
             }
             ItemType::Sheet => {
                 if ui.button("编辑").clicked() {
                     // TODO: 实现打开文件逻辑
-                    ui.close_menu();
+                    ui.close();
                 }
                 ui.separator();
                 if ui.button("重命名").clicked() {
                     *renaming_item = Some(item.fullpath.clone());
                     *renaming_text = item.display_name.clone();
-                    ui.close_menu();
+                    ui.close();
                 }
                 if ui.button("删除").clicked() {
                     // TODO: 实现打开文件逻辑
-                    ui.close_menu();
+                    ui.close();
                 }
+            }
+        }
+    }
+
+    /// 创建新文件夹并进入编辑状态
+    fn create_new_folder_and_edit(
+        parent_item: &TreeItem,
+        renaming_item: &mut Option<String>,
+        renaming_text: &mut String,
+    ) {
+        // 确保只在文件夹类型上创建
+        if parent_item.item_type != ItemType::Folder {
+            return;
+        }
+
+        // 构造新文件夹路径
+        let new_folder_path = std::path::Path::new(&parent_item.fullpath).join("新建文件夹");
+
+        // 如果文件夹已存在，则添加序号
+        let mut new_path = new_folder_path.clone();
+        let mut counter = 1;
+        while new_path.exists() {
+            let new_name = format!("新建文件夹({})", counter);
+            new_path = std::path::Path::new(&parent_item.fullpath).join(new_name);
+            counter += 1;
+        }
+
+        // 创建文件夹
+        match std::fs::create_dir_all(&new_path) {
+            Ok(_) => {
+                // 设置重命名状态，使新建的文件夹进入编辑模式
+                if let Some(file_name) = new_path.file_name() {
+                    *renaming_item = Some(new_path.to_string_lossy().to_string());
+                    *renaming_text = file_name.to_string_lossy().to_string();
+
+                    // 延迟刷新，在下一次update中执行
+                    std::thread::spawn(|| {
+                        std::thread::sleep(std::time::Duration::from_millis(100));
+                        gables::refresh_gables();
+                    });
+                }
+            }
+            Err(e) => {
+                eprintln!("创建文件夹失败: {}", e);
             }
         }
     }

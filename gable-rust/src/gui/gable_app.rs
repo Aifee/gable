@@ -5,10 +5,13 @@ use crate::common::global;
 use crate::common::setting;
 use crate::gui::datas::gables;
 use crate::gui::gable_explorer::GableExplorer;
+use crate::gui::gable_menu::GableMenu;
 
 pub(crate) struct GableApp {
     /// 当前选中的导航索引
     selected_navigation_index: u8,
+    /// 菜单组件
+    gable_menu: GableMenu,
     /// 文件浏览器组件
     gable_explorer: GableExplorer,
 }
@@ -62,6 +65,7 @@ impl GableApp {
         // 应用字体定义
         let app = Self {
             selected_navigation_index: 0,
+            gable_menu: GableMenu::new(),
             gable_explorer: GableExplorer::new(),
         };
         gables::refresh_gables();
@@ -79,51 +83,6 @@ impl GableApp {
     /// 绘制窗口标题
     fn gui_title(&mut self, ctx: &egui::Context) {
         ctx.send_viewport_cmd(egui::ViewportCommand::Title(self.get_title().to_string()));
-    }
-
-    /// 绘制菜单
-    fn gui_menu(&mut self, ctx: &egui::Context) {
-        egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
-            egui::MenuBar::new().ui(ui, |ui| {
-                ui.menu_button("文件", |ui| {
-                    if ui.button("新建文件").clicked() {}
-                    if ui.button("新建文件夹").clicked() {}
-                    ui.separator();
-                    if ui.button("打开工程目录").clicked() {
-                        // 打开文件选择对话框
-                        if let Some(path) = rfd::FileDialog::new()
-                            .set_title("选择工程目录")
-                            .pick_folder()
-                        {
-                            let path_str = path.to_string_lossy().to_string();
-                            setting::set_workspace(path_str);
-                            gables::refresh_gables();
-                        }
-                    }
-                    ui.separator();
-                    if ui.button("设置").clicked() {}
-                    if ui.button("退出").clicked() {
-                        ctx.send_viewport_cmd(egui::ViewportCommand::Close);
-                    }
-                });
-                ui.menu_button("编译", |ui| {
-                    if ui.button("编译设置").clicked() {}
-                    if ui.button("快速编译").clicked() {}
-                });
-                ui.menu_button("选择", |ui| if ui.button("导入Excel").clicked() {});
-                ui.menu_button("帮助", |ui| {
-                    if ui.button("关于").clicked() {}
-                    ui.menu_button("主题", |ui| {
-                        if ui.button("Light").clicked() {
-                            ctx.set_visuals(egui::Visuals::light());
-                        }
-                        if ui.button("Dark").clicked() {
-                            ctx.set_visuals(egui::Visuals::dark());
-                        }
-                    });
-                });
-            });
-        });
     }
 
     /// 绘制 导航栏
@@ -195,7 +154,7 @@ impl GableApp {
 impl eframe::App for GableApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.gui_title(ctx);
-        self.gui_menu(ctx);
+        self.gable_menu.gui_menu(ctx);
         self.gui_navigation_bar(ctx);
         self.gable_explorer.gui_tree_view(ctx);
         egui::TopBottomPanel::bottom("my_log_panel")

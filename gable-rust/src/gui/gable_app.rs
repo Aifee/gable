@@ -252,9 +252,17 @@ impl GableApp {
                     renaming_text,
                 );
             }
-
-            // 处理失去焦点时取消重命名（通过ESC键）
-            if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Escape)) {
+            // 新增：处理失去焦点时完成重命名（不是通过ESC键）
+            else if response.lost_focus() && !ui.input(|i| i.key_pressed(egui::Key::Escape)) {
+                Self::finish_renaming(
+                    item,
+                    std::mem::take(renaming_text),
+                    renaming_item,
+                    renaming_text,
+                );
+            }
+            // 处理通过ESC键取消重命名
+            else if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Escape)) {
                 *renaming_item = None;
                 renaming_text.clear();
             }

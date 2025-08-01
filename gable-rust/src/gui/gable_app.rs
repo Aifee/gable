@@ -59,7 +59,7 @@ impl GableApp {
         .into();
         cc.egui_ctx.set_style(style);
         // 应用字体定义
-        let mut app = Self {
+        let app = Self {
             selected_navigation_index: 0,
             selected_tree_item: None,
         };
@@ -241,7 +241,7 @@ impl GableApp {
             if is_selected {
                 ui.painter().rect_filled(
                     header_response.rect,
-                    egui::Rounding::ZERO,
+                    egui::CornerRadius::ZERO,
                     egui::Color32::from_rgb(0, 120, 200).linear_multiply(0.2),
                 );
             }
@@ -260,7 +260,7 @@ impl GableApp {
             if is_selected {
                 ui.painter().rect_filled(
                     response.rect,
-                    egui::Rounding::ZERO,
+                    egui::CornerRadius::ZERO,
                     egui::Color32::from_rgb(0, 120, 200).linear_multiply(0.2),
                 );
             }

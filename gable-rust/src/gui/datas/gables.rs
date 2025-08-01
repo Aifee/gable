@@ -37,11 +37,6 @@ pub fn set_folder_expanded(path: &str) {
     let _ = EXPANDED_FOLDERS.lock().unwrap().insert(path.to_string());
 }
 
-// 添加清空展开状态的函数，在刷新时调用
-pub fn clear_expanded_folders() {
-    EXPANDED_FOLDERS.lock().unwrap().clear();
-}
-
 /// 解析 .gable 文件名，返回 (excel_name, sheet_name) 或仅 excel_name
 pub(crate) fn parse_gable_filename(filename: &str) -> Option<(String, Option<String>)> {
     if !filename.ends_with(global::GABLE_FILE_TYPE) {
@@ -96,7 +91,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
 
     // 处理目录
     for (dir_path, dir_name) in directories {
-        let mut children = build_tree_from_path(&dir_path);
+        let children = build_tree_from_path(&dir_path);
 
         // 检查此路径是否应该展开
         let should_be_expanded = {
@@ -193,7 +188,7 @@ pub fn refresh_gables() {
             .map(|name| name.to_string_lossy().to_string())
             .unwrap_or_else(|| "项目".to_string());
 
-        let mut children = build_tree_from_path(root_path);
+        let children = build_tree_from_path(root_path);
 
         // 检查根路径是否应该展开
         let should_be_expanded = {

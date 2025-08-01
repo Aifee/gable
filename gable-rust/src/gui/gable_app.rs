@@ -94,8 +94,8 @@ impl GableApp {
                             .pick_folder()
                         {
                             let path_str = path.to_string_lossy().to_string();
-                            // 设置 WORKSPACE 值
                             setting::set_workspace(path_str);
+                            gables::refresh_gables();
                         }
                     }
                     ui.separator();

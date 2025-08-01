@@ -56,7 +56,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
 
     // 收集目录项和文件项
     let mut directories = Vec::new();
-    let mut gable_files: HashMap<String, Vec<(String, String)>> = HashMap::new(); // excel_name -> Vec<(full_path, sheet_name)>
+    let mut gable_files: HashMap<String, Vec<(String, String)>> = HashMap::new();
 
     if let Ok(entries) = fs::read_dir(path) {
         for entry in entries.filter_map(|e| e.ok()) {
@@ -64,7 +64,9 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
             let entry_name = entry.file_name().to_string_lossy().to_string();
 
             if entry_path.is_dir() {
-                directories.push((entry_path, entry_name));
+                if !global::IGNORED_DIRS.contains(&entry_name.as_str()) {
+                    directories.push((entry_path, entry_name));
+                }
             } else if let Some((excel_name, sheet_name)) = parse_gable_filename(&entry_name) {
                 gable_files
                     .entry(excel_name)

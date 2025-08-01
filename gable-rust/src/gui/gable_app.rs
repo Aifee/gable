@@ -223,10 +223,6 @@ impl GableApp {
             .map_or(false, |id| id == &item.fullpath);
         if !item.children.is_empty() {
             let header_response = egui::CollapsingHeader::new(&header_text)
-                // .icon_style(egui::collapsing_header::IconStyle::OpenClose {
-                //     opened: Some(egui::Vec2::new(12.0, 12.0)), // 调整打开状态的箭头大小
-                //     closed: Some(egui::Vec2::new(12.0, 12.0)), // 调整关闭状态的箭头大小
-                // })
                 .default_open(item.is_open)
                 .show(ui, |ui| {
                     // 显示子项

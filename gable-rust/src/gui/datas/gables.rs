@@ -29,7 +29,7 @@ lazy_static! {
     pub static ref TREE_ITEMS: Arc<Mutex<Vec<TreeItem>>> = Arc::new(Mutex::new(Vec::new()));
 }
 /// 解析 .gable 文件名，返回 (excel_name, sheet_name) 或仅 excel_name
-fn parse_gable_filename(filename: &str) -> Option<(String, Option<String>)> {
+pub(crate) fn parse_gable_filename(filename: &str) -> Option<(String, Option<String>)> {
     if !filename.ends_with(global::GABLE_FILE_TYPE) {
         return None;
     }

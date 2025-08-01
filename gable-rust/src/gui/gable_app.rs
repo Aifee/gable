@@ -219,7 +219,6 @@ impl GableApp {
                     });
             });
     }
-
     /// 带右键菜单的树形结构绘制
     fn gui_tree_item(
         ui: &mut egui::Ui,
@@ -273,61 +272,36 @@ impl GableApp {
                 .as_ref()
                 .map_or(false, |id| id == &item.fullpath);
 
-            if !item.children.is_empty() {
-                let header_response = egui::CollapsingHeader::new(&header_text)
-                    .default_open(item.is_open)
-                    .show(ui, |ui| {
-                        // 显示子项
-                        for child in &item.children {
-                            Self::gui_tree_item(
-                                ui,
-                                child,
-                                selected_id,
-                                renaming_item,
-                                renaming_text,
-                            );
-                        }
-                    })
-                    .header_response;
+            // 对于所有项目，统一使用 CollapsingHeader 来保持一致的缩进和布局
+            let header_response = egui::CollapsingHeader::new(&header_text)
+                .default_open(item.is_open)
+                .show(ui, |ui| {
+                    // 显示子项（如果有的话）
+                    for child in &item.children {
+                        Self::gui_tree_item(ui, child, selected_id, renaming_item, renaming_text);
+                    }
+                })
+                .header_response;
 
-                // 只有点击header文本区域时才选中
-                if header_response.clicked() {
-                    *selected_id = Some(item.fullpath.clone());
-                    println!("Clicked: {}", item.fullpath.clone())
-                }
-
-                // 添加选中状态的视觉反馈
-                if is_selected {
-                    ui.painter().rect_filled(
-                        header_response.rect,
-                        egui::CornerRadius::ZERO,
-                        egui::Color32::from_rgb(0, 120, 200).linear_multiply(0.2),
-                    );
-                }
-
-                // 为header添加右键菜单
-                header_response.context_menu(|ui| {
-                    Self::show_context_menu(ui, item, renaming_item, renaming_text);
-                });
-            } else {
-                let response = ui.label(&header_text);
-                // 处理点击事件
-                if response.clicked() {
-                    *selected_id = Some(item.fullpath.clone());
-                }
-                // 添加选中状态的视觉反馈
-                if is_selected {
-                    ui.painter().rect_filled(
-                        response.rect,
-                        egui::CornerRadius::ZERO,
-                        egui::Color32::from_rgb(0, 120, 200).linear_multiply(0.2),
-                    );
-                }
-                // 为文件添加右键菜单
-                response.context_menu(|ui| {
-                    Self::show_context_menu(ui, item, renaming_item, renaming_text);
-                });
+            // 只有点击header文本区域时才选中
+            if header_response.clicked() {
+                *selected_id = Some(item.fullpath.clone());
+                println!("Clicked: {}", item.fullpath.clone())
             }
+
+            // 添加选中状态的视觉反馈
+            if is_selected {
+                ui.painter().rect_filled(
+                    header_response.rect,
+                    egui::CornerRadius::ZERO,
+                    egui::Color32::from_rgb(0, 120, 200).linear_multiply(0.2),
+                );
+            }
+
+            // 为header添加右键菜单
+            header_response.context_menu(|ui| {
+                Self::show_context_menu(ui, item, renaming_item, renaming_text);
+            });
         }
     }
 

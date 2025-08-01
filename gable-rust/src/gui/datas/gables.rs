@@ -1,5 +1,5 @@
 use lazy_static::lazy_static;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -27,7 +27,21 @@ pub struct TreeItem {
 
 lazy_static! {
     pub static ref TREE_ITEMS: Arc<Mutex<Vec<TreeItem>>> = Arc::new(Mutex::new(Vec::new()));
+    // 跟踪需要展开的节点路径
+    pub static ref EXPANDED_FOLDERS: Arc<Mutex<HashSet<String>>> =
+        Arc::new(Mutex::new(HashSet::new()));
 }
+
+// 添加设置展开状态的函数
+pub fn set_folder_expanded(path: &str) {
+    let _ = EXPANDED_FOLDERS.lock().unwrap().insert(path.to_string());
+}
+
+// 添加清空展开状态的函数，在刷新时调用
+pub fn clear_expanded_folders() {
+    EXPANDED_FOLDERS.lock().unwrap().clear();
+}
+
 /// 解析 .gable 文件名，返回 (excel_name, sheet_name) 或仅 excel_name
 pub(crate) fn parse_gable_filename(filename: &str) -> Option<(String, Option<String>)> {
     if !filename.ends_with(global::GABLE_FILE_TYPE) {
@@ -46,6 +60,7 @@ pub(crate) fn parse_gable_filename(filename: &str) -> Option<(String, Option<Str
         Some((name_without_ext.to_string(), None))
     }
 }
+
 /// 递归构建目录树
 fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     let mut items = Vec::new();
@@ -83,11 +98,17 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     for (dir_path, dir_name) in directories {
         let mut children = build_tree_from_path(&dir_path);
 
+        // 检查此路径是否应该展开
+        let should_be_expanded = {
+            let expanded_folders = EXPANDED_FOLDERS.lock().unwrap();
+            expanded_folders.contains(&dir_path.to_string_lossy().to_string())
+        };
+
         // 创建目录项
         items.push(TreeItem {
             item_type: ItemType::Folder,
             display_name: dir_name,
-            is_open: false,
+            is_open: should_be_expanded,
             fullpath: dir_path.to_string_lossy().to_string(),
             children,
         });
@@ -174,11 +195,17 @@ pub fn refresh_gables() {
 
         let mut children = build_tree_from_path(root_path);
 
+        // 检查根路径是否应该展开
+        let should_be_expanded = {
+            let expanded_folders = EXPANDED_FOLDERS.lock().unwrap();
+            expanded_folders.contains(&root_path.to_string_lossy().to_string())
+        };
+
         // 创建根节点
         let root_item = TreeItem {
             item_type: ItemType::Folder,
             display_name: root_name,
-            is_open: true,
+            is_open: should_be_expanded || true, // 根节点始终展开或根据记录展开
             fullpath: root_path.to_string_lossy().to_string(),
             children,
         };

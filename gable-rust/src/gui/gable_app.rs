@@ -609,7 +609,6 @@ impl GableApp {
             }
         }
     }
-
     /// 创建新文件夹并进入编辑状态
     fn create_new_folder_and_edit(
         parent_item: &TreeItem,
@@ -620,6 +619,9 @@ impl GableApp {
         if parent_item.item_type != ItemType::Folder {
             return;
         }
+
+        // 标记父节点为展开状态
+        gables::set_folder_expanded(&parent_item.fullpath);
 
         // 构造新文件夹路径
         let new_folder_path = std::path::Path::new(&parent_item.fullpath).join("新建文件夹");

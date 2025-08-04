@@ -85,7 +85,10 @@ impl GableForm {
             .striped(true)
             .resizable(true)
             .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
-            .columns(egui_extras::Column::auto(), max_column)
+            .columns(
+                egui_extras::Column::initial(100.0).range(40.0..=300.0),
+                max_column,
+            )
             .header(20.0, |mut header| {
                 // 渲染表头
                 for col in 1..=max_column {
@@ -102,7 +105,7 @@ impl GableForm {
                     });
                 }
             })
-            .body(|mut body| {
+            .body(|body| {
                 body.rows(20.0, max_row, |mut row| {
                     let row_index = row.index();
                     for col in 1..=max_column {
@@ -112,7 +115,8 @@ impl GableForm {
                                 gable_content.cells.get(&(row_index + 1).to_string())
                             {
                                 if let Some(col_data) = row_data.get(&col.to_string()) {
-                                    ui.label(&col_data.value);
+                                    ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                                    ui.add(egui::Label::new(&col_data.value).truncate());
                                 } else {
                                     ui.label("");
                                 }

@@ -111,7 +111,7 @@ impl GableExplorer {
                         .default_open(item.is_open)
                         .open(Some(false)) // 禁用展开状态
                         .icon(|_, _, _| {}) // 隐藏箭头图标
-                        .show(ui, |ui| {})
+                        .show(ui, |_| {})
                         .header_response
                 }
                 _ => {

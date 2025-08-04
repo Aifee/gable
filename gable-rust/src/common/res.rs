@@ -13,10 +13,10 @@ pub const FONT_ASSETS: &[u8] =
 // pub const ICON_CLIENT: &[u8] = include_bytes!("../../assets/icons/client.png");
 // pub const ICON_SERVER: &[u8] = include_bytes!("../../assets/icons/server.png");
 
-pub const ICON_FOLDER_BLUE: &[u8] = include_bytes!("../../assets/icons/folder_blue.png");
+// pub const ICON_FOLDER_BLUE: &[u8] = include_bytes!("../../assets/icons/folder_blue.png");
 // pub const ICON_FOLDER_NORMAL: &[u8] = include_bytes!("../../assets/icons/folder_normal.png");
-pub const ICON_EXCEL: &[u8] = include_bytes!("../../assets/icons/excel.png");
-pub const ICON_SHEET: &[u8] = include_bytes!("../../assets/icons/sheet.png");
+// pub const ICON_EXCEL: &[u8] = include_bytes!("../../assets/icons/excel.png");
+// pub const ICON_SHEET: &[u8] = include_bytes!("../../assets/icons/sheet.png");
 
 // pub const ICON_C: &[u8] = include_bytes!("../../assets/icons/c.png");
 // pub const ICON_CANGJIE: &[u8] = include_bytes!("../../assets/icons/cangjie.png");

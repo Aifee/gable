@@ -20,7 +20,24 @@ pub enum ItemType {
 pub struct CellData {
     pub row: u32,
     pub column: u32,
+    #[serde(default = "default_string", deserialize_with = "deserialize_string")]
     pub value: String,
+}
+fn default_string() -> String {
+    String::new()
+}
+fn deserialize_string<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let value = serde_json::value::Value::deserialize(deserializer)?;
+    Ok(match value {
+        serde_json::value::Value::String(s) => s,
+        serde_json::value::Value::Number(n) => n.to_string(),
+        serde_json::value::Value::Bool(b) => b.to_string(),
+        serde_json::value::Value::Null => String::new(),
+        _ => value.to_string(),
+    })
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -80,8 +97,8 @@ fn read_gable_file(file_path: &str) -> Option<GableData> {
     match fs::read_to_string(file_path) {
         Ok(content) => match serde_json::from_str::<GableData>(&content) {
             Ok(json_value) => Some(json_value),
-            Err(_) => {
-                // eprintln!("解析JSON文件失败 '{}': {}", file_path, e);
+            Err(e) => {
+                eprintln!("解析JSON文件失败 '{}': {}", file_path, e);
                 None
             }
         },
@@ -191,10 +208,19 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
 
             // 创建子项
             let mut children = Vec::new();
+            let mut excel_gable_content = None;
+            let sheets_len = sheets.len();
+
             for (full_path, sheet_name) in sheets {
                 // 读取每个sheet文件的内容
                 let gable_content = file_contents.get(&full_path).cloned().unwrap_or(None);
                 // let gable_content = read_gable_file(&full_path);
+
+                // 如果只有一个sheet且是默认sheet，则也将内容赋给Excel节点
+                if sheets_len == 1 && sheet_name.is_empty() {
+                    excel_gable_content = gable_content.clone();
+                }
+
                 if !sheet_name.is_empty() {
                     children.push(TreeItem {
                         item_type: ItemType::Sheet,
@@ -229,7 +255,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                 fullpath: excel_fullpath,
                 parent: Some(path.to_string_lossy().to_string()),
                 children,
-                gable_content: None, // Excel节点本身没有内容，内容在子节点中
+                gable_content: excel_gable_content, // Excel节点本身的内容（如果有默认sheet）
             });
         }
     }

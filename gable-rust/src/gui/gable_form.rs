@@ -103,28 +103,25 @@ impl GableForm {
                 }
             })
             .body(|mut body| {
-                // 渲染表格主体
-                for _ in 1..max_row {
-                    body.row(20.0, |mut row| {
-                        let row_index = row.index(); // 提前获取 row.index() 的值
-                        for col in 1..=max_column {
-                            row.col(|ui| {
-                                if let Some(row_data) =
-                                    gable_content.cells.get(&row_index.to_string())
-                                // 使用预先获取的值
-                                {
-                                    if let Some(col_data) = row_data.get(&col.to_string()) {
-                                        ui.label(&col_data.value);
-                                    } else {
-                                        ui.label("");
-                                    }
+                body.rows(20.0, max_row, |mut row| {
+                    let row_index = row.index();
+                    for col in 1..=max_column {
+                        row.col(|ui| {
+                            // 注意：row_index从0开始，但数据可能从1开始存储
+                            if let Some(row_data) =
+                                gable_content.cells.get(&(row_index + 1).to_string())
+                            {
+                                if let Some(col_data) = row_data.get(&col.to_string()) {
+                                    ui.label(&col_data.value);
                                 } else {
                                     ui.label("");
                                 }
-                            });
-                        }
-                    });
-                }
+                            } else {
+                                ui.label("");
+                            }
+                        });
+                    }
+                });
             });
     }
 

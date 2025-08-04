@@ -138,39 +138,11 @@ impl GableExplorer {
             // 只有点击header文本区域时才选中
             if header_response.clicked() {
                 *selected_id = Some(item.fullpath.clone());
-                println!("Clicked: {}", item.fullpath.clone())
             }
 
             // 处理双击事件
             if header_response.double_clicked() {
                 *double_clicked_item = Some(item.fullpath.clone());
-                // 打印节点内容
-                match item.item_type {
-                    ItemType::Sheet => {
-                        if let Some(content) = &item.gable_content {
-                            println!(
-                                "Content: {}",
-                                serde_json::to_string_pretty(content)
-                                    .unwrap_or_else(|_| "Invalid JSON".to_string())
-                            );
-                        } else {
-                            println!("No content available for this sheet");
-                        }
-                    }
-                    ItemType::Excel => {
-                        println!("Excel node double clicked: {}", item.display_name);
-                        if let Some(content) = &item.gable_content {
-                            println!(
-                                "Content: {}",
-                                serde_json::to_string_pretty(content)
-                                    .unwrap_or_else(|_| "Invalid JSON".to_string())
-                            );
-                        } else {
-                            println!("No content available for this excel file");
-                        }
-                    }
-                    ItemType::Folder => {}
-                }
             }
 
             // 添加选中状态的视觉反馈

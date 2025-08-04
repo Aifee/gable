@@ -244,37 +244,78 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
 
     items
 }
+
 /// 根据路径直接获取TreeItem，保证返回的是ItemType::Excel类型
 pub fn find_tree_item_by_path(path: &str) -> Option<TreeItem> {
     let tree_items = TREE_ITEMS.lock().unwrap();
 
-    fn find_in_children(items: &[TreeItem], path: &str) -> Option<TreeItem> {
+    // 先直接根据路径找到对应的TreeItem
+    fn find_item_by_path(items: &[TreeItem], path: &str) -> Option<TreeItem> {
         for item in items.iter() {
             if item.fullpath == path {
-                // 如果找到的是Sheet类型，则找到其父节点（Excel类型）
-                if item.item_type == ItemType::Sheet {
-                    // 通过parent字段找到父节点
-                    if let Some(parent_path) = &item.parent {
-                        return find_in_children(items, parent_path);
-                    } else {
-                        return Some(item.clone());
-                    }
-                } else if item.item_type == ItemType::Excel {
-                    // 如果是Excel类型，直接返回
-                    return Some(item.clone());
-                }
+                return Some(item.clone());
             }
 
-            // 搜索子项
-            if let Some(result) = find_in_children(&item.children, path) {
+            if let Some(result) = find_item_by_path(&item.children, path) {
                 return Some(result);
             }
         }
         None
     }
 
-    if !tree_items.is_empty() {
-        find_in_children(&tree_items[0].children, path)
+    // 查找指定路径的项
+    let target_item = {
+        let mut found_item = None;
+        for root_item in tree_items.iter() {
+            if let Some(item) = find_item_by_path(&[root_item.clone()], path) {
+                found_item = Some(item);
+                break;
+            }
+        }
+        found_item
+    };
+
+    // 根据找到的项类型进行处理
+    if let Some(item) = target_item {
+        match item.item_type {
+            ItemType::Sheet => {
+                // 如果是Sheet类型，查找其父节点（应该是Excel类型）
+                if let Some(parent_path) = &item.parent {
+                    // 在整个树中查找父节点
+                    fn find_excel_parent(
+                        items: &[TreeItem],
+                        parent_path: &str,
+                    ) -> Option<TreeItem> {
+                        for item in items.iter() {
+                            if &item.fullpath == parent_path && item.item_type == ItemType::Excel {
+                                return Some(item.clone());
+                            }
+
+                            if let Some(result) = find_excel_parent(&item.children, parent_path) {
+                                return Some(result);
+                            }
+                        }
+                        None
+                    }
+
+                    // 在所有根节点中查找父节点
+                    for root_item in tree_items.iter() {
+                        if let Some(parent) = find_excel_parent(&[root_item.clone()], parent_path) {
+                            return Some(parent);
+                        }
+                    }
+                }
+                None
+            }
+            ItemType::Excel => {
+                // 如果是Excel类型，直接返回
+                Some(item)
+            }
+            ItemType::Folder => {
+                // 如果是Folder类型，返回None
+                None
+            }
+        }
     } else {
         None
     }
@@ -294,31 +335,9 @@ pub fn refresh_gables() {
     let mut tree_items = Vec::new();
 
     if root_path.exists() && root_path.is_dir() {
-        let root_name = root_path
-            .file_name()
-            .map(|name| name.to_string_lossy().to_string())
-            .unwrap_or_else(|| "项目".to_string());
-
+        // 直接读取工作空间下的所有子项作为根节点，而不是将工作空间本身作为根节点
         let children = build_tree_from_path(root_path);
-
-        // 检查根路径是否应该展开
-        let should_be_expanded = {
-            let expanded_folders = EXPANDED_FOLDERS.lock().unwrap();
-            expanded_folders.contains(&root_path.to_string_lossy().to_string())
-        };
-
-        // 创建根节点
-        let root_item = TreeItem {
-            item_type: ItemType::Folder,
-            display_name: root_name,
-            is_open: should_be_expanded || true, // 根节点始终展开或根据记录展开
-            fullpath: root_path.to_string_lossy().to_string(),
-            children,
-            parent: None,        // 根节点没有父节点
-            gable_content: None, // 根节点没有内容
-        };
-
-        tree_items.push(root_item);
+        tree_items.extend(children);
     }
 
     // let duration = start_time.elapsed();

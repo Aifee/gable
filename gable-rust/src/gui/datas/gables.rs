@@ -1,11 +1,9 @@
 use lazy_static::lazy_static;
-use serde_json::Value;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-// 添加时间统计相关引入
-use std::time::Instant;
 
 use crate::common::global;
 use crate::common::setting;
@@ -18,6 +16,21 @@ pub enum ItemType {
     Excel,
     Sheet,
 }
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CellData {
+    pub row: u32,
+    pub column: u32,
+    pub value: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GableData {
+    pub sheetname: String,
+    pub max_row: u32,
+    pub max_column: u32,
+    pub heads: HashMap<String, HashMap<String, CellData>>,
+    pub cells: HashMap<String, HashMap<String, CellData>>,
+}
 
 #[derive(Debug, Clone)]
 pub struct TreeItem {
@@ -25,11 +38,10 @@ pub struct TreeItem {
     pub display_name: String,
     pub is_open: bool,
     pub fullpath: String,
-    // file_name: String,
-    // parent: TreeItem,
+    pub parent: Option<String>,
     pub children: Vec<TreeItem>,
     /// 存储Sheet类型节点的gable文件内容
-    pub gable_content: Option<Value>,
+    pub gable_content: Option<GableData>,
 }
 
 lazy_static! {
@@ -64,9 +76,9 @@ pub(crate) fn parse_gable_filename(filename: &str) -> Option<(String, Option<Str
 }
 
 /// 读取并解析gable文件
-fn read_gable_file(file_path: &str) -> Option<Value> {
+fn read_gable_file(file_path: &str) -> Option<GableData> {
     match fs::read_to_string(file_path) {
-        Ok(content) => match serde_json::from_str::<Value>(&content) {
+        Ok(content) => match serde_json::from_str::<GableData>(&content) {
             Ok(json_value) => Some(json_value),
             Err(e) => {
                 eprintln!("解析JSON文件失败 '{}': {}", file_path, e);
@@ -83,7 +95,7 @@ fn read_gable_file(file_path: &str) -> Option<Value> {
 /// 并行读取所有gable文件
 fn read_all_gable_files_parallel(
     gable_files: &HashMap<String, Vec<(String, String)>>,
-) -> HashMap<String, Option<Value>> {
+) -> HashMap<String, Option<GableData>> {
     // 收集所有文件路径
     let file_paths: Vec<String> = gable_files
         .values()
@@ -152,6 +164,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
             display_name: dir_name,
             is_open: should_be_expanded,
             fullpath: dir_path.to_string_lossy().to_string(),
+            parent: Some(path.to_string_lossy().to_string()),
             children,
             gable_content: None, // 目录节点没有内容
         });
@@ -168,6 +181,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                 display_name: excel_name,
                 is_open: false,
                 fullpath: sheets[0].0.clone(),
+                parent: Some(path.to_string_lossy().to_string()),
                 children: vec![],
                 gable_content, // 存储文件内容
             });
@@ -187,6 +201,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                         display_name: sheet_name,
                         is_open: false,
                         fullpath: full_path.clone(),
+                        parent: Some(excel_fullpath.clone()),
                         children: vec![],
                         gable_content, // 存储文件内容
                     });
@@ -197,6 +212,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                         display_name: "默认".to_string(), // 或者使用其他默认名称
                         is_open: false,
                         fullpath: full_path.clone(),
+                        parent: Some(excel_fullpath.clone()),
                         children: vec![],
                         gable_content, // 存储文件内容
                     });
@@ -211,6 +227,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                 display_name: excel_name,
                 is_open: false,
                 fullpath: excel_fullpath,
+                parent: Some(path.to_string_lossy().to_string()),
                 children,
                 gable_content: None, // Excel节点本身没有内容，内容在子节点中
             });
@@ -226,6 +243,41 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     });
 
     items
+}
+/// 根据路径直接获取TreeItem，保证返回的是ItemType::Excel类型
+pub fn find_tree_item_by_path(path: &str) -> Option<TreeItem> {
+    let tree_items = TREE_ITEMS.lock().unwrap();
+
+    fn find_in_children(items: &[TreeItem], path: &str) -> Option<TreeItem> {
+        for item in items.iter() {
+            if item.fullpath == path {
+                // 如果找到的是Sheet类型，则找到其父节点（Excel类型）
+                if item.item_type == ItemType::Sheet {
+                    // 通过parent字段找到父节点
+                    if let Some(parent_path) = &item.parent {
+                        return find_in_children(items, parent_path);
+                    } else {
+                        return Some(item.clone());
+                    }
+                } else if item.item_type == ItemType::Excel {
+                    // 如果是Excel类型，直接返回
+                    return Some(item.clone());
+                }
+            }
+
+            // 搜索子项
+            if let Some(result) = find_in_children(&item.children, path) {
+                return Some(result);
+            }
+        }
+        None
+    }
+
+    if !tree_items.is_empty() {
+        find_in_children(&tree_items[0].children, path)
+    } else {
+        None
+    }
 }
 
 /// 项目目录调整好重置数据
@@ -262,6 +314,7 @@ pub fn refresh_gables() {
             is_open: should_be_expanded || true, // 根节点始终展开或根据记录展开
             fullpath: root_path.to_string_lossy().to_string(),
             children,
+            parent: None,        // 根节点没有父节点
             gable_content: None, // 根节点没有内容
         };
 

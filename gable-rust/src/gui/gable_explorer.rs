@@ -11,7 +11,7 @@ pub struct GableExplorer {
     /// 重命名时的临时名称
     renaming_text: String,
     /// 双击选中的项目路径
-    double_clicked_item: Option<String>,
+    pub double_clicked_item: Option<String>,
 }
 
 impl GableExplorer {

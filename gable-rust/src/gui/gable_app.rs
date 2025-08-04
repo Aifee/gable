@@ -4,7 +4,9 @@ use std::sync::Arc;
 use crate::common::res;
 use crate::common::setting;
 use crate::gui::datas::gables;
+use crate::gui::datas::gables::TREE_ITEMS;
 use crate::gui::gable_explorer::GableExplorer;
+use crate::gui::gable_form::GableForm;
 use crate::gui::gable_menu::GableMenu;
 use crate::gui::gable_navigation::GableNavigation;
 
@@ -15,6 +17,8 @@ pub(crate) struct GableApp {
     gable_navigation: GableNavigation,
     /// 文件浏览器组件
     gable_explorer: GableExplorer,
+    /// 表格展示组件
+    gable_form: GableForm,
 }
 
 impl GableApp {
@@ -68,6 +72,7 @@ impl GableApp {
             gable_menu: GableMenu::new(),
             gable_navigation: GableNavigation::new(),
             gable_explorer: GableExplorer::new(),
+            gable_form: GableForm::new(),
         };
         gables::refresh_gables();
         app
@@ -101,12 +106,19 @@ impl eframe::App for GableApp {
                 if ui.button("按钮1").clicked() {}
                 if ui.button("按钮2").clicked() {}
             });
+
+        if let Some(double_clicked_path) = &self.gable_explorer.double_clicked_item {
+            // 从TREE_ITEMS中查找对应的TreeItem
+            if let Some(tree_item) = gables::find_tree_item_by_path(double_clicked_path) {
+                // 直接打开项目
+                self.gable_form.open(tree_item);
+            }
+            // 重置双击项，避免重复处理
+            self.gable_explorer.double_clicked_item = None;
+        }
         // 中央主内容面板
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.vertical(|ui| {
-                ui.heading("Main Content");
-                ui.label("这是中央主要内容区域");
-            });
+            self.gable_form.gui_form(ui);
         });
     }
 }

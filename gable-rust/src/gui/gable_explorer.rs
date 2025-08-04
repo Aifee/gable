@@ -10,6 +10,8 @@ pub struct GableExplorer {
     renaming_item: Option<String>,
     /// 重命名时的临时名称
     renaming_text: String,
+    /// 双击选中的项目路径
+    double_clicked_item: Option<String>,
 }
 
 impl GableExplorer {
@@ -18,6 +20,7 @@ impl GableExplorer {
             selected_tree_item: None,
             renaming_item: None,
             renaming_text: String::new(),
+            double_clicked_item: None,
         }
     }
 
@@ -40,6 +43,7 @@ impl GableExplorer {
                                 &mut self.selected_tree_item,
                                 &mut self.renaming_item,
                                 &mut self.renaming_text,
+                                &mut self.double_clicked_item,
                             );
                         }
                     });
@@ -53,6 +57,7 @@ impl GableExplorer {
         selected_id: &mut Option<String>,
         renaming_item: &mut Option<String>,
         renaming_text: &mut String,
+        double_clicked_item: &mut Option<String>,
     ) {
         let icon = match item.item_type {
             ItemType::Folder => "📁",
@@ -122,6 +127,7 @@ impl GableExplorer {
                                     selected_id,
                                     renaming_item,
                                     renaming_text,
+                                    double_clicked_item,
                                 );
                             }
                         })
@@ -133,6 +139,38 @@ impl GableExplorer {
             if header_response.clicked() {
                 *selected_id = Some(item.fullpath.clone());
                 println!("Clicked: {}", item.fullpath.clone())
+            }
+
+            // 处理双击事件
+            if header_response.double_clicked() {
+                *double_clicked_item = Some(item.fullpath.clone());
+                // 打印节点内容
+                match item.item_type {
+                    ItemType::Sheet => {
+                        if let Some(content) = &item.gable_content {
+                            println!(
+                                "Content: {}",
+                                serde_json::to_string_pretty(content)
+                                    .unwrap_or_else(|_| "Invalid JSON".to_string())
+                            );
+                        } else {
+                            println!("No content available for this sheet");
+                        }
+                    }
+                    ItemType::Excel => {
+                        println!("Excel node double clicked: {}", item.display_name);
+                        if let Some(content) = &item.gable_content {
+                            println!(
+                                "Content: {}",
+                                serde_json::to_string_pretty(content)
+                                    .unwrap_or_else(|_| "Invalid JSON".to_string())
+                            );
+                        } else {
+                            println!("No content available for this excel file");
+                        }
+                    }
+                    ItemType::Folder => {}
+                }
             }
 
             // 添加选中状态的视觉反馈

@@ -1,4 +1,5 @@
 use lazy_static::lazy_static;
+use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
@@ -23,6 +24,8 @@ pub struct TreeItem {
     // file_name: String,
     // parent: TreeItem,
     pub children: Vec<TreeItem>,
+    /// 存储Sheet类型节点的gable文件内容
+    pub gable_content: Option<Value>,
 }
 
 lazy_static! {
@@ -46,13 +49,30 @@ pub(crate) fn parse_gable_filename(filename: &str) -> Option<(String, Option<Str
     let name_without_ext = &filename[..filename.len() - global::GABLE_FILE_TYPE.len()];
 
     if let Some(pos) = name_without_ext.find('@') {
-        // 格式为 excelname#sheetname
+        // 格式为 excelname@sheetname
         let excel_name = name_without_ext[..pos].to_string();
         let sheet_name = name_without_ext[pos + 1..].to_string();
         Some((excel_name, Some(sheet_name)))
     } else {
         // 格式为 excelname
         Some((name_without_ext.to_string(), None))
+    }
+}
+
+/// 读取并解析gable文件
+fn read_gable_file(file_path: &str) -> Option<Value> {
+    match fs::read_to_string(file_path) {
+        Ok(content) => match serde_json::from_str::<Value>(&content) {
+            Ok(json_value) => Some(json_value),
+            Err(e) => {
+                eprintln!("解析JSON文件失败 '{}': {}", file_path, e);
+                None
+            }
+        },
+        Err(e) => {
+            eprintln!("读取文件失败 '{}': {}", file_path, e);
+            None
+        }
     }
 }
 
@@ -106,19 +126,23 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
             is_open: should_be_expanded,
             fullpath: dir_path.to_string_lossy().to_string(),
             children,
+            gable_content: None, // 目录节点没有内容
         });
     }
 
     // 处理 .gable 文件
     for (excel_name, sheets) in gable_files {
         if sheets.len() == 1 && sheets[0].1.is_empty() {
-            // 只有一个文件且没有 sheet 部分
+            // 读取文件内容
+            let gable_content = read_gable_file(&sheets[0].0);
+
             items.push(TreeItem {
                 item_type: ItemType::Excel,
                 display_name: excel_name,
                 is_open: false,
                 fullpath: sheets[0].0.clone(),
                 children: vec![],
+                gable_content, // 存储文件内容
             });
         } else {
             // 有多个 sheet 或有 sheet 部分
@@ -127,6 +151,9 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
             // 创建子项
             let mut children = Vec::new();
             for (full_path, sheet_name) in sheets {
+                // 读取每个sheet文件的内容
+                let gable_content = read_gable_file(&full_path);
+
                 if !sheet_name.is_empty() {
                     children.push(TreeItem {
                         item_type: ItemType::Sheet,
@@ -134,6 +161,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                         is_open: false,
                         fullpath: full_path.clone(),
                         children: vec![],
+                        gable_content, // 存储文件内容
                     });
                 } else {
                     // 没有 sheet 部分的文件作为默认 sheet
@@ -143,6 +171,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                         is_open: false,
                         fullpath: full_path.clone(),
                         children: vec![],
+                        gable_content, // 存储文件内容
                     });
                 }
             }
@@ -156,6 +185,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                 is_open: false,
                 fullpath: excel_fullpath,
                 children,
+                gable_content: None, // Excel节点本身没有内容，内容在子节点中
             });
         }
     }
@@ -170,6 +200,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
 
     items
 }
+
 /// 项目目录调整好重置数据
 pub fn refresh_gables() {
     let workspace = setting::WORKSPACE.lock().unwrap();
@@ -203,6 +234,7 @@ pub fn refresh_gables() {
             is_open: should_be_expanded || true, // 根节点始终展开或根据记录展开
             fullpath: root_path.to_string_lossy().to_string(),
             children,
+            gable_content: None, // 根节点没有内容
         };
 
         tree_items.push(root_item);

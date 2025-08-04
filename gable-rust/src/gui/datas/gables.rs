@@ -80,8 +80,8 @@ fn read_gable_file(file_path: &str) -> Option<GableData> {
     match fs::read_to_string(file_path) {
         Ok(content) => match serde_json::from_str::<GableData>(&content) {
             Ok(json_value) => Some(json_value),
-            Err(e) => {
-                eprintln!("解析JSON文件失败 '{}': {}", file_path, e);
+            Err(_) => {
+                // eprintln!("解析JSON文件失败 '{}': {}", file_path, e);
                 None
             }
         },

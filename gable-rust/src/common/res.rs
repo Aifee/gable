@@ -30,7 +30,6 @@ pub const FONT_ASSETS: &[u8] =
 // pub const ICON_YAML: &[u8] = include_bytes!("../../assets/icons/yaml.png");
 
 /// 加载图片
-// 修改 load_texture 支持从字节数据加载
 pub fn load_texture(ctx: &egui::Context, data: &[u8], name: &str) -> egui::TextureHandle {
     let img = image::load_from_memory(data).expect("无法从内存加载图像");
     let size = [img.width() as usize, img.height() as usize];

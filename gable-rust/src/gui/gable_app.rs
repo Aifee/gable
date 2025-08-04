@@ -4,7 +4,6 @@ use std::sync::Arc;
 use crate::common::res;
 use crate::common::setting;
 use crate::gui::datas::gables;
-use crate::gui::datas::gables::TREE_ITEMS;
 use crate::gui::gable_explorer::GableExplorer;
 use crate::gui::gable_form::GableForm;
 use crate::gui::gable_menu::GableMenu;

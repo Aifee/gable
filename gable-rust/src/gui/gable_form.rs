@@ -104,7 +104,7 @@ impl GableForm {
             })
             .body(|mut body| {
                 // 渲染表格主体
-                for row in 1..max_row {
+                for _ in 1..max_row {
                     body.row(20.0, |mut row| {
                         let row_index = row.index(); // 提前获取 row.index() 的值
                         for col in 1..=max_column {

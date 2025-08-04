@@ -162,7 +162,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
         if sheets.len() == 1 && sheets[0].1.is_empty() {
             // 读取文件内容
             let gable_content = file_contents.get(&sheets[0].0).cloned().unwrap_or(None);
-
+            // let gable_content = read_gable_file(&sheets[0].0);
             items.push(TreeItem {
                 item_type: ItemType::Excel,
                 display_name: excel_name,
@@ -180,7 +180,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
             for (full_path, sheet_name) in sheets {
                 // 读取每个sheet文件的内容
                 let gable_content = file_contents.get(&full_path).cloned().unwrap_or(None);
-
+                // let gable_content = read_gable_file(&full_path);
                 if !sheet_name.is_empty() {
                     children.push(TreeItem {
                         item_type: ItemType::Sheet,
@@ -230,6 +230,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
 
 /// 项目目录调整好重置数据
 pub fn refresh_gables() {
+    // let start_time = Instant::now();
     let workspace = setting::WORKSPACE.lock().unwrap();
     let root_path = if let Some(path) = workspace.as_ref() {
         Path::new(path)
@@ -267,6 +268,8 @@ pub fn refresh_gables() {
         tree_items.push(root_item);
     }
 
+    // let duration = start_time.elapsed();
+    // println!("refresh_gables 执行耗时: {:?}", duration);
     // 使用 lock 安全更新 TREE_ITEMS
     *TREE_ITEMS.lock().unwrap() = tree_items;
 }

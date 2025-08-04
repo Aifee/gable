@@ -1,7 +1,7 @@
 use eframe::egui;
 use std::sync::Arc;
 
-use crate::common::global;
+use crate::common::res;
 use crate::common::setting;
 use crate::gui::datas::gables;
 use crate::gui::gable_explorer::GableExplorer;
@@ -25,7 +25,7 @@ impl GableApp {
         // 从文件加载字体（示例使用系统字体路径）
         fonts.font_data.insert(
             "chinese_font".to_owned(),
-            Arc::new(egui::FontData::from_static(global::FONT_ASSETS)),
+            Arc::new(egui::FontData::from_static(res::FONT_ASSETS)),
         );
 
         // 设置字体族，优先使用中文字体

@@ -99,6 +99,8 @@ impl eframe::App for GableApp {
         self.gable_explorer.gui_tree_view(ctx);
         egui::TopBottomPanel::bottom("my_log_panel")
             .resizable(true)
+            .min_height(100.0)
+            .max_height(200.0)
             .frame(egui::Frame::side_top_panel(&ctx.style()).inner_margin(10.0))
             .show_animated(ctx, true, |ui| {
                 ui.heading("LeftPanelLeftPanelLeftPanelLeftPanelLeftPanel");

@@ -193,37 +193,55 @@ impl GableForm {
         // 如果没有Sheet子项，但项目本身有内容，则直接显示项目内容
         let has_sheet_children = !sheet_items.is_empty();
 
-        // 如果有Sheet子项，渲染底部Sheet标签页
-        if has_sheet_children {
-            self.render_sheet_tabs(ui, &sheet_items);
-        }
-
-        // 渲染表格内容区域
-        egui::ScrollArea::both().show(ui, |ui| {
-            if has_sheet_children {
-                let selected_sheet_index =
-                    if self.opened_items[selected_index].selected_sheet_index < sheet_items.len() {
-                        self.opened_items[selected_index].selected_sheet_index
-                    } else {
-                        0
-                    };
-
-                // 获取当前选中的Sheet
-                let selected_sheet = sheet_items[selected_sheet_index];
-
-                // 显示Sheet内容
-                if let Some(content) = &selected_sheet.gable_content {
-                    self.render_table(ui, content);
-                } else {
-                    ui.label("没有可显示的Sheet内容");
-                }
+        // 创建一个垂直布局，为底部标签页预留空间
+        ui.vertical(|ui| {
+            // 上部区域：表格内容（占据大部分空间）
+            let available_height = ui.available_height();
+            // 为底部标签页预留大约30像素空间
+            let table_height = if has_sheet_children {
+                available_height - 30.0
             } else {
-                // 显示项目内容（当项目没有Sheet子项时）
-                if let Some(content) = &self.opened_items[selected_index].item.gable_content {
-                    self.render_table(ui, content);
-                } else {
-                    ui.label("没有可显示的内容");
-                }
+                available_height
+            };
+
+            // 渲染表格内容区域
+            egui::ScrollArea::both()
+                .max_height(table_height)
+                .show(ui, |ui| {
+                    if has_sheet_children {
+                        let selected_sheet_index = if self.opened_items[selected_index]
+                            .selected_sheet_index
+                            < sheet_items.len()
+                        {
+                            self.opened_items[selected_index].selected_sheet_index
+                        } else {
+                            0
+                        };
+
+                        // 获取当前选中的Sheet
+                        let selected_sheet = sheet_items[selected_sheet_index];
+
+                        // 显示Sheet内容
+                        if let Some(content) = &selected_sheet.gable_content {
+                            self.render_table(ui, content);
+                        } else {
+                            ui.label("没有可显示的Sheet内容");
+                        }
+                    } else {
+                        // 显示项目内容（当项目没有Sheet子项时）
+                        if let Some(content) = &self.opened_items[selected_index].item.gable_content
+                        {
+                            self.render_table(ui, content);
+                        } else {
+                            ui.label("没有可显示的内容");
+                        }
+                    }
+                });
+
+            // 如果有Sheet子项，渲染底部Sheet标签页
+            if has_sheet_children {
+                ui.separator();
+                self.render_sheet_tabs(ui, &sheet_items);
             }
         });
     }

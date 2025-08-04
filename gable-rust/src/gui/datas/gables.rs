@@ -4,9 +4,13 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
+// 添加时间统计相关引入
+use std::time::Instant;
 
 use crate::common::global;
 use crate::common::setting;
+// 添加 rayon 的引入
+use rayon::prelude::*;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ItemType {
@@ -76,6 +80,26 @@ fn read_gable_file(file_path: &str) -> Option<Value> {
     }
 }
 
+/// 并行读取所有gable文件
+fn read_all_gable_files_parallel(
+    gable_files: &HashMap<String, Vec<(String, String)>>,
+) -> HashMap<String, Option<Value>> {
+    // 收集所有文件路径
+    let file_paths: Vec<String> = gable_files
+        .values()
+        .flat_map(|sheets| sheets.iter().map(|(path, _)| path.clone()))
+        .collect();
+
+    // 使用rayon并行处理所有文件读取
+    file_paths
+        .into_par_iter()
+        .map(|file_path| {
+            let content = read_gable_file(&file_path);
+            (file_path, content)
+        })
+        .collect()
+}
+
 /// 递归构建目录树
 fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     let mut items = Vec::new();
@@ -109,6 +133,9 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
         }
     }
 
+    // 并行读取所有gable文件内容
+    let file_contents = read_all_gable_files_parallel(&gable_files);
+
     // 处理目录
     for (dir_path, dir_name) in directories {
         let children = build_tree_from_path(&dir_path);
@@ -134,7 +161,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     for (excel_name, sheets) in gable_files {
         if sheets.len() == 1 && sheets[0].1.is_empty() {
             // 读取文件内容
-            let gable_content = read_gable_file(&sheets[0].0);
+            let gable_content = file_contents.get(&sheets[0].0).cloned().unwrap_or(None);
 
             items.push(TreeItem {
                 item_type: ItemType::Excel,
@@ -152,7 +179,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
             let mut children = Vec::new();
             for (full_path, sheet_name) in sheets {
                 // 读取每个sheet文件的内容
-                let gable_content = read_gable_file(&full_path);
+                let gable_content = file_contents.get(&full_path).cloned().unwrap_or(None);
 
                 if !sheet_name.is_empty() {
                     children.push(TreeItem {

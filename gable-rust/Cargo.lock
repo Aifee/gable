@@ -1282,6 +1282,7 @@ dependencies = [
  "eframe",
  "image",
  "lazy_static",
+ "rayon",
  "rfd",
  "serde_json",
 ]

@@ -175,18 +175,97 @@ impl GableForm {
     /// 渲染顶部标签页
     fn render_item_tabs(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
-            for (index, opened_item) in self.opened_items.iter().enumerate() {
-                let is_selected = self.selected_item_index == Some(index);
-                if ui
-                    .selectable_label(is_selected, &opened_item.item.display_name)
-                    .clicked()
-                {
-                    self.selected_item_index = Some(index);
+            let mut tab_to_close: Option<usize> = None;
+
+            // 创建临时索引和项目列表的副本以避免借用冲突
+            let items_count = self.opened_items.len();
+            for index in 0..items_count {
+                // 确保索引仍然有效
+                if index >= self.opened_items.len() {
+                    break;
                 }
 
-                // 可以在这里添加关闭标签的按钮
+                let opened_item = &self.opened_items[index];
+                let is_selected = self.selected_item_index == Some(index);
+
+                ui.horizontal(|ui| {
+                    // 标签文本
+                    let label_response =
+                        ui.selectable_label(is_selected, &opened_item.item.display_name);
+
+                    // 关闭按钮，使用较小的按钮
+                    let close_response = ui.add(egui::Button::new("✕").small().frame(false));
+                    if close_response.clicked() {
+                        tab_to_close = Some(index);
+                    }
+
+                    if label_response.clicked() {
+                        self.selected_item_index = Some(index);
+                    }
+                });
+
+                // 在标签之间添加一点间距
+                ui.add_space(2.0);
+            }
+
+            // 处理标签关闭
+            if let Some(index) = tab_to_close {
+                // 确保索引仍然有效
+                if index < self.opened_items.len() {
+                    self.close_item_tab(index);
+                }
             }
         });
+    }
+
+    /// 关闭一个项目标签页
+    fn close_item_tab(&mut self, index: usize) {
+        // 检查索引是否有效
+        if index >= self.opened_items.len() {
+            return;
+        }
+
+        // 从打开的项目列表中移除指定索引的项目
+        self.opened_items.remove(index);
+
+        // 调整选中项索引
+        match self.selected_item_index {
+            // 如果关闭的是当前选中的标签页
+            Some(selected_index) if selected_index == index => {
+                // 如果还有其他标签页
+                if !self.opened_items.is_empty() {
+                    // 如果关闭的不是第一个标签页，选中前面一个标签页
+                    if index > 0 {
+                        self.selected_item_index = Some(index - 1);
+                    }
+                    // 如果关闭的是第一个标签页，选中新的第一个标签页（索引0）
+                    else {
+                        self.selected_item_index = Some(0);
+                    }
+                }
+                // 如果没有其他标签页，取消选中
+                else {
+                    self.selected_item_index = None;
+                }
+            }
+            // 如果关闭的是选中项之前的标签页，需要调整选中项索引
+            Some(selected_index) if selected_index > index => {
+                self.selected_item_index = Some(selected_index - 1);
+            }
+            // 其他情况保持当前选中项不变
+            _ => {}
+        }
+
+        // 最后确保选中的索引不会超出范围
+        if let Some(selected_index) = self.selected_item_index {
+            if selected_index >= self.opened_items.len() {
+                if self.opened_items.is_empty() {
+                    self.selected_item_index = None;
+                } else {
+                    self.selected_item_index = Some(self.opened_items.len() - 1);
+                }
+            }
+        }
     }
 
     /// 渲染底部Sheet标签页
@@ -213,7 +292,7 @@ impl GableForm {
 
     /// 主渲染函数
     pub fn gui_form(&mut self, ui: &mut egui::Ui) {
-        // 如果没有选中的项目，显示提示信息
+        // 如果没有选中的项目或没有打开的项目，显示提示信息
         if self.selected_item_index.is_none() || self.opened_items.is_empty() {
             ui.centered_and_justified(|ui| {
                 ui.label("双击左侧文件树中的项目以打开");
@@ -221,11 +300,57 @@ impl GableForm {
             return;
         }
 
+        // 确保选中的索引是有效的
+        let selected_index = match self.selected_item_index {
+            Some(index) if index < self.opened_items.len() => index,
+            _ => {
+                // 索引无效，重置选择
+                if self.opened_items.is_empty() {
+                    self.selected_item_index = None;
+                    ui.centered_and_justified(|ui| {
+                        ui.label("双击左侧文件树中的项目以打开");
+                    });
+                    return;
+                } else {
+                    // 选择第一个有效的项目
+                    let new_index = 0;
+                    self.selected_item_index = Some(new_index);
+                    new_index
+                }
+            }
+        };
+
         // 渲染顶部标签页
         self.render_item_tabs(ui);
 
-        // 获取当前选中的项目索引
-        let selected_index = self.selected_item_index.unwrap(); // 安全因为上面已经检查过了
+        // 再次检查，确保在渲染标签页后opened_items仍然不为空
+        if self.opened_items.is_empty() {
+            self.selected_item_index = None;
+            ui.centered_and_justified(|ui| {
+                ui.label("双击左侧文件树中的项目以打开");
+            });
+            return;
+        }
+
+        // 确保selected_index仍然有效
+        if selected_index >= self.opened_items.len() {
+            self.selected_item_index = if self.opened_items.is_empty() {
+                None
+            } else {
+                Some(0)
+            };
+
+            // 如果仍然没有有效项目，显示提示信息
+            if self.selected_item_index.is_none() {
+                ui.centered_and_justified(|ui| {
+                    ui.label("双击左侧文件树中的项目以打开");
+                });
+                return;
+            }
+        }
+
+        // 获取当前有效的selected_index
+        let selected_index = self.selected_item_index.unwrap();
 
         // 克隆当前项目以避免借用冲突
         let current_item = self.opened_items[selected_index].item.clone();

@@ -176,36 +176,36 @@ impl GableForm {
     fn render_item_tabs(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             let mut tab_to_close: Option<usize> = None;
+            let mut new_selection: Option<usize> = None;
 
-            // 创建临时索引和项目列表的副本以避免借用冲突
-            let items_count = self.opened_items.len();
-            for index in 0..items_count {
-                // 确保索引仍然有效
-                if index >= self.opened_items.len() {
-                    break;
-                }
-
-                let opened_item = &self.opened_items[index];
+            for (index, opened_item) in self.opened_items.iter().enumerate() {
                 let is_selected = self.selected_item_index == Some(index);
 
+                // 创建一个水平布局来容纳标签文本和关闭按钮
                 ui.horizontal(|ui| {
-                    // 标签文本
+                    // ui.style_mut().spacing.item_spacing = egui::Vec2::new(4.0, 0.0);
+
+                    // 创建标签按钮（使用SelectableLabel）
                     let label_response =
                         ui.selectable_label(is_selected, &opened_item.item.display_name);
 
-                    // 关闭按钮，使用较小的按钮
-                    let close_response = ui.add(egui::Button::new("✕").small().frame(false));
+                    // 创建关闭按钮（使用Unicode乘号）
+                    let close_response = ui.add(egui::Button::new("×").small().frame(false));
+
+                    // 处理点击事件
                     if close_response.clicked() {
                         tab_to_close = Some(index);
                     }
 
                     if label_response.clicked() {
-                        self.selected_item_index = Some(index);
+                        new_selection = Some(index);
                     }
                 });
+            }
 
-                // 在标签之间添加一点间距
-                ui.add_space(2.0);
+            // 更新选中项
+            if let Some(index) = new_selection {
+                self.selected_item_index = Some(index);
             }
 
             // 处理标签关闭

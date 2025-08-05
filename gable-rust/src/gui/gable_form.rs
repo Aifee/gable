@@ -82,19 +82,43 @@ impl GableForm {
 
         // 创建表格（不使用header）
         egui_extras::TableBuilder::new(ui)
+            // 是否显示边框
             .striped(true)
+            // 是否可拖动列宽
             .resizable(true)
+            // 单元格默认布局
             .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
+            // 行号
+            .column(egui_extras::Column::auto())
+            // 列宽度
             .columns(
                 egui_extras::Column::initial(100.0).range(40.0..=300.0),
                 max_column,
             )
+            .header(20.0, |mut header| {
+                // 表头行
+                header.col(|ui| {
+                    // 左上角空白单元格（行号列和列号行的交汇处）
+                    ui.label("");
+                });
+
+                // 显示列号 (A, B, C, ...)
+                for col in 1..=max_column {
+                    header.col(|ui| {
+                        ui.label(self.column_number_to_name(col as u32));
+                    });
+                }
+            })
             .body(|body| {
                 // 表头和数据都在body中显示
                 // 总行数 = 表头行数(5) + 数据行数(max_row)
                 body.rows(20.0, max_row, |mut row| {
-                    /// excel索引从1开始的，表现层的索引从0开始
+                    // excel索引从1开始的，表现层的索引从0开始
                     let row_index = row.index() + 1;
+                    // 显示行号
+                    row.col(|ui| {
+                        ui.label(&row_index.to_string());
+                    });
                     for col in 1..=max_column {
                         row.col(|ui| {
                             // 前5行显示heads数据（表头）
@@ -133,6 +157,19 @@ impl GableForm {
             });
     }
 
+    /// 将列号转换为Excel风格的列名（A, B, ..., Z, AA, AB, ...）
+    fn column_number_to_name(&self, column_number: u32) -> String {
+        let mut result = String::new();
+        let mut num = column_number;
+
+        while num > 0 {
+            let remainder = (num - 1) % 26;
+            result.insert(0, (b'A' + remainder as u8) as char);
+            num = (num - 1) / 26;
+        }
+
+        result
+    }
     /// 渲染顶部标签页
     fn render_item_tabs(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {

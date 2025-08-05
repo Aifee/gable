@@ -1,7 +1,7 @@
+use crate::common::global;
 use crate::gui::datas::gables::GableData;
-use eframe::egui;
-
 use crate::gui::datas::gables::{ItemType, TreeItem};
+use eframe::egui;
 
 #[derive(Debug, Clone)]
 pub struct OpenedItem {
@@ -80,7 +80,7 @@ impl GableForm {
         let max_row = gable_content.max_row as usize;
         let max_column = gable_content.max_column as usize;
 
-        // 创建表格
+        // 创建表格（不使用header）
         egui_extras::TableBuilder::new(ui)
             .striped(true)
             .resizable(true)
@@ -89,39 +89,43 @@ impl GableForm {
                 egui_extras::Column::initial(100.0).range(40.0..=300.0),
                 max_column,
             )
-            .header(20.0, |mut header| {
-                // 渲染表头
-                for col in 1..=max_column {
-                    header.col(|ui| {
-                        if let Some(col_data) = gable_content.heads.get(&col.to_string()) {
-                            if let Some(cell_value) = col_data.get(&col.to_string()) {
-                                ui.label(&cell_value.value);
-                            } else {
-                                ui.label("");
-                            }
-                        } else {
-                            ui.label("");
-                        }
-                    });
-                }
-            })
             .body(|body| {
+                // 表头和数据都在body中显示
+                // 总行数 = 表头行数(5) + 数据行数(max_row)
                 body.rows(20.0, max_row, |mut row| {
-                    let row_index = row.index();
+                    /// excel索引从1开始的，表现层的索引从0开始
+                    let row_index = row.index() + 1;
                     for col in 1..=max_column {
                         row.col(|ui| {
-                            // 注意：row_index从0开始，但数据可能从1开始存储
-                            if let Some(row_data) =
-                                gable_content.cells.get(&(row_index + 1).to_string())
-                            {
-                                if let Some(col_data) = row_data.get(&col.to_string()) {
-                                    ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
-                                    ui.add(egui::Label::new(&col_data.value).truncate());
+                            // 前5行显示heads数据（表头）
+                            if row_index < global::TABLE_DATA_ROW_TOTAL {
+                                if let Some(row_data) =
+                                    gable_content.heads.get(&row_index.to_string())
+                                {
+                                    if let Some(col_data) = row_data.get(&col.to_string()) {
+                                        ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                                        ui.add(egui::Label::new(&col_data.value).truncate());
+                                    } else {
+                                        ui.label("");
+                                    }
                                 } else {
                                     ui.label("");
                                 }
-                            } else {
-                                ui.label("");
+                            }
+                            // 从第6行开始显示cells数据
+                            else {
+                                if let Some(row_data) =
+                                    gable_content.cells.get(&row_index.to_string())
+                                {
+                                    if let Some(col_data) = row_data.get(&col.to_string()) {
+                                        ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                                        ui.add(egui::Label::new(&col_data.value).truncate());
+                                    } else {
+                                        ui.label("");
+                                    }
+                                } else {
+                                    ui.label("");
+                                }
                             }
                         });
                     }

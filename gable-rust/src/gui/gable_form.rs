@@ -105,7 +105,9 @@ impl GableForm {
                 // 显示列号 (A, B, C, ...)
                 for col in 1..=max_column {
                     header.col(|ui| {
-                        ui.label(self.column_number_to_name(col as u32));
+                        ui.centered_and_justified(|ui| {
+                            ui.label(self.column_number_to_name(col as u32));
+                        });
                     });
                 }
             })

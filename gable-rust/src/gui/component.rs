@@ -1,6 +1,6 @@
 use eframe::egui;
 
-pub fn frame_button(
+pub fn excel_tap(
     ui: &mut egui::Ui,
     text: &str,
     selected: bool,
@@ -55,7 +55,7 @@ pub fn frame_button(
             );
             ui.add_space(8.0);
             // 创建关闭按钮
-            let button = egui::Button::new("x").small().frame(false);
+            let button = egui::Button::new("❌").small().frame(false);
             close_response = Some(ui.add(button));
         })
         .response

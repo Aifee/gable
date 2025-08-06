@@ -37,7 +37,7 @@ pub fn frame_button(
     let mut label_response = None;
 
     // 使用 Frame 包装按钮
-    let inner_response = frame.show(ui, |ui| {
+    let _ = frame.show(ui, |ui| {
         ui.horizontal(|ui| {
             // 设置文字颜色
             let text_color = if selected {
@@ -53,7 +53,7 @@ pub fn frame_button(
                         .sense(egui::Sense::click()),
                 ),
             );
-            ui.separator();
+            ui.add_space(8.0);
             // 创建关闭按钮
             let button = egui::Button::new("x").small().frame(false);
             close_response = Some(ui.add(button));

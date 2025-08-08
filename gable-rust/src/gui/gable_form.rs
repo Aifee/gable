@@ -103,9 +103,17 @@ impl GableForm {
             }
             ui.vertical(|ui| {
                 let tab_height: f32 = 30.0;
-                let table_height: f32 = ui.available_height() - tab_height * 2.0;
                 self.ongui_excel_tab(ui, tab_height);
-                self.ongui_table(ui, table_height);
+                let table_height: f32 =
+                    ui.available_height() - tab_height - ui.spacing().item_spacing.y;
+                // 表格区域填充剩余空间
+                ui.allocate_ui_with_layout(
+                    egui::Vec2::new(ui.available_width(), table_height),
+                    egui::Layout::top_down(egui::Align::Min),
+                    |ui| {
+                        self.ongui_table(ui);
+                    },
+                );
                 self.ongui_sheet_tab(ui, tab_height);
             });
         });
@@ -139,7 +147,7 @@ impl GableForm {
                             }
                         }
                         if let Some(index) = selected_index {
-                            self.selected_excel_index = Some(index);
+                            self.set_excel_index(index)
                         }
                         if let Some(index) = close_index {
                             self.remove_item(index);
@@ -176,7 +184,7 @@ impl GableForm {
         });
     }
 
-    fn ongui_table(&mut self, ui: &mut egui::Ui, height: f32) {
+    fn ongui_table(&mut self, ui: &mut egui::Ui) {
         let sheet = self.get_sheet();
         if sheet.is_none() {
             ui.centered_and_justified(|ui| ui.label("请选择要浏览的页签"));
@@ -188,7 +196,7 @@ impl GableForm {
         let max_col = content.max_column as usize;
 
         ui.push_id("table_scroll", |ui| {
-            egui::ScrollArea::both().max_height(height).show(ui, |ui| {
+            egui::ScrollArea::both().auto_shrink(false).show(ui, |ui| {
                 egui_extras::TableBuilder::new(ui)
                     .striped(true)
                     .resizable(true)

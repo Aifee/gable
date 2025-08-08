@@ -97,13 +97,12 @@ impl eframe::App for GableApp {
         self.gable_menu.gui_menu(ctx);
         self.gable_navigation.gui_navigation_bar(ctx);
         self.gable_explorer.gui_tree_view(ctx);
-        self.gable_form.ongui(ctx);
         egui::TopBottomPanel::bottom("my_log_panel")
             .resizable(true)
             .min_height(100.0)
             .max_height(200.0)
             .frame(egui::Frame::side_top_panel(&ctx.style()).inner_margin(10.0))
-            .show_animated(ctx, true, |ui| {
+            .show(ctx, |ui| {
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     ui.heading("LeftPanelLeftPanelLeftPanelLeftPanelLeftPanel");
                     if ui.button("按钮1").clicked() {
@@ -122,6 +121,7 @@ impl eframe::App for GableApp {
                     }
                 })
             });
+        self.gable_form.ongui(ctx);
 
         if let Some(double_clicked_path) = &self.gable_explorer.double_clicked_item {
             println!("double_clicked_path: {}", &double_clicked_path);

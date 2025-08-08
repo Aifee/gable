@@ -97,19 +97,34 @@ impl eframe::App for GableApp {
         self.gable_menu.gui_menu(ctx);
         self.gable_navigation.gui_navigation_bar(ctx);
         self.gable_explorer.gui_tree_view(ctx);
+        self.gable_form.ongui(ctx);
         egui::TopBottomPanel::bottom("my_log_panel")
             .resizable(true)
             .min_height(100.0)
             .max_height(200.0)
             .frame(egui::Frame::side_top_panel(&ctx.style()).inner_margin(10.0))
             .show_animated(ctx, true, |ui| {
-                ui.heading("LeftPanelLeftPanelLeftPanelLeftPanelLeftPanel");
-                if ui.button("按钮1").clicked() {}
-                if ui.button("按钮2").clicked() {}
+                egui::ScrollArea::vertical().show(ui, |ui| {
+                    ui.heading("LeftPanelLeftPanelLeftPanelLeftPanelLeftPanel");
+                    if ui.button("按钮1").clicked() {
+                        let test: &str = "E:\\projects\\gable_project/tutorials";
+                        if let Some(tree_item) = gables::find_tree_item_by_path(test) {
+                            // 直接打开项目
+                            self.gable_form.open(tree_item);
+                        }
+                    }
+                    if ui.button("按钮2").clicked() {
+                        let test: &str = "E:\\projects\\gable_project\\Unit/Unit";
+                        if let Some(tree_item) = gables::find_tree_item_by_path(test) {
+                            // 直接打开项目
+                            self.gable_form.open(tree_item);
+                        }
+                    }
+                })
             });
 
         if let Some(double_clicked_path) = &self.gable_explorer.double_clicked_item {
-            // println!("double_clicked_path: {}", &double_clicked_path);
+            println!("double_clicked_path: {}", &double_clicked_path);
             // 从TREE_ITEMS中查找对应的TreeItem
             if let Some(tree_item) = gables::find_tree_item_by_path(double_clicked_path) {
                 // 直接打开项目
@@ -118,9 +133,5 @@ impl eframe::App for GableApp {
             // 重置双击项，避免重复处理
             self.gable_explorer.double_clicked_item = None;
         }
-        // 中央主内容面板
-        egui::CentralPanel::default().show(ctx, |ui| {
-            self.gable_form.gui_form(ui);
-        });
     }
 }

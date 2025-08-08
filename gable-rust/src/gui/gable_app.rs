@@ -25,15 +25,30 @@ pub(crate) struct GableApp {
 
 impl GableApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        Self::init_fonts(cc);
+        Self::init_style(cc);
+        // 应用字体定义
+        let app = Self {
+            gable_menu: GableMenu::new(),
+            gable_navigation: GableNavigation::new(),
+            gable_explorer: GableExplorer::new(),
+            gable_form: GableForm::new(),
+            gable_log: GableLog::new(),
+        };
+        gables::refresh_gables();
+        app
+    }
+
+    /// 初始化字体
+    fn init_fonts(cc: &eframe::CreationContext<'_>) {
         // 加载自定义字体
-        let mut fonts = egui::FontDefinitions::default();
+        let mut fonts: egui::FontDefinitions = egui::FontDefinitions::default();
 
         // 从文件加载字体（示例使用系统字体路径）
         fonts.font_data.insert(
             "chinese_font".to_owned(),
             Arc::new(egui::FontData::from_static(res::FONT_ASSETS)),
         );
-
         // 设置字体族，优先使用中文字体
         fonts
             .families
@@ -41,7 +56,17 @@ impl GableApp {
             .or_default()
             .insert(0, "chinese_font".to_owned());
 
+        fonts
+            .families
+            .entry(egui::FontFamily::Monospace)
+            .or_default()
+            .insert(0, "chinese_font".to_owned());
+
         cc.egui_ctx.set_fonts(fonts);
+    }
+
+    /// 初始化样式
+    fn init_style(cc: &eframe::CreationContext<'_>) {
         // 设置全局样式，调整字体大小
         let mut style = (*cc.egui_ctx.style()).clone();
         style.spacing.indent = 30.0;
@@ -69,16 +94,6 @@ impl GableApp {
         ]
         .into();
         cc.egui_ctx.set_style(style);
-        // 应用字体定义
-        let app = Self {
-            gable_menu: GableMenu::new(),
-            gable_navigation: GableNavigation::new(),
-            gable_explorer: GableExplorer::new(),
-            gable_form: GableForm::new(),
-            gable_log: GableLog::new(),
-        };
-        gables::refresh_gables();
-        app
     }
 
     fn get_title(&self) -> String {

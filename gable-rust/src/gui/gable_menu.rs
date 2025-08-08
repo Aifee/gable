@@ -11,7 +11,7 @@ impl GableMenu {
         }
     }
     /// 绘制菜单
-    pub fn gui_menu(&mut self, ctx: &egui::Context) {
+    pub fn ongui(&mut self, ctx: &egui::Context) {
         egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("文件", |ui| {

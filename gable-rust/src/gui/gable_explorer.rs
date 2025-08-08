@@ -25,7 +25,7 @@ impl GableExplorer {
     }
 
     /// 绘制 treeview
-    pub fn gui_tree_view(&mut self, ctx: &egui::Context) {
+    pub fn ongui(&mut self, ctx: &egui::Context) {
         egui::SidePanel::left("my_gables_panel")
             .min_width(150.0) // 设置最小宽度
             .max_width(800.0) // 设置最大宽度

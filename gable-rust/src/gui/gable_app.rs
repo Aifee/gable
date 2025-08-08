@@ -6,6 +6,7 @@ use crate::common::setting;
 use crate::gui::datas::gables;
 use crate::gui::gable_explorer::GableExplorer;
 use crate::gui::gable_form::GableForm;
+use crate::gui::gable_log::GableLog;
 use crate::gui::gable_menu::GableMenu;
 use crate::gui::gable_navigation::GableNavigation;
 
@@ -18,6 +19,8 @@ pub(crate) struct GableApp {
     gable_explorer: GableExplorer,
     /// 表格展示组件
     gable_form: GableForm,
+    /// 日志组件
+    gable_log: GableLog,
 }
 
 impl GableApp {
@@ -72,6 +75,7 @@ impl GableApp {
             gable_navigation: GableNavigation::new(),
             gable_explorer: GableExplorer::new(),
             gable_form: GableForm::new(),
+            gable_log: GableLog::new(),
         };
         gables::refresh_gables();
         app
@@ -94,33 +98,10 @@ impl GableApp {
 impl eframe::App for GableApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.gui_title(ctx);
-        self.gable_menu.gui_menu(ctx);
-        self.gable_navigation.gui_navigation_bar(ctx);
-        self.gable_explorer.gui_tree_view(ctx);
-        egui::TopBottomPanel::bottom("my_log_panel")
-            .resizable(true)
-            .min_height(100.0)
-            .max_height(200.0)
-            .frame(egui::Frame::side_top_panel(&ctx.style()).inner_margin(10.0))
-            .show(ctx, |ui| {
-                egui::ScrollArea::vertical().show(ui, |ui| {
-                    ui.heading("LeftPanelLeftPanelLeftPanelLeftPanelLeftPanel");
-                    if ui.button("按钮1").clicked() {
-                        let test: &str = "E:\\projects\\gable_project/tutorials";
-                        if let Some(tree_item) = gables::find_tree_item_by_path(test) {
-                            // 直接打开项目
-                            self.gable_form.open(tree_item);
-                        }
-                    }
-                    if ui.button("按钮2").clicked() {
-                        let test: &str = "E:\\projects\\gable_project\\Unit/Unit";
-                        if let Some(tree_item) = gables::find_tree_item_by_path(test) {
-                            // 直接打开项目
-                            self.gable_form.open(tree_item);
-                        }
-                    }
-                })
-            });
+        self.gable_menu.ongui(ctx);
+        self.gable_navigation.ongui(ctx);
+        self.gable_explorer.ongui(ctx);
+        self.gable_log.ongui(ctx);
         self.gable_form.ongui(ctx);
 
         if let Some(double_clicked_path) = &self.gable_explorer.double_clicked_item {

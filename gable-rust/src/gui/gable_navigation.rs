@@ -12,7 +12,7 @@ impl GableNavigation {
     }
 
     /// 绘制 导航栏
-    pub fn gui_navigation_bar(&mut self, ctx: &egui::Context) {
+    pub fn ongui(&mut self, ctx: &egui::Context) {
         egui::SidePanel::left("my_left_panel")
             .default_width(40.0)
             .resizable(false)

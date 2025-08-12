@@ -53,6 +53,30 @@ impl GableForm {
         }
     }
 
+    pub fn ongui(&mut self, ctx: &egui::Context) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            if self.excels.is_empty() {
+                ui.centered_and_justified(|ui| ui.label("双击左侧文件树中的项目以打开"));
+                return;
+            }
+            ui.vertical(|ui| {
+                let tab_height: f32 = 30.0;
+                self.ongui_excel_tab(ui, tab_height);
+                let table_height: f32 =
+                    ui.available_height() - tab_height - ui.spacing().item_spacing.y;
+                // 表格区域填充剩余空间
+                ui.allocate_ui_with_layout(
+                    egui::Vec2::new(ui.available_width(), table_height),
+                    egui::Layout::top_down(egui::Align::Min),
+                    |ui| {
+                        self.ongui_table(ui);
+                    },
+                );
+                self.ongui_sheet_tab(ui, tab_height);
+            });
+        });
+    }
+
     /// 设置选中当前的excel
     fn set_excel_index(&mut self, index: usize) {
         self.selected_excel_index = Some(index);
@@ -95,29 +119,6 @@ impl GableForm {
         None
     }
 
-    pub fn ongui(&mut self, ctx: &egui::Context) {
-        egui::CentralPanel::default().show(ctx, |ui| {
-            if self.excels.is_empty() {
-                ui.centered_and_justified(|ui| ui.label("双击左侧文件树中的项目以打开"));
-                return;
-            }
-            ui.vertical(|ui| {
-                let tab_height: f32 = 30.0;
-                self.ongui_excel_tab(ui, tab_height);
-                let table_height: f32 =
-                    ui.available_height() - tab_height - ui.spacing().item_spacing.y;
-                // 表格区域填充剩余空间
-                ui.allocate_ui_with_layout(
-                    egui::Vec2::new(ui.available_width(), table_height),
-                    egui::Layout::top_down(egui::Align::Min),
-                    |ui| {
-                        self.ongui_table(ui);
-                    },
-                );
-                self.ongui_sheet_tab(ui, tab_height);
-            });
-        });
-    }
     fn ongui_excel_tab(&mut self, ui: &mut egui::Ui, height: f32) {
         let tab_padding = egui::Vec2::new(8.0, 4.0);
         ui.push_id("excel_tab_scroll", |ui| {
@@ -130,28 +131,30 @@ impl GableForm {
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         ui.spacing_mut().item_spacing.x = 0.0;
-                        let mut selected_index = None;
-                        let mut close_index = None;
-                        for (index, opened_item) in self.excels.iter().enumerate() {
-                            let is_selected = self.selected_excel_index == Some(index);
-                            let info = &opened_item.item.display_name;
-                            let (response, close_response) =
-                                component::excel_tap(ui, info, is_selected, tab_padding);
-                            if response.clicked() {
-                                selected_index = Some(index);
-                            }
-                            if let Some(close_resp) = close_response {
-                                if close_resp.clicked() {
-                                    close_index = Some(index);
+                        ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
+                            let mut selected_index = None;
+                            let mut close_index = None;
+                            for (index, opened_item) in self.excels.iter().enumerate() {
+                                let is_selected = self.selected_excel_index == Some(index);
+                                let info = &opened_item.item.display_name;
+                                let (response, close_response) =
+                                    component::excel_tap(ui, info, is_selected, tab_padding);
+                                if response.clicked() {
+                                    selected_index = Some(index);
+                                }
+                                if let Some(close_resp) = close_response {
+                                    if close_resp.clicked() {
+                                        close_index = Some(index);
+                                    }
                                 }
                             }
-                        }
-                        if let Some(index) = selected_index {
-                            self.set_excel_index(index)
-                        }
-                        if let Some(index) = close_index {
-                            self.remove_item(index);
-                        }
+                            if let Some(index) = selected_index {
+                                self.set_excel_index(index)
+                            }
+                            if let Some(index) = close_index {
+                                self.remove_item(index);
+                            }
+                        });
                     });
                 });
         });
@@ -170,15 +173,18 @@ impl GableForm {
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         ui.spacing_mut().item_spacing.x = 0.0;
-                        for index in 0..excel.item.children.len() {
-                            let sheet_item = &excel.item.children[index];
-                            let is_selected = excel.selected_sheet_index == index;
-                            let info = &sheet_item.display_name;
-                            let response = component::sheet_tab(ui, info, is_selected, tab_padding);
-                            if response.clicked() {
-                                excel.selected_sheet_index = index;
+                        ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
+                            for index in 0..excel.item.children.len() {
+                                let sheet_item = &excel.item.children[index];
+                                let is_selected = excel.selected_sheet_index == index;
+                                let info = &sheet_item.display_name;
+                                let response =
+                                    component::sheet_tab(ui, info, is_selected, tab_padding);
+                                if response.clicked() {
+                                    excel.selected_sheet_index = index;
+                                }
                             }
-                        }
+                        });
                     });
                 });
         });

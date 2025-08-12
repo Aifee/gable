@@ -1,4 +1,5 @@
 use eframe::egui;
+use log::Level;
 
 pub fn excel_tap(
     ui: &mut egui::Ui,
@@ -116,4 +117,15 @@ pub fn sheet_tab(
     // 添加interact方法使Frame可以响应点击事件
     let response = ui.interact(response.rect, response.id, egui::Sense::click());
     response
+}
+
+pub fn log_text(ui: &mut egui::Ui, text: &str, level: log::Level) {
+    let color = match level {
+        Level::Error => egui::Color32::RED,
+        Level::Warn => egui::Color32::YELLOW,
+        Level::Info => ui.style().visuals.text_color(),
+        Level::Debug => egui::Color32::LIGHT_BLUE,
+        Level::Trace => egui::Color32::GRAY,
+    };
+    ui.colored_label(color, text);
 }

@@ -1,4 +1,4 @@
-use crate::gui::datas::log::LogTrace;
+use crate::gui::{component, datas::log::LogTrace};
 use eframe::egui;
 use log::Level;
 
@@ -70,28 +70,33 @@ impl GableLog {
                                             body.rows(self.row_height, row_count, |mut row| {
                                                 let row_index = row_count - row.index() - 1;
                                                 if let Some(record) = records.get(row_index) {
-                                                    let color = match record.level {
-                                                        Level::Error => egui::Color32::RED,
-                                                        Level::Warn => egui::Color32::YELLOW,
-                                                        Level::Info => egui::Color32::WHITE,
-                                                        Level::Debug => egui::Color32::LIGHT_BLUE,
-                                                        Level::Trace => egui::Color32::GRAY,
-                                                    };
-
                                                     row.col(|ui| {
-                                                        ui.colored_label(color, &record.timestamp);
-                                                    });
-                                                    row.col(|ui| {
-                                                        ui.colored_label(
-                                                            color,
-                                                            format!("{:?}", record.level),
+                                                        component::log_text(
+                                                            ui,
+                                                            &record.timestamp,
+                                                            record.level,
                                                         );
                                                     });
                                                     row.col(|ui| {
-                                                        ui.colored_label(color, &record.target);
+                                                        component::log_text(
+                                                            ui,
+                                                            &format!("{:?}", record.level),
+                                                            record.level,
+                                                        );
                                                     });
                                                     row.col(|ui| {
-                                                        ui.colored_label(color, &record.args);
+                                                        component::log_text(
+                                                            ui,
+                                                            &record.target,
+                                                            record.level,
+                                                        );
+                                                    });
+                                                    row.col(|ui| {
+                                                        component::log_text(
+                                                            ui,
+                                                            &record.args,
+                                                            record.level,
+                                                        );
                                                     });
                                                 }
                                             });

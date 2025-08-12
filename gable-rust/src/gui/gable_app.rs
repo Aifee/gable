@@ -120,10 +120,17 @@ impl eframe::App for GableApp {
         self.gable_form.ongui(ctx);
 
         if let Some(double_clicked_path) = &self.gable_explorer.double_clicked_item {
-            log::info!("double_clicked_path: {}", &double_clicked_path);
             // 从TREE_ITEMS中查找对应的TreeItem
             if let Some(tree_item) = gables::find_tree_item_by_path(double_clicked_path) {
-                // 直接打开项目
+                // log::info!(
+                //     "double_clicked_path: {} - {}",
+                //     &double_clicked_path,
+                //     &tree_item
+                //         .data
+                //         .as_ref()
+                //         .map(|d| format!("{:?}", d.gable_type))
+                //         .unwrap_or("None".to_string())
+                // );
                 self.gable_form.open(tree_item);
             }
             // 重置双击项，避免重复处理

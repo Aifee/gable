@@ -1,7 +1,9 @@
 use crate::common::global;
 use crate::common::setting;
+use crate::common::utils;
 use crate::gui::datas::eitem_type::EItemType;
 use crate::gui::datas::gable_data::GableData;
+use crate::gui::datas::tree_data::TreeData;
 use crate::gui::datas::tree_item::TreeItem;
 use lazy_static::lazy_static;
 use rayon::prelude::*;
@@ -132,7 +134,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
             fullpath: dir_path.to_string_lossy().to_string(),
             parent: Some(path.to_string_lossy().to_string()),
             children,
-            gable_content: None, // 目录节点没有内容
+            data: None,
         });
     }
 
@@ -141,7 +143,12 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
         if sheets.len() == 1 && sheets[0].1.is_empty() {
             // 读取文件内容
             let gable_content = file_contents.get(&sheets[0].0).cloned().unwrap_or(None);
-            // let gable_content = read_gable_file(&sheets[0].0);
+            // 确定文件类型
+            let sheet_type = utils::determine_sheet_type(Path::new(&sheets[0].0));
+            let tree_data = gable_content.map(|content| TreeData {
+                gable_type: sheet_type,
+                content,
+            });
             items.push(TreeItem {
                 item_type: EItemType::Excel,
                 display_name: excel_name,
@@ -149,7 +156,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                 fullpath: sheets[0].0.clone(),
                 parent: Some(path.to_string_lossy().to_string()),
                 children: vec![],
-                gable_content, // 存储文件内容
+                data: tree_data,
             });
         } else {
             // 有多个 sheet 或有 sheet 部分
@@ -163,11 +170,15 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
             for (full_path, sheet_name) in sheets {
                 // 读取每个sheet文件的内容
                 let gable_content = file_contents.get(&full_path).cloned().unwrap_or(None);
-                // let gable_content = read_gable_file(&full_path);
+                // 确定文件类型
+                let sheet_type = utils::determine_sheet_type(Path::new(&full_path));
+                let tree_data = gable_content.map(|content| TreeData {
+                    gable_type: sheet_type,
+                    content,
+                });
 
-                // 如果只有一个sheet且是默认sheet，则也将内容赋给Excel节点
                 if sheets_len == 1 && sheet_name.is_empty() {
-                    excel_gable_content = gable_content.clone();
+                    excel_gable_content = tree_data.clone();
                 }
 
                 if !sheet_name.is_empty() {
@@ -178,18 +189,18 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                         fullpath: full_path.clone(),
                         parent: Some(excel_fullpath.clone()),
                         children: vec![],
-                        gable_content, // 存储文件内容
+                        data: tree_data,
                     });
                 } else {
                     // 没有 sheet 部分的文件作为默认 sheet
                     children.push(TreeItem {
                         item_type: EItemType::Sheet,
-                        display_name: "默认".to_string(), // 或者使用其他默认名称
+                        display_name: "默认".to_string(),
                         is_open: false,
                         fullpath: full_path.clone(),
                         parent: Some(excel_fullpath.clone()),
                         children: vec![],
-                        gable_content, // 存储文件内容
+                        data: tree_data,
                     });
                 }
             }
@@ -204,7 +215,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                 fullpath: excel_fullpath,
                 parent: Some(path.to_string_lossy().to_string()),
                 children,
-                gable_content: excel_gable_content, // Excel节点本身的内容（如果有默认sheet）
+                data: excel_gable_content, // Excel节点本身的内容（如果有默认sheet）
             });
         }
     }

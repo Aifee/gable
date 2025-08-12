@@ -1,4 +1,4 @@
-use crate::gui::datas::{eitem_type::EItemType, gable_data::GableData};
+use crate::gui::datas::{eitem_type::EItemType, gable_data::GableData, tree_data::TreeData};
 
 #[derive(Debug, Clone)]
 pub struct TreeItem {
@@ -8,6 +8,5 @@ pub struct TreeItem {
     pub fullpath: String,
     pub parent: Option<String>,
     pub children: Vec<TreeItem>,
-    /// 存储Sheet类型节点的gable文件内容
-    pub gable_content: Option<GableData>,
+    pub data: Option<TreeData>,
 }

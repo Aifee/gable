@@ -197,7 +197,7 @@ impl GableForm {
             return;
         }
         let sheet = sheet.unwrap();
-        let content = sheet.gable_content.as_ref().unwrap();
+        let content = &sheet.data.as_ref().unwrap().content;
         let max_row = content.max_row as usize;
         let max_col = content.max_column as usize;
 
@@ -215,7 +215,6 @@ impl GableForm {
                     )
                     .header(20.0, |mut header| {
                         header.col(|ui| {
-                            // 左上角空白单元格（行号列和列号行的交汇处）
                             ui.label("");
                         });
                         // 显示列号 (A, B, C, ...)

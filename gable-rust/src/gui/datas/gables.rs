@@ -1,5 +1,4 @@
 use lazy_static::lazy_static;
-use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
@@ -7,59 +6,11 @@ use std::sync::{Arc, Mutex};
 
 use crate::common::global;
 use crate::common::setting;
+use crate::gui::datas::gable_data::GableData;
+use crate::gui::datas::item_type::ItemType;
+use crate::gui::datas::tree_item::TreeItem;
 // 添加 rayon 的引入
 use rayon::prelude::*;
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum ItemType {
-    Folder,
-    Excel,
-    Sheet,
-}
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CellData {
-    pub row: u32,
-    pub column: u32,
-    #[serde(default = "default_string", deserialize_with = "deserialize_string")]
-    pub value: String,
-}
-fn default_string() -> String {
-    String::new()
-}
-fn deserialize_string<'de, D>(deserializer: D) -> Result<String, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let value = serde_json::value::Value::deserialize(deserializer)?;
-    Ok(match value {
-        serde_json::value::Value::String(s) => s,
-        serde_json::value::Value::Number(n) => n.to_string(),
-        serde_json::value::Value::Bool(b) => b.to_string(),
-        serde_json::value::Value::Null => String::new(),
-        _ => value.to_string(),
-    })
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GableData {
-    pub sheetname: String,
-    pub max_row: u32,
-    pub max_column: u32,
-    pub heads: HashMap<String, HashMap<String, CellData>>,
-    pub cells: HashMap<String, HashMap<String, CellData>>,
-}
-
-#[derive(Debug, Clone)]
-pub struct TreeItem {
-    pub item_type: ItemType,
-    pub display_name: String,
-    pub is_open: bool,
-    pub fullpath: String,
-    pub parent: Option<String>,
-    pub children: Vec<TreeItem>,
-    /// 存储Sheet类型节点的gable文件内容
-    pub gable_content: Option<GableData>,
-}
 
 lazy_static! {
     pub static ref TREE_ITEMS: Arc<Mutex<Vec<TreeItem>>> = Arc::new(Mutex::new(Vec::new()));

@@ -1,7 +1,7 @@
 use crate::common::global;
 use crate::common::utils;
 use crate::gui::component;
-use crate::gui::datas::gables::TreeItem;
+use crate::gui::datas::tree_item::TreeItem;
 use eframe::egui;
 
 #[derive(Debug, Clone)]

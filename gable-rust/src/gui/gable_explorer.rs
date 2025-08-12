@@ -1,7 +1,8 @@
 use eframe::egui;
 
 use crate::gui::datas::gables;
-use crate::gui::datas::gables::{ItemType, TreeItem};
+use crate::gui::datas::item_type::ItemType;
+use crate::gui::datas::tree_item::TreeItem;
 
 pub struct GableExplorer {
     /// 当前选中的treeItem，以fullpath为key

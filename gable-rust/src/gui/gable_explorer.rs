@@ -177,15 +177,13 @@ impl GableExplorer {
 
         // 进行合法性校验
         if !Self::is_valid_filename(&new_name) {
-            println!("文件名包含非法字符");
-            // 保留编辑状态，让用户重新输入
+            log::error!("文件名包含非法字符:{}", &new_name);
             return;
         }
 
         // 检查同名文件/文件夹是否已存在
         if Self::is_name_exists(item, &new_name) {
-            println!("同名文件或文件夹已存在");
-            // 保留编辑状态，让用户重新输入
+            log::error!("同名文件或文件夹已存在:{}", &new_name);
             return;
         }
 
@@ -209,7 +207,7 @@ impl GableExplorer {
         renaming_text.clear();
 
         if let Err(e) = result {
-            println!("重命名失败: {}", e);
+            log::error!("重命名失败:{}", e);
         }
 
         // 延迟刷新，在下一次update中执行
@@ -487,7 +485,7 @@ impl GableExplorer {
                 }
             }
             Err(e) => {
-                eprintln!("创建文件夹失败: {}", e);
+                log::error!("创建文件夹失败:{}", e);
             }
         }
     }

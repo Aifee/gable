@@ -98,12 +98,12 @@ fn read_gable_file(file_path: &str) -> Option<GableData> {
         Ok(content) => match serde_json::from_str::<GableData>(&content) {
             Ok(json_value) => Some(json_value),
             Err(e) => {
-                eprintln!("解析JSON文件失败 '{}': {}", file_path, e);
+                log::error!("解析JSON文件失败:'{}': {}", file_path, e);
                 None
             }
         },
         Err(e) => {
-            eprintln!("读取文件失败 '{}': {}", file_path, e);
+            log::error!("读取文件失败:'{}': {}", file_path, e);
             None
         }
     }
@@ -367,7 +367,6 @@ pub fn refresh_gables() {
     }
 
     // let duration = start_time.elapsed();
-    // println!("refresh_gables 执行耗时: {:?}", duration);
     // 使用 lock 安全更新 TREE_ITEMS
     *TREE_ITEMS.lock().unwrap() = tree_items;
 }

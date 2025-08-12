@@ -120,7 +120,7 @@ impl eframe::App for GableApp {
         self.gable_form.ongui(ctx);
 
         if let Some(double_clicked_path) = &self.gable_explorer.double_clicked_item {
-            println!("double_clicked_path: {}", &double_clicked_path);
+            log::info!("double_clicked_path: {}", &double_clicked_path);
             // 从TREE_ITEMS中查找对应的TreeItem
             if let Some(tree_item) = gables::find_tree_item_by_path(double_clicked_path) {
                 // 直接打开项目

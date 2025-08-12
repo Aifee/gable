@@ -1,17 +1,38 @@
 use chrono::Local;
 use log::LevelFilter;
+use once_cell::sync::OnceCell;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::{self, Write};
+use std::sync::Arc;
 use std::sync::Mutex;
 
-pub struct GableLog {
+// 添加静态变量来存储全局LogRecord列表
+static GLOBAL_LOG_RECORDS: OnceCell<Arc<Mutex<Vec<LogRecord>>>> = OnceCell::new();
+
+#[derive(Debug, Clone)]
+pub struct LogRecord {
+    pub timestamp: String,
+    pub level: log::Level,
+    pub target: String,
+    pub args: String,
+}
+
+pub struct LogTrace {
     file: Mutex<Option<File>>,
     level: LevelFilter,
 }
+impl Clone for LogTrace {
+    fn clone(&self) -> Self {
+        LogTrace {
+            file: Mutex::new(None), // 不克隆文件句柄
+            level: self.level,
+        }
+    }
+}
 
-impl GableLog {
-    pub fn new(log_dir_path: Option<&str>) -> Result<GableLog, io::Error> {
+impl LogTrace {
+    pub fn new(log_dir_path: Option<&str>) -> Result<LogTrace, io::Error> {
         let file = match log_dir_path {
             Some(dir_path) => {
                 std::fs::create_dir_all(dir_path)?;
@@ -26,30 +47,43 @@ impl GableLog {
             }
             None => None,
         };
-
-        Ok(GableLog {
+        if GLOBAL_LOG_RECORDS.get().is_none() {
+            let _ = GLOBAL_LOG_RECORDS.set(Arc::new(Mutex::new(Vec::new())));
+        }
+        Ok(LogTrace {
             file: Mutex::new(file),
             level: LevelFilter::Trace,
         })
     }
 
     pub fn init(log_dir_path: Option<&str>, level: LevelFilter) -> Result<(), log::SetLoggerError> {
-        match GableLog::new(log_dir_path) {
+        match LogTrace::new(log_dir_path) {
             Ok(logger) => {
+                // 设置全局实例
                 log::set_boxed_logger(Box::new(logger)).map(|()| log::set_max_level(level))
             }
             Err(_e) => {
-                let logger = GableLog {
+                // 确保全局日志记录列表已初始化
+                if GLOBAL_LOG_RECORDS.get().is_none() {
+                    let _ = GLOBAL_LOG_RECORDS.set(Arc::new(Mutex::new(Vec::new())));
+                }
+                let logger = LogTrace {
                     file: Mutex::new(None),
                     level: level,
                 };
+                // 设置全局实例
                 log::set_boxed_logger(Box::new(logger)).map(|()| log::set_max_level(level))
             }
         }
     }
+
+    // 获取全局日志记录列表的方法
+    pub fn get_log_records() -> Option<&'static Arc<Mutex<Vec<LogRecord>>>> {
+        GLOBAL_LOG_RECORDS.get()
+    }
 }
 
-impl log::Log for GableLog {
+impl log::Log for LogTrace {
     fn enabled(&self, metadata: &log::Metadata) -> bool {
         metadata.level() <= self.level
     }
@@ -64,6 +98,23 @@ impl log::Log for GableLog {
             let log_message = format!("{} [{}] {} - {}\n", timestamp, level, target, args);
 
             print!("{}", log_message);
+
+            // 更新全局日志记录列表
+            if let Some(global_records) = LogTrace::get_log_records() {
+                if let Ok(mut records) = global_records.lock() {
+                    records.push(LogRecord {
+                        timestamp: timestamp.to_string(),
+                        level,
+                        target: target.to_string(),
+                        args: args.to_string(),
+                    });
+
+                    // 可以限制存储的日志数量，避免内存无限增长
+                    if records.len() > 1000 {
+                        records.drain(0..100);
+                    }
+                }
+            }
 
             if let Ok(mut file_guard) = self.file.lock() {
                 if let Some(ref mut file) = *file_guard {

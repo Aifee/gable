@@ -1348,6 +1348,7 @@ dependencies = [
  "image",
  "lazy_static",
  "log",
+ "once_cell",
  "rayon",
  "rfd",
  "serde",

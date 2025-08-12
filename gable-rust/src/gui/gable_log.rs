@@ -64,19 +64,38 @@ impl GableLog {
                             .body(|mut body| {
                                 if let Some(log_records) = LogTrace::get_log_records() {
                                     if let Ok(records) = log_records.lock() {
-                                        for record in records.iter().rev() {
+                                        let row_count = records.len();
+                                        if row_count > 0 {
+                                            body.rows(self.row_height, row_count, |mut row| {
+                                                let row_index = row_count - row.index() - 1; // 反向索引以实现最新的在上面
+                                                if let Some(record) = records.get(row_index) {
+                                                    row.col(|ui| {
+                                                        ui.label(&record.timestamp);
+                                                    });
+                                                    row.col(|ui| {
+                                                        ui.label(format!("{:?}", record.level));
+                                                    });
+                                                    row.col(|ui| {
+                                                        ui.label(&record.target);
+                                                    });
+                                                    row.col(|ui| {
+                                                        ui.label(&record.args);
+                                                    });
+                                                }
+                                            });
+                                        } else {
                                             body.row(self.row_height, |mut row| {
                                                 row.col(|ui| {
-                                                    ui.label(&record.timestamp);
+                                                    ui.label("暂无日志");
                                                 });
                                                 row.col(|ui| {
-                                                    ui.label(format!("{:?}", record.level));
+                                                    ui.label("");
                                                 });
                                                 row.col(|ui| {
-                                                    ui.label(&record.target);
+                                                    ui.label("");
                                                 });
                                                 row.col(|ui| {
-                                                    ui.label(&record.args);
+                                                    ui.label("");
                                                 });
                                             });
                                         }
@@ -85,6 +104,15 @@ impl GableLog {
                                     body.row(self.row_height, |mut row| {
                                         row.col(|ui| {
                                             ui.label("日志系统未初始化");
+                                        });
+                                        row.col(|ui| {
+                                            ui.label("");
+                                        });
+                                        row.col(|ui| {
+                                            ui.label("");
+                                        });
+                                        row.col(|ui| {
+                                            ui.label("");
                                         });
                                     });
                                 }

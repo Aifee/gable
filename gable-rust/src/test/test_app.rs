@@ -186,7 +186,6 @@ impl TestApp {
                         .auto_shrink(false)
                         .scroll_source(egui::scroll_area::ScrollSource::ALL)
                         .wheel_scroll_multiplier(egui::Vec2::new(1.0, 1.0))
-                        // .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden)
                         .max_height(50.0)
                         .show(ui, |ui| {
                             ui.horizontal(|ui| {

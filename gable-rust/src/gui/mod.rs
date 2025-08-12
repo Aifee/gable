@@ -7,4 +7,5 @@ pub mod gable_menu;
 pub mod gable_navigation;
 pub mod datas {
     pub mod gables;
+    pub mod log;
 }

@@ -1,5 +1,6 @@
 use crate::gui::datas::log::LogTrace;
 use eframe::egui;
+use log::Level;
 
 pub(crate) struct GableLog {
     row_height: f32,
@@ -67,19 +68,30 @@ impl GableLog {
                                         let row_count = records.len();
                                         if row_count > 0 {
                                             body.rows(self.row_height, row_count, |mut row| {
-                                                let row_index = row_count - row.index() - 1; // 反向索引以实现最新的在上面
+                                                let row_index = row_count - row.index() - 1;
                                                 if let Some(record) = records.get(row_index) {
+                                                    let color = match record.level {
+                                                        Level::Error => egui::Color32::RED,
+                                                        Level::Warn => egui::Color32::YELLOW,
+                                                        Level::Info => egui::Color32::WHITE,
+                                                        Level::Debug => egui::Color32::LIGHT_BLUE,
+                                                        Level::Trace => egui::Color32::GRAY,
+                                                    };
+
                                                     row.col(|ui| {
-                                                        ui.label(&record.timestamp);
+                                                        ui.colored_label(color, &record.timestamp);
                                                     });
                                                     row.col(|ui| {
-                                                        ui.label(format!("{:?}", record.level));
+                                                        ui.colored_label(
+                                                            color,
+                                                            format!("{:?}", record.level),
+                                                        );
                                                     });
                                                     row.col(|ui| {
-                                                        ui.label(&record.target);
+                                                        ui.colored_label(color, &record.target);
                                                     });
                                                     row.col(|ui| {
-                                                        ui.label(&record.args);
+                                                        ui.colored_label(color, &record.args);
                                                     });
                                                 }
                                             });

@@ -1,16 +1,14 @@
+use crate::common::global;
+use crate::common::setting;
+use crate::gui::datas::eitem_type::EItemType;
+use crate::gui::datas::gable_data::GableData;
+use crate::gui::datas::tree_item::TreeItem;
 use lazy_static::lazy_static;
+use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-
-use crate::common::global;
-use crate::common::setting;
-use crate::gui::datas::gable_data::GableData;
-use crate::gui::datas::item_type::ItemType;
-use crate::gui::datas::tree_item::TreeItem;
-// 添加 rayon 的引入
-use rayon::prelude::*;
 
 lazy_static! {
     pub static ref TREE_ITEMS: Arc<Mutex<Vec<TreeItem>>> = Arc::new(Mutex::new(Vec::new()));
@@ -128,7 +126,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
 
         // 创建目录项
         items.push(TreeItem {
-            item_type: ItemType::Folder,
+            item_type: EItemType::Folder,
             display_name: dir_name,
             is_open: should_be_expanded,
             fullpath: dir_path.to_string_lossy().to_string(),
@@ -145,7 +143,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
             let gable_content = file_contents.get(&sheets[0].0).cloned().unwrap_or(None);
             // let gable_content = read_gable_file(&sheets[0].0);
             items.push(TreeItem {
-                item_type: ItemType::Excel,
+                item_type: EItemType::Excel,
                 display_name: excel_name,
                 is_open: false,
                 fullpath: sheets[0].0.clone(),
@@ -174,7 +172,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
 
                 if !sheet_name.is_empty() {
                     children.push(TreeItem {
-                        item_type: ItemType::Sheet,
+                        item_type: EItemType::Sheet,
                         display_name: sheet_name,
                         is_open: false,
                         fullpath: full_path.clone(),
@@ -185,7 +183,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                 } else {
                     // 没有 sheet 部分的文件作为默认 sheet
                     children.push(TreeItem {
-                        item_type: ItemType::Sheet,
+                        item_type: EItemType::Sheet,
                         display_name: "默认".to_string(), // 或者使用其他默认名称
                         is_open: false,
                         fullpath: full_path.clone(),
@@ -200,7 +198,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
             children.sort_by(|a, b| a.display_name.cmp(&b.display_name));
 
             items.push(TreeItem {
-                item_type: ItemType::Excel,
+                item_type: EItemType::Excel,
                 display_name: excel_name,
                 is_open: false,
                 fullpath: excel_fullpath,
@@ -213,9 +211,9 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
 
     // 对所有项进行排序，文件夹在前
     items.sort_by(|a, b| match (&a.item_type, &b.item_type) {
-        (ItemType::Folder, ItemType::Folder) => a.display_name.cmp(&b.display_name),
-        (ItemType::Folder, _) => std::cmp::Ordering::Less,
-        (_, ItemType::Folder) => std::cmp::Ordering::Greater,
+        (EItemType::Folder, EItemType::Folder) => a.display_name.cmp(&b.display_name),
+        (EItemType::Folder, _) => std::cmp::Ordering::Less,
+        (_, EItemType::Folder) => std::cmp::Ordering::Greater,
         _ => a.display_name.cmp(&b.display_name),
     });
 
@@ -255,7 +253,7 @@ pub fn find_tree_item_by_path(path: &str) -> Option<TreeItem> {
     // 根据找到的项类型进行处理
     if let Some(item) = target_item {
         match item.item_type {
-            ItemType::Sheet => {
+            EItemType::Sheet => {
                 // 如果是Sheet类型，查找其父节点（应该是Excel类型）
                 if let Some(parent_path) = &item.parent {
                     // 在整个树中查找父节点
@@ -264,7 +262,7 @@ pub fn find_tree_item_by_path(path: &str) -> Option<TreeItem> {
                         parent_path: &str,
                     ) -> Option<TreeItem> {
                         for item in items.iter() {
-                            if &item.fullpath == parent_path && item.item_type == ItemType::Excel {
+                            if &item.fullpath == parent_path && item.item_type == EItemType::Excel {
                                 return Some(item.clone());
                             }
 
@@ -284,11 +282,11 @@ pub fn find_tree_item_by_path(path: &str) -> Option<TreeItem> {
                 }
                 None
             }
-            ItemType::Excel => {
+            EItemType::Excel => {
                 // 如果是Excel类型，直接返回
                 Some(item)
             }
-            ItemType::Folder => {
+            EItemType::Folder => {
                 // 如果是Folder类型，返回None
                 None
             }

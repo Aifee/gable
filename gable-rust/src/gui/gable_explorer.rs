@@ -1,7 +1,7 @@
 use eframe::egui;
 
+use crate::gui::datas::eitem_type::EItemType;
 use crate::gui::datas::gables;
-use crate::gui::datas::item_type::ItemType;
 use crate::gui::datas::tree_item::TreeItem;
 
 pub struct GableExplorer {
@@ -61,9 +61,9 @@ impl GableExplorer {
         double_clicked_item: &mut Option<String>,
     ) {
         let icon = match item.item_type {
-            ItemType::Folder => "📁",
-            ItemType::Excel => "📄",
-            ItemType::Sheet => "📊",
+            EItemType::Folder => "📁",
+            EItemType::Excel => "📄",
+            EItemType::Sheet => "📊",
         };
 
         // 检查是否是当前正在重命名的项目
@@ -106,7 +106,7 @@ impl GableExplorer {
                 .map_or(false, |id| id == &item.fullpath);
 
             let header_response = match item.item_type {
-                ItemType::Sheet => {
+                EItemType::Sheet => {
                     // 使用 CollapsingHeader 但禁用展开功能以保持一致的外观和交互
                     egui::CollapsingHeader::new(&header_text)
                         .default_open(item.is_open)
@@ -189,15 +189,15 @@ impl GableExplorer {
         }
 
         let result = match item.item_type {
-            ItemType::Excel => {
+            EItemType::Excel => {
                 // 重命名Excel文件及其所有sheet文件
                 Self::rename_excel_item(item, &new_name)
             }
-            ItemType::Sheet => {
+            EItemType::Sheet => {
                 // 重命名单个sheet
                 Self::rename_sheet_item(item, &new_name)
             }
-            ItemType::Folder => {
+            EItemType::Folder => {
                 // 重命名文件夹
                 Self::rename_folder_item(item, &new_name)
             }
@@ -395,7 +395,7 @@ impl GableExplorer {
         renaming_text: &mut String,
     ) {
         match item.item_type {
-            ItemType::Folder => {
+            EItemType::Folder => {
                 if ui.button("新建文件").clicked() {
                     // TODO: 实现新建文件逻辑
                     ui.close();
@@ -405,7 +405,7 @@ impl GableExplorer {
                     ui.close();
                 }
             }
-            ItemType::Excel => {
+            EItemType::Excel => {
                 if ui.button("新建文件").clicked() {
                     // TODO: 实现新建文件逻辑
                     ui.close();
@@ -425,7 +425,7 @@ impl GableExplorer {
                     ui.close();
                 }
             }
-            ItemType::Sheet => {
+            EItemType::Sheet => {
                 if ui.button("编辑").clicked() {
                     // TODO: 实现打开文件逻辑
                     ui.close();
@@ -451,7 +451,7 @@ impl GableExplorer {
         renaming_text: &mut String,
     ) {
         // 确保只在文件夹类型上创建
-        if parent_item.item_type != ItemType::Folder {
+        if parent_item.item_type != EItemType::Folder {
             return;
         }
 

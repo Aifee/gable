@@ -1,8 +1,8 @@
-use crate::gui::datas::{gable_data::GableData, item_type::ItemType};
+use crate::gui::datas::{eitem_type::EItemType, gable_data::GableData};
 
 #[derive(Debug, Clone)]
 pub struct TreeItem {
-    pub item_type: ItemType,
+    pub item_type: EItemType,
     pub display_name: String,
     pub is_open: bool,
     pub fullpath: String,

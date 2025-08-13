@@ -1,8 +1,12 @@
 use crate::common::global;
 use crate::common::utils;
 use crate::gui::component;
+use crate::gui::datas::esheet_type::ESheetType;
+use crate::gui::datas::gable_data::GableData;
+use crate::gui::datas::tree_data::TreeData;
 use crate::gui::datas::tree_item::TreeItem;
 use eframe::egui;
+use egui_extras::TableBody;
 
 #[derive(Debug, Clone)]
 pub struct OpenedExcel {
@@ -190,6 +194,7 @@ impl GableForm {
         });
     }
 
+    /// 数据表 绘制
     fn ongui_table(&mut self, ui: &mut egui::Ui) {
         let sheet = self.get_sheet();
         if sheet.is_none() {
@@ -197,9 +202,9 @@ impl GableForm {
             return;
         }
         let sheet = sheet.unwrap();
-        let content = &sheet.data.as_ref().unwrap().content;
-        let max_row = content.max_row as usize;
-        let max_col = content.max_column as usize;
+        let sheet_type = sheet.data.as_ref().unwrap().gable_type.clone();
+        let max_col = sheet.data.as_ref().unwrap().content.max_column as usize;
+        let gable_data = sheet.data.as_ref().unwrap().content.clone();
 
         ui.push_id("table_scroll", |ui| {
             egui::ScrollArea::both().auto_shrink(false).show(ui, |ui| {
@@ -208,7 +213,6 @@ impl GableForm {
                     .resizable(true)
                     .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
                     .column(egui_extras::Column::auto())
-                    // 列宽度
                     .columns(
                         egui_extras::Column::initial(100.0).range(40.0..=300.0),
                         max_col,
@@ -217,7 +221,6 @@ impl GableForm {
                         header.col(|ui| {
                             ui.label("");
                         });
-                        // 显示列号 (A, B, C, ...)
                         for col in 1..=max_col {
                             header.col(|ui| {
                                 ui.centered_and_justified(|ui| {
@@ -226,59 +229,135 @@ impl GableForm {
                             });
                         }
                     })
-                    .body(|body| {
-                        // 表头和数据都在body中显示
-                        // 总行数 = 表头行数(5) + 数据行数(max_row)
-                        body.rows(20.0, max_row, |mut row| {
-                            // excel索引从1开始的，表现层的索引从0开始
-                            let row_index = row.index() + 1;
-                            // 显示行号
-                            row.col(|ui| {
-                                ui.label(&row_index.to_string());
-                            });
-                            for col in 1..=max_col {
-                                row.col(|ui| {
-                                    // 前5行显示heads数据（表头）
-                                    if row_index < global::TABLE_DATA_ROW_TOTAL {
-                                        if let Some(row_data) =
-                                            content.heads.get(&row_index.to_string())
-                                        {
-                                            if let Some(col_data) = row_data.get(&col.to_string()) {
-                                                ui.style_mut().wrap_mode =
-                                                    Some(egui::TextWrapMode::Extend);
-                                                ui.add(
-                                                    egui::Label::new(&col_data.value).truncate(),
-                                                );
-                                            } else {
-                                                ui.label("");
-                                            }
-                                        } else {
-                                            ui.label("");
-                                        }
-                                    }
-                                    // 从第6行开始显示cells数据
-                                    else {
-                                        if let Some(row_data) =
-                                            content.cells.get(&row_index.to_string())
-                                        {
-                                            if let Some(col_data) = row_data.get(&col.to_string()) {
-                                                ui.style_mut().wrap_mode =
-                                                    Some(egui::TextWrapMode::Extend);
-                                                ui.add(
-                                                    egui::Label::new(&col_data.value).truncate(),
-                                                );
-                                            } else {
-                                                ui.label("");
-                                            }
-                                        } else {
-                                            ui.label("");
-                                        }
-                                    }
-                                });
-                            }
-                        });
+                    .body(|body| match sheet_type {
+                        ESheetType::DATA => {
+                            self.ongui_table_databody(body, &gable_data);
+                        }
+                        ESheetType::KV => {
+                            self.ongui_table_kvbody(body, &gable_data);
+                        }
+                        ESheetType::ENUM => {
+                            self.ongui_table_enumbody(body, &gable_data);
+                        }
                     });
             });
+        });
+    }
+
+    /// 普通数据表绘制
+    fn ongui_table_databody(&mut self, body: TableBody<'_>, sheet_content: &GableData) {
+        let total_rows = sheet_content.max_row as usize;
+        let total_cols = sheet_content.max_column as usize;
+        body.rows(20.0, total_rows, |mut row| {
+            let row_index = row.index() + 1;
+            row.col(|ui| {
+                ui.label(&row_index.to_string());
+            });
+            for col_index in 1..total_cols {
+                row.col(|ui| {
+                    if row_index < global::TABLE_DATA_ROW_TOTAL {
+                        if let Some(row_data) = sheet_content.heads.get(&row_index.to_string()) {
+                            if let Some(col_data) = row_data.get(&col_index.to_string()) {
+                                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                                ui.add(egui::Label::new(&col_data.value).truncate());
+                            } else {
+                                ui.label("");
+                            }
+                        } else {
+                            ui.label("");
+                        }
+                    } else {
+                        if let Some(row_data) = sheet_content.cells.get(&row_index.to_string()) {
+                            if let Some(col_data) = row_data.get(&col_index.to_string()) {
+                                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                                ui.add(egui::Label::new(&col_data.value).truncate());
+                            } else {
+                                ui.label("");
+                            }
+                        } else {
+                            ui.label("");
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    /// KV表绘制
+    fn ongui_table_kvbody(&mut self, body: TableBody<'_>, sheet_content: &GableData) {
+        let total_rows = sheet_content.max_row as usize;
+        let total_cols = sheet_content.max_column as usize;
+        body.rows(20.0, total_rows, |mut row| {
+            let row_index = row.index() + 1;
+            row.col(|ui| {
+                ui.label(&row_index.to_string());
+            });
+            for col_index in 1..=total_cols {
+                row.col(|ui| {
+                    if row_index < global::TABLE_KV_ROW_TOTAL {
+                        if let Some(row_data) = sheet_content.heads.get(&row_index.to_string()) {
+                            if let Some(col_data) = row_data.get(&col_index.to_string()) {
+                                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                                ui.add(egui::Label::new(&col_data.value).truncate());
+                            } else {
+                                ui.label("");
+                            }
+                        } else {
+                            ui.label("");
+                        }
+                    } else {
+                        if let Some(row_data) = sheet_content.cells.get(&row_index.to_string()) {
+                            if let Some(col_data) = row_data.get(&col_index.to_string()) {
+                                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                                ui.add(egui::Label::new(&col_data.value).truncate());
+                            } else {
+                                ui.label("");
+                            }
+                        } else {
+                            ui.label("");
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    /// 枚举表绘制器
+    fn ongui_table_enumbody(&mut self, body: TableBody<'_>, sheet_content: &GableData) {
+        let total_rows = sheet_content.max_row as usize;
+        let total_cols = sheet_content.max_column as usize;
+        body.rows(20.0, total_rows, |mut row| {
+            let row_index = row.index() + 1;
+            row.col(|ui| {
+                ui.label(&row_index.to_string());
+            });
+            for col_index in 1..=total_cols {
+                row.col(|ui| {
+                    if row_index < global::TABLE_KV_ROW_TOTAL {
+                        if let Some(row_data) = sheet_content.heads.get(&row_index.to_string()) {
+                            if let Some(col_data) = row_data.get(&col_index.to_string()) {
+                                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                                ui.add(egui::Label::new(&col_data.value).truncate());
+                            } else {
+                                ui.label("");
+                            }
+                        } else {
+                            ui.label("");
+                        }
+                    } else {
+                        if let Some(row_data) = sheet_content.cells.get(&row_index.to_string()) {
+                            if let Some(col_data) = row_data.get(&col_index.to_string()) {
+                                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                                ui.add(egui::Label::new(&col_data.value).truncate());
+                            } else {
+                                ui.label("");
+                            }
+                        } else {
+                            ui.label("");
+                        }
+                    }
+                });
+            }
         });
     }
 }

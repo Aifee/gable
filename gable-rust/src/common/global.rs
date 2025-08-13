@@ -18,3 +18,7 @@ pub const TABLE_DATA_ROW_TARGET: usize = 4;
 pub const TABLE_DATA_ROW_LINK: usize = 5;
 /// [数据表单]有效数据起始行数
 pub const TABLE_DATA_ROW_TOTAL: usize = 6;
+
+pub const TABLE_KV_ROW_TOTAL: usize = 2;
+
+pub const TABLE_ENUM_ROW_TOTAL: usize = 2;

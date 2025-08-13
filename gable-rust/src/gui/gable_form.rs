@@ -253,7 +253,7 @@ impl GableForm {
             row.col(|ui| {
                 ui.label(&row_index.to_string());
             });
-            for col_index in 1..total_cols {
+            for col_index in 1..total_cols + 1 {
                 row.col(|ui| {
                     if row_index < global::TABLE_DATA_ROW_TOTAL {
                         if let Some(row_data) = sheet_content.heads.get(&row_index.to_string()) {
@@ -292,7 +292,7 @@ impl GableForm {
             row.col(|ui| {
                 ui.label(&row_index.to_string());
             });
-            for col_index in 1..=total_cols {
+            for col_index in 1..total_cols + 1 {
                 row.col(|ui| {
                     if row_index < global::TABLE_KV_ROW_TOTAL {
                         if let Some(row_data) = sheet_content.heads.get(&row_index.to_string()) {
@@ -331,7 +331,7 @@ impl GableForm {
             row.col(|ui| {
                 ui.label(&row_index.to_string());
             });
-            for col_index in 1..=total_cols {
+            for col_index in 1..total_cols + 1 {
                 row.col(|ui| {
                     if row_index < global::TABLE_KV_ROW_TOTAL {
                         if let Some(row_data) = sheet_content.heads.get(&row_index.to_string()) {

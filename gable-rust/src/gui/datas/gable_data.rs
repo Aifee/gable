@@ -1,7 +1,6 @@
+use crate::gui::datas::cell_data::CellData;
 use serde::Deserialize;
 use std::collections::HashMap;
-
-use crate::gui::datas::cell_data::CellData;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct GableData {

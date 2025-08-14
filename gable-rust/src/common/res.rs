@@ -1,4 +1,5 @@
-use eframe::egui;
+use eframe::egui::{Color32, ColorImage, Context, TextureHandle, TextureOptions, Vec2};
+use image::{DynamicImage, ImageBuffer, Rgba};
 
 /// 字体资源
 pub const FONT_ASSETS: &[u8] =
@@ -30,18 +31,18 @@ pub const FONT_ASSETS: &[u8] =
 // pub const ICON_YAML: &[u8] = include_bytes!("../../assets/icons/yaml.png");
 
 /// 加载图片
-pub fn load_texture(ctx: &egui::Context, data: &[u8], name: &str) -> egui::TextureHandle {
-    let img = image::load_from_memory(data).expect("无法从内存加载图像");
-    let size = [img.width() as usize, img.height() as usize];
-    let image_buffer = img.to_rgba8();
-    let pixels: Vec<egui::Color32> = image_buffer
+pub fn load_texture(ctx: &Context, data: &[u8], name: &str) -> TextureHandle {
+    let img: DynamicImage = image::load_from_memory(data).expect("无法从内存加载图像");
+    let size: [usize; 2] = [img.width() as usize, img.height() as usize];
+    let image_buffer: ImageBuffer<Rgba<u8>, Vec<u8>> = img.to_rgba8();
+    let pixels: Vec<Color32> = image_buffer
         .pixels()
-        .map(|p| egui::Color32::from_rgb(p[0], p[1], p[2]))
+        .map(|p| Color32::from_rgb(p[0], p[1], p[2]))
         .collect();
-    let color_image = egui::ColorImage {
+    let color_image: ColorImage = ColorImage {
         size,
         pixels,
-        source_size: egui::Vec2::new(size[0] as f32, size[1] as f32),
+        source_size: Vec2::new(size[0] as f32, size[1] as f32),
     };
-    ctx.load_texture(name, color_image, egui::TextureOptions::default())
+    ctx.load_texture(name, color_image, TextureOptions::default())
 }

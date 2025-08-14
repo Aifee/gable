@@ -1,16 +1,14 @@
-use crate::common::global;
-use crate::common::setting;
-use crate::common::utils;
+use crate::common::{global, setting, utils};
 use crate::gui::datas::eitem_type::EItemType;
-use crate::gui::datas::gable_data::GableData;
-use crate::gui::datas::tree_data::TreeData;
-use crate::gui::datas::tree_item::TreeItem;
+use crate::gui::datas::{
+    esheet_type::ESheetType, gable_data::GableData, tree_data::TreeData, tree_item::TreeItem,
+};
 use lazy_static::lazy_static;
 use rayon::prelude::*;
-use std::collections::{HashMap, HashSet};
-use std::fs;
-use std::path::Path;
-use std::sync::{Arc, Mutex};
+use std::{
+    cmp::Ordering, collections::HashMap, collections::HashSet, fs, io::Error, path::Path,
+    path::PathBuf, sync::Arc, sync::Mutex, sync::MutexGuard,
+};
 
 lazy_static! {
     pub static ref TREE_ITEMS: Arc<Mutex<Vec<TreeItem>>> = Arc::new(Mutex::new(Vec::new()));
@@ -30,12 +28,12 @@ pub(crate) fn parse_gable_filename(filename: &str) -> Option<(String, Option<Str
         return None;
     }
 
-    let name_without_ext = &filename[..filename.len() - global::GABLE_FILE_TYPE.len()];
+    let name_without_ext: &str = &filename[..filename.len() - global::GABLE_FILE_TYPE.len()];
 
     if let Some(pos) = name_without_ext.find('@') {
         // 格式为 excelname@sheetname
-        let excel_name = name_without_ext[..pos].to_string();
-        let sheet_name = name_without_ext[pos + 1..].to_string();
+        let excel_name: String = name_without_ext[..pos].to_string();
+        let sheet_name: String = name_without_ext[pos + 1..].to_string();
         Some((excel_name, Some(sheet_name)))
     } else {
         // 格式为 excelname
@@ -82,20 +80,20 @@ fn read_all_gable_files_parallel(
 
 /// 递归构建目录树
 fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
-    let mut items = Vec::new();
+    let mut items: Vec<TreeItem> = Vec::new();
 
     if !path.exists() || !path.is_dir() {
         return items;
     }
 
     // 收集目录项和文件项
-    let mut directories = Vec::new();
+    let mut directories: Vec<(PathBuf, String)> = Vec::new();
     let mut gable_files: HashMap<String, Vec<(String, String)>> = HashMap::new();
 
     if let Ok(entries) = fs::read_dir(path) {
-        for entry in entries.filter_map(|e| e.ok()) {
-            let entry_path = entry.path();
-            let entry_name = entry.file_name().to_string_lossy().to_string();
+        for entry in entries.filter_map(|e: Result<fs::DirEntry, Error>| e.ok()) {
+            let entry_path: PathBuf = entry.path();
+            let entry_name: String = entry.file_name().to_string_lossy().to_string();
 
             if entry_path.is_dir() {
                 if !global::IGNORED_DIRS.contains(&entry_name.as_str()) {
@@ -114,15 +112,17 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     }
 
     // 并行读取所有gable文件内容
-    let file_contents = read_all_gable_files_parallel(&gable_files);
+    let file_contents: HashMap<String, Option<GableData>> =
+        read_all_gable_files_parallel(&gable_files);
 
     // 处理目录
     for (dir_path, dir_name) in directories {
-        let children = build_tree_from_path(&dir_path);
+        let children: Vec<TreeItem> = build_tree_from_path(&dir_path);
 
         // 检查此路径是否应该展开
-        let should_be_expanded = {
-            let expanded_folders = EXPANDED_FOLDERS.lock().unwrap();
+        let should_be_expanded: bool = {
+            let expanded_folders: MutexGuard<'_, HashSet<String>> =
+                EXPANDED_FOLDERS.lock().unwrap();
             expanded_folders.contains(&dir_path.to_string_lossy().to_string())
         };
 
@@ -142,10 +142,11 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     for (excel_name, sheets) in gable_files {
         if sheets.len() == 1 && sheets[0].1.is_empty() {
             // 读取文件内容
-            let gable_content = file_contents.get(&sheets[0].0).cloned().unwrap_or(None);
+            let gable_content: Option<GableData> =
+                file_contents.get(&sheets[0].0).cloned().unwrap_or(None);
             // 确定文件类型
-            let sheet_type = utils::determine_sheet_type(Path::new(&sheets[0].0));
-            let tree_data = gable_content.map(|content| TreeData {
+            let sheet_type: ESheetType = utils::determine_sheet_type(Path::new(&sheets[0].0));
+            let tree_data: Option<TreeData> = gable_content.map(|content| TreeData {
                 gable_type: sheet_type,
                 content,
             });
@@ -160,19 +161,20 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
             });
         } else {
             // 有多个 sheet 或有 sheet 部分
-            let excel_fullpath = format!("{}/{}", path.to_string_lossy(), excel_name);
+            let excel_fullpath: String = format!("{}/{}", path.to_string_lossy(), excel_name);
 
             // 创建子项
-            let mut children = Vec::new();
-            let mut excel_gable_content = None;
-            let sheets_len = sheets.len();
+            let mut children: Vec<TreeItem> = Vec::new();
+            let mut excel_gable_content: Option<TreeData> = None;
+            let sheets_len: usize = sheets.len();
 
             for (full_path, sheet_name) in sheets {
                 // 读取每个sheet文件的内容
-                let gable_content = file_contents.get(&full_path).cloned().unwrap_or(None);
+                let gable_content: Option<GableData> =
+                    file_contents.get(&full_path).cloned().unwrap_or(None);
                 // 确定文件类型
-                let sheet_type = utils::determine_sheet_type(Path::new(&full_path));
-                let tree_data = gable_content.map(|content| TreeData {
+                let sheet_type: ESheetType = utils::determine_sheet_type(Path::new(&full_path));
+                let tree_data: Option<TreeData> = gable_content.map(|content| TreeData {
                     gable_type: sheet_type,
                     content,
                 });
@@ -223,8 +225,8 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     // 对所有项进行排序，文件夹在前
     items.sort_by(|a, b| match (&a.item_type, &b.item_type) {
         (EItemType::Folder, EItemType::Folder) => a.display_name.cmp(&b.display_name),
-        (EItemType::Folder, _) => std::cmp::Ordering::Less,
-        (_, EItemType::Folder) => std::cmp::Ordering::Greater,
+        (EItemType::Folder, _) => Ordering::Less,
+        (_, EItemType::Folder) => Ordering::Greater,
         _ => a.display_name.cmp(&b.display_name),
     });
 
@@ -249,7 +251,7 @@ fn find_parent_for_item(item: TreeItem, item_type: EItemType) -> Option<TreeItem
     if item.item_type == item_type {
         return Some(item);
     }
-    let parent_path = item.parent?;
+    let parent_path: String = item.parent?;
     match TREE_ITEMS.try_lock() {
         Ok(tree_items) => {
             let tree_items_copy: Vec<TreeItem> = tree_items.clone();
@@ -273,7 +275,7 @@ fn find_parent_for_item(item: TreeItem, item_type: EItemType) -> Option<TreeItem
 
 /// 根据路径直接获取TreeItem，保证返回的是item_type类型
 pub fn find_tree_item_by_path(path: &str, item_type: EItemType) -> Option<TreeItem> {
-    let tree_items_copy = TREE_ITEMS.lock().unwrap().clone();
+    let tree_items_copy: Vec<TreeItem> = TREE_ITEMS.lock().unwrap().clone();
     let mut found_item: Option<TreeItem> = None;
     for root_item in tree_items_copy.iter() {
         if let Some(item) = get_item_by_path(&[root_item.clone()], path) {
@@ -299,7 +301,7 @@ pub fn edit_gable(item: TreeItem) {
         item.display_name.clone()
     } else {
         let file_name: String = {
-            let path: &Path = std::path::Path::new(&item.fullpath);
+            let path: &Path = Path::new(&item.fullpath);
             if let Some(file_name) = path.file_name() {
                 file_name.to_string_lossy().to_string()
             } else {
@@ -316,7 +318,7 @@ pub fn edit_gable(item: TreeItem) {
         }
     };
     let parent_path = {
-        let path: &Path = std::path::Path::new(&item.fullpath);
+        let path: &Path = Path::new(&item.fullpath);
         if let Some(parent) = path.parent() {
             parent.to_string_lossy().to_string()
         } else {

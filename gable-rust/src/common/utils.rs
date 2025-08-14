@@ -1,14 +1,15 @@
 use crate::gui::datas::esheet_type::ESheetType;
-use eframe::egui;
+use eframe::egui::{Color32, Context, Style};
 use std::path::Path;
+use std::sync::Arc;
 
 /// 将列号转换为Excel风格的列名（A, B, ..., Z, AA, AB, ...）
 pub fn column_index_to_name(col: u32) -> String {
-    let mut result = String::new();
-    let mut num = col;
+    let mut result: String = String::new();
+    let mut num: u32 = col;
 
     while num > 0 {
-        let remainder = (num - 1) % 26;
+        let remainder: u32 = (num - 1) % 26;
         result.insert(0, (b'A' + remainder as u8) as char);
         num = (num - 1) / 26;
     }
@@ -32,11 +33,11 @@ pub fn determine_sheet_type(path: &Path) -> ESheetType {
     ESheetType::DATA
 }
 
-pub fn get_selected_color(ctx: &egui::Context) -> egui::Color32 {
-    let style = ctx.style();
+pub fn get_selected_color(ctx: &Context) -> Color32 {
+    let style: Arc<Style> = ctx.style();
     if style.visuals.dark_mode {
-        egui::Color32::from_rgb(60, 100, 150)
+        Color32::from_rgb(60, 100, 150)
     } else {
-        egui::Color32::from_rgb(173, 216, 230)
+        Color32::from_rgb(173, 216, 230)
     }
 }

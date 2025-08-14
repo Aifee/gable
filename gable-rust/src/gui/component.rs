@@ -1,19 +1,20 @@
-use eframe::egui;
+use crate::common::utils;
+use eframe::egui::{
+    Button, Color32, CornerRadius, Frame, Label, Response, RichText, Sense, Stroke, Ui, Vec2,
+};
 use log::Level;
 
-use crate::common::utils;
-
 pub fn excel_tap(
-    ui: &mut egui::Ui,
+    ui: &mut Ui,
     text: &str,
     selected: bool,
-    padding: egui::Vec2,
-) -> (egui::Response, Option<egui::Response>) {
-    let frame = if selected {
-        egui::Frame::NONE
+    padding: Vec2,
+) -> (Response, Option<Response>) {
+    let frame: Frame = if selected {
+        Frame::NONE
             .fill(utils::get_selected_color(ui.ctx()))
-            .stroke(egui::Stroke::new(1.0, utils::get_selected_color(ui.ctx())))
-            .corner_radius(egui::CornerRadius {
+            .stroke(Stroke::new(1.0, utils::get_selected_color(ui.ctx())))
+            .corner_radius(CornerRadius {
                 nw: 4, // 左上角
                 ne: 4, // 右上角
                 sw: 0, // 左下角
@@ -22,10 +23,10 @@ pub fn excel_tap(
             .inner_margin(padding)
     } else {
         // 未选中状态：透明背景，灰色边框
-        egui::Frame::NONE
-            .fill(egui::Color32::TRANSPARENT)
-            .stroke(egui::Stroke::new(1.0, egui::Color32::GRAY))
-            .corner_radius(egui::CornerRadius {
+        Frame::NONE
+            .fill(Color32::TRANSPARENT)
+            .stroke(Stroke::new(1.0, Color32::GRAY))
+            .corner_radius(CornerRadius {
                 nw: 4, // 左上角
                 ne: 4, // 右上角
                 sw: 0, // 左下角
@@ -41,12 +42,10 @@ pub fn excel_tap(
     let _ = frame.show(ui, |ui| {
         ui.horizontal(|ui| {
             // 创建可交互的文本标签
-            label_response = Some(
-                ui.add(egui::Label::new(egui::RichText::new(text)).sense(egui::Sense::click())),
-            );
+            label_response = Some(ui.add(Label::new(RichText::new(text)).sense(Sense::click())));
             ui.add_space(8.0);
             // 创建关闭按钮
-            let button = egui::Button::new("❌").small().frame(false);
+            let button = Button::new("❌").small().frame(false);
             close_response = Some(ui.add(button));
         })
         .response
@@ -58,18 +57,13 @@ pub fn excel_tap(
     (frame_response, close_response)
 }
 
-pub fn sheet_tab(
-    ui: &mut egui::Ui,
-    text: &str,
-    selected: bool,
-    padding: egui::Vec2,
-) -> egui::Response {
+pub fn sheet_tab(ui: &mut Ui, text: &str, selected: bool, padding: Vec2) -> Response {
     // 创建 Frame 样式
     let frame = if selected {
-        egui::Frame::NONE
+        Frame::NONE
             .fill(utils::get_selected_color(ui.ctx()))
-            .stroke(egui::Stroke::new(1.0, utils::get_selected_color(ui.ctx())))
-            .corner_radius(egui::CornerRadius {
+            .stroke(Stroke::new(1.0, utils::get_selected_color(ui.ctx())))
+            .corner_radius(CornerRadius {
                 nw: 0, // 左上角
                 ne: 0, // 右上角
                 sw: 4, // 左下角
@@ -78,10 +72,10 @@ pub fn sheet_tab(
             .inner_margin(padding)
     } else {
         // 未选中状态：透明背景，灰色边框
-        egui::Frame::NONE
-            .fill(egui::Color32::TRANSPARENT)
-            .stroke(egui::Stroke::new(1.0, egui::Color32::GRAY))
-            .corner_radius(egui::CornerRadius {
+        Frame::NONE
+            .fill(Color32::TRANSPARENT)
+            .stroke(Stroke::new(1.0, Color32::GRAY))
+            .corner_radius(CornerRadius {
                 nw: 0, // 左上角
                 ne: 0, // 右上角
                 sw: 4, // 左下角
@@ -90,22 +84,20 @@ pub fn sheet_tab(
             .inner_margin(padding)
     };
     // 使用 Frame 包装按钮
-    let response = frame
-        .show(ui, |ui| ui.label(egui::RichText::new(text)))
-        .response;
+    let response = frame.show(ui, |ui| ui.label(RichText::new(text))).response;
 
     // 添加interact方法使Frame可以响应点击事件
-    let response = ui.interact(response.rect, response.id, egui::Sense::click());
+    let response = ui.interact(response.rect, response.id, Sense::click());
     response
 }
 
-pub fn log_text(ui: &mut egui::Ui, text: &str, level: log::Level) {
+pub fn log_text(ui: &mut Ui, text: &str, level: log::Level) {
     let color = match level {
-        Level::Error => egui::Color32::RED,
-        Level::Warn => egui::Color32::YELLOW,
+        Level::Error => Color32::RED,
+        Level::Warn => Color32::YELLOW,
         Level::Info => ui.style().visuals.text_color(),
-        Level::Debug => egui::Color32::LIGHT_BLUE,
-        Level::Trace => egui::Color32::GRAY,
+        Level::Debug => Color32::LIGHT_BLUE,
+        Level::Trace => Color32::GRAY,
     };
     ui.colored_label(color, text);
 }

@@ -1,9 +1,14 @@
 use chrono::Local;
+use chrono::format::DelayedFormat;
+use chrono::format::StrftimeItems;
 use log::LevelFilter;
 use once_cell::sync::OnceCell;
+use std::fmt::Arguments;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::{self, Write};
+use std::path::Path;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
 
@@ -33,12 +38,13 @@ impl Clone for LogTrace {
 
 impl LogTrace {
     pub fn new(log_dir_path: Option<&str>) -> Result<LogTrace, io::Error> {
-        let file = match log_dir_path {
+        let file: Option<File> = match log_dir_path {
             Some(dir_path) => {
                 std::fs::create_dir_all(dir_path)?;
-                let day_file_name = Local::now().format("%Y-%m-%d");
-                let file_path =
-                    std::path::Path::new(dir_path).join(format!("{}.log", day_file_name));
+                let day_file_name: chrono::format::DelayedFormat<
+                    chrono::format::StrftimeItems<'_>,
+                > = Local::now().format("%Y-%m-%d");
+                let file_path: PathBuf = Path::new(dir_path).join(format!("{}.log", day_file_name));
                 let f = OpenOptions::new()
                     .create(true)
                     .append(true)
@@ -90,12 +96,13 @@ impl log::Log for LogTrace {
 
     fn log(&self, record: &log::Record) {
         if self.enabled(record.metadata()) {
-            let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
-            let level = record.level();
-            let target = record.target();
-            let args = record.args();
+            let timestamp: DelayedFormat<StrftimeItems<'_>> =
+                Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
+            let level: log::Level = record.level();
+            let target: &str = record.target();
+            let args: &Arguments<'_> = record.args();
 
-            let log_message = format!("{} [{}] {} - {}\n", timestamp, level, target, args);
+            let log_message: String = format!("{} [{}] {} - {}\n", timestamp, level, target, args);
 
             print!("{}", log_message);
 

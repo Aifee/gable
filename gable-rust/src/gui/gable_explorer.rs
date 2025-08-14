@@ -60,23 +60,25 @@ impl GableExplorer {
         renaming_text: &mut String,
         double_clicked_item: &mut Option<String>,
     ) {
-        let icon = match item.item_type {
+        let icon: &'static str = match item.item_type {
             EItemType::Folder => "📁",
             EItemType::Excel => "📄",
             EItemType::Sheet => "📊",
         };
 
         // 检查是否是当前正在重命名的项目
-        let is_renaming = renaming_item
+        let is_renaming: bool = renaming_item
             .as_ref()
             .map_or(false, |id| id == &item.fullpath);
 
         if is_renaming {
             // 显示重命名输入框
-            let response = ui.text_edit_singleline(renaming_text);
+            let response: egui::Response = ui.text_edit_singleline(renaming_text);
 
             // 处理回车确认重命名
-            if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+            if response.lost_focus()
+                && ui.input(|i: &egui::InputState| i.key_pressed(egui::Key::Enter))
+            {
                 Self::finish_renaming(
                     item,
                     std::mem::take(renaming_text),
@@ -85,7 +87,9 @@ impl GableExplorer {
                 );
             }
             // 新增：处理失去焦点时完成重命名（不是通过ESC键）
-            else if response.lost_focus() && !ui.input(|i| i.key_pressed(egui::Key::Escape)) {
+            else if response.lost_focus()
+                && !ui.input(|i: &egui::InputState| i.key_pressed(egui::Key::Escape))
+            {
                 Self::finish_renaming(
                     item,
                     std::mem::take(renaming_text),
@@ -94,16 +98,18 @@ impl GableExplorer {
                 );
             }
             // 处理通过ESC键取消重命名
-            else if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Escape)) {
+            else if response.lost_focus()
+                && ui.input(|i: &egui::InputState| i.key_pressed(egui::Key::Escape))
+            {
                 *renaming_item = None;
                 renaming_text.clear();
             }
         } else {
-            let header_text = format!("{} {}", icon, item.display_name);
+            let header_text: String = format!("{} {}", icon, item.display_name);
             // 检查当前项是否被选中
-            let is_selected = selected_id
+            let is_selected: bool = selected_id
                 .as_ref()
-                .map_or(false, |id| id == &item.fullpath);
+                .map_or(false, |id: &String| id == &item.fullpath);
 
             let header_response = match item.item_type {
                 EItemType::Sheet => {
@@ -188,7 +194,7 @@ impl GableExplorer {
             return;
         }
 
-        let result = match item.item_type {
+        let result: Result<(), std::io::Error> = match item.item_type {
             EItemType::Excel => {
                 // 重命名Excel文件及其所有sheet文件
                 Self::rename_excel_item(item, &new_name)
@@ -222,7 +228,7 @@ impl GableExplorer {
     fn rename_folder_item(item: &TreeItem, new_folder_name: &str) -> Result<(), std::io::Error> {
         let path = std::path::Path::new(&item.fullpath);
         if let Some(parent_path) = path.parent() {
-            let new_path = parent_path.join(new_folder_name);
+            let new_path: std::path::PathBuf = parent_path.join(new_folder_name);
 
             // 检查目标文件夹是否已存在
             if new_path.exists() && path != new_path {
@@ -248,7 +254,7 @@ impl GableExplorer {
         }
 
         // 检查是否包含非法字符
-        let invalid_chars = ['/', '\\', ':', '*', '?', '"', '<', '>', '|'];
+        let invalid_chars: [char; 9] = ['/', '\\', ':', '*', '?', '"', '<', '>', '|'];
         for c in name.chars() {
             if invalid_chars.contains(&c) || c.is_control() {
                 return false;
@@ -261,12 +267,12 @@ impl GableExplorer {
         }
 
         // 检查是否是保留名称
-        let reserved_names = [
+        let reserved_names: [&'static str; 22] = [
             "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7",
             "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
         ];
 
-        let upper_name = name.to_uppercase();
+        let upper_name: String = name.to_uppercase();
         for reserved in &reserved_names {
             if &upper_name == reserved {
                 return false;
@@ -277,9 +283,9 @@ impl GableExplorer {
 
     /// 检查同名文件/文件夹是否已存在
     fn is_name_exists(item: &TreeItem, new_name: &str) -> bool {
-        let path = std::path::Path::new(&item.fullpath);
+        let path: &std::path::Path = std::path::Path::new(&item.fullpath);
         if let Some(parent_path) = path.parent() {
-            let new_path = parent_path.join(new_name);
+            let new_path: std::path::PathBuf = parent_path.join(new_name);
             new_path.exists()
         } else {
             false
@@ -292,10 +298,12 @@ impl GableExplorer {
         if let Some(parent_path) = std::path::Path::new(&item.fullpath).parent() {
             // 查找所有相关的sheet文件
             if let Ok(entries) = std::fs::read_dir(parent_path) {
-                for entry in entries.filter_map(|e| e.ok()) {
-                    let entry_path = entry.path();
+                for entry in
+                    entries.filter_map(|e: Result<std::fs::DirEntry, std::io::Error>| e.ok())
+                {
+                    let entry_path: std::path::PathBuf = entry.path();
                     if entry_path.is_file() {
-                        let file_name = entry_path
+                        let file_name: String = entry_path
                             .file_name()
                             .unwrap_or_default()
                             .to_string_lossy()
@@ -326,7 +334,8 @@ impl GableExplorer {
                                     };
 
                                     // 构造新的完整路径
-                                    let new_path = parent_path.join(new_file_name);
+                                    let new_path: std::path::PathBuf =
+                                        parent_path.join(new_file_name);
 
                                     // 检查目标文件是否已存在
                                     if new_path.exists() && entry_path != new_path {
@@ -353,21 +362,21 @@ impl GableExplorer {
     /// 重命名单个sheet项
     fn rename_sheet_item(item: &TreeItem, new_sheet_name: &str) -> Result<(), std::io::Error> {
         // 从完整路径中提取目录和原始文件名
-        let path = std::path::Path::new(&item.fullpath);
+        let path: &std::path::Path = std::path::Path::new(&item.fullpath);
         if let Some(parent_path) = path.parent() {
             if let Some(file_name) = path.file_name() {
-                let file_name_str = file_name.to_string_lossy();
+                let file_name_str: std::borrow::Cow<'_, str> = file_name.to_string_lossy();
 
                 // 解析原始文件名
                 if let Some((excel_name, _)) = gables::parse_gable_filename(&file_name_str) {
                     // 构造新的文件名: excelname@new_sheetname.gable
-                    let new_file_name = format!(
+                    let new_file_name: String = format!(
                         "{}@{}{}",
                         excel_name,
                         new_sheet_name,
                         crate::common::global::GABLE_FILE_TYPE
                     );
-                    let new_path = parent_path.join(new_file_name);
+                    let new_path: std::path::PathBuf = parent_path.join(new_file_name);
 
                     // 检查目标文件是否已存在
                     if new_path.exists() && path != new_path {
@@ -459,13 +468,14 @@ impl GableExplorer {
         gables::set_folder_expanded(&parent_item.fullpath);
 
         // 构造新文件夹路径
-        let new_folder_path = std::path::Path::new(&parent_item.fullpath).join("新建文件夹");
+        let new_folder_path: std::path::PathBuf =
+            std::path::Path::new(&parent_item.fullpath).join("新建文件夹");
 
         // 如果文件夹已存在，则添加序号
-        let mut new_path = new_folder_path.clone();
-        let mut counter = 1;
+        let mut new_path: std::path::PathBuf = new_folder_path.clone();
+        let mut counter: i32 = 1;
         while new_path.exists() {
-            let new_name = format!("新建文件夹({})", counter);
+            let new_name: String = format!("新建文件夹({})", counter);
             new_path = std::path::Path::new(&parent_item.fullpath).join(new_name);
             counter += 1;
         }

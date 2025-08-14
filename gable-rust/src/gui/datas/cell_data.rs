@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use serde_json::Value;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct CellData {
@@ -16,12 +17,12 @@ fn deserialize_string<'de, D>(deserializer: D) -> Result<String, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
-    let value = serde_json::value::Value::deserialize(deserializer)?;
+    let value: Value = Value::deserialize(deserializer)?;
     Ok(match value {
-        serde_json::value::Value::String(s) => s,
-        serde_json::value::Value::Number(n) => n.to_string(),
-        serde_json::value::Value::Bool(b) => b.to_string(),
-        serde_json::value::Value::Null => String::new(),
+        Value::String(s) => s,
+        Value::Number(n) => n.to_string(),
+        Value::Bool(b) => b.to_string(),
+        Value::Null => String::new(),
         _ => value.to_string(),
     })
 }

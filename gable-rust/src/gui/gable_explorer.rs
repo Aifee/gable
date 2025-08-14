@@ -411,7 +411,7 @@ impl GableExplorer {
                     ui.close();
                 }
                 if ui.button("编辑").clicked() {
-                    // TODO: 实现打开文件逻辑
+                    gables::edit_gable(item.clone());
                     ui.close();
                 }
                 ui.separator();
@@ -427,7 +427,7 @@ impl GableExplorer {
             }
             EItemType::Sheet => {
                 if ui.button("编辑").clicked() {
-                    // TODO: 实现打开文件逻辑
+                    gables::edit_gable(item.clone());
                     ui.close();
                 }
                 ui.separator();

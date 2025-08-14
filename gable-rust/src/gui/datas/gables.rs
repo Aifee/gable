@@ -245,80 +245,119 @@ fn get_item_by_path(items: &[TreeItem], path: &str) -> Option<TreeItem> {
     None
 }
 
-pub fn find_tree_item(item: TreeItem, item_type: EItemType) -> Option<TreeItem> {
+fn find_parent_for_item(item: TreeItem, item_type: EItemType) -> Option<TreeItem> {
     if item.item_type == item_type {
         return Some(item);
     }
     let parent_path = item.parent?;
-    let tree_items = TREE_ITEMS.lock().unwrap();
-    // 查找父节点
-    let parent_item = {
-        let mut found_item = None;
-        for root_item in tree_items.iter() {
-            if let Some(item) = get_item_by_path(&[root_item.clone()], &parent_path) {
-                found_item = Some(item);
-                break;
+    match TREE_ITEMS.try_lock() {
+        Ok(tree_items) => {
+            let tree_items_copy: Vec<TreeItem> = tree_items.clone();
+            // 释放锁
+            drop(tree_items);
+
+            for root_item in tree_items_copy.iter() {
+                if let Some(parent_item) = get_item_by_path(&[root_item.clone()], &parent_path) {
+                    return find_parent_for_item(parent_item, item_type);
+                }
             }
+            None
         }
-        found_item
-    };
-    if let Some(parent) = parent_item {
-        find_tree_item(parent, item_type)
-    } else {
-        None
+        Err(_) => {
+            // 获取锁失败，说明锁已被占用，返回None避免死锁
+            log::warn!("无法获取TREE_ITEMS锁，跳过查找父项");
+            None
+        }
     }
 }
 
 /// 根据路径直接获取TreeItem，保证返回的是item_type类型
 pub fn find_tree_item_by_path(path: &str, item_type: EItemType) -> Option<TreeItem> {
-    let tree_items: std::sync::MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
-    let target_item: Option<TreeItem> = {
-        let mut found_item: Option<TreeItem> = None;
-        for root_item in tree_items.iter() {
-            if let Some(item) = get_item_by_path(&[root_item.clone()], path) {
-                found_item = Some(item);
-                break;
-            }
+    let tree_items_copy = TREE_ITEMS.lock().unwrap().clone();
+    let mut found_item: Option<TreeItem> = None;
+    for root_item in tree_items_copy.iter() {
+        if let Some(item) = get_item_by_path(&[root_item.clone()], path) {
+            found_item = Some(item);
+            break;
         }
-        found_item
-    };
-    drop(tree_items);
-    // 根据找到的项类型进行处理
-    if let Some(item) = target_item {
-        find_tree_item(item, item_type)
+    }
+    if let Some(item) = found_item {
+        find_parent_for_item(item, item_type)
     } else {
         None
     }
 }
 
 /// 编辑gable文件
-pub fn edit_gable(path: &str) {
-    let item = find_tree_item_by_path(path, EItemType::Excel);
-    if let Some(item) = item {
-        log::info!("准备编辑文件: {}", item.fullpath);
-
-        // 在新线程中打开文件，避免阻塞UI
-        let file_path = item.fullpath.clone();
-        std::thread::spawn(move || {
-            #[cfg(target_os = "windows")]
-            use std::process::Command;
-            let result = Command::new("cmd")
-                .args(&["/C", "start", "", &file_path])
-                .spawn();
-
-            #[cfg(target_os = "macos")]
-            let result = Command::new("open").arg(&file_path).spawn();
-
-            #[cfg(target_os = "linux")]
-            let result = Command::new("xdg-open").arg(&file_path).spawn();
-
-            if let Err(e) = result {
-                log::error!("无法打开文件 '{}': {}", file_path, e);
-            }
-        });
-    } else {
-        log::error!("找不到路径为 '{}' 的项", path);
+pub fn edit_gable(item: TreeItem) {
+    if item.item_type == EItemType::Folder {
+        log::error!("文件夹不能进行编辑");
+        return;
     }
+
+    // 解析当前项的excel名称
+    let excel_name = if item.item_type == EItemType::Excel {
+        item.display_name.clone()
+    } else {
+        let file_name = if let Some(last_slash) = item.fullpath.rfind(|c| c == '/' || c == '\\') {
+            &item.fullpath[last_slash + 1..]
+        } else {
+            &item.fullpath
+        };
+
+        if let Some(at_pos) = file_name.find('@') {
+            file_name[..at_pos].to_string()
+        } else if let Some(dot_pos) = file_name.rfind('.') {
+            file_name[..dot_pos].to_string()
+        } else {
+            item.display_name.clone()
+        }
+    };
+    let parent_path = if let Some(last_slash) = item.fullpath.rfind(|c| c == '/' || c == '\\') {
+        item.fullpath[..last_slash].to_string()
+    } else {
+        ".".to_string()
+    };
+    // 在父目录中查找所有同名excel文件
+    let mut related_files = Vec::new();
+
+    if let Ok(entries) = fs::read_dir(&parent_path) {
+        for entry in entries.filter_map(|e| e.ok()) {
+            let entry_name = entry.file_name().to_string_lossy().to_string();
+
+            // 检查是否为.gable文件且excel名称匹配
+            if let Some((parsed_excel_name, _)) = parse_gable_filename(&entry_name) {
+                if parsed_excel_name == excel_name {
+                    related_files.push(entry.path().to_string_lossy().to_string());
+                }
+            }
+        }
+    }
+    log::info!("找到与 '{}' 相关的文件:", excel_name);
+    for file in &related_files {
+        log::info!("  {}", file);
+    }
+    // 打开所有相关文件
+    // for file_path in related_files {
+    //     let path = file_path.clone();
+    //     std::thread::spawn(move || {
+    //         #[cfg(target_os = "windows")]
+    //         use std::process::Command;
+    //         let result = Command::new("cmd")
+    //             .args(&["/C", "start", "", &path])
+    //             .spawn();
+
+    //         #[cfg(target_os = "macos")]
+    //         let result = Command::new("open").arg(&path).spawn();
+
+    //         #[cfg(target_os = "linux")]
+    //         let result = Command::new("xdg-open").arg(&path).spawn();
+
+    //         if let Err(e) = result {
+    //             log::error!("无法打开文件 '{}': {}", path, e);
+    //         }
+    //     });
+    // }
 }
 
 /// 项目目录调整好重置数据

@@ -10,6 +10,47 @@ impl GableMenu {
             show_about: false, // 初始化为false
         }
     }
+
+    pub fn set_theme(&mut self, ctx: &egui::Context, theme: &str) {
+        match theme {
+            "Light" => {
+                let mut visuals_light = egui::Visuals::light();
+                // 面板背景颜色
+                visuals_light.panel_fill = egui::Color32::from_rgb(243, 243, 243);
+                // 设置文本颜色（全局文本色）
+                visuals_light.override_text_color = Some(egui::Color32::BLACK);
+                // 修改浅色背景（表单的交替色）
+                visuals_light.faint_bg_color = egui::Color32::from_rgb(230, 230, 230);
+                // 编辑框背景色
+                visuals_light.text_edit_bg_color = Some(egui::Color32::from_rgb(220, 220, 220));
+                // 右键菜单填充色
+                visuals_light.window_fill = egui::Color32::from_rgb(230, 230, 230);
+                // 非常暗或亮的颜色（对应主题）。用作文本编辑、滚动条和其他需要与其他交互内容区别开来的背景。
+                visuals_light.extreme_bg_color = egui::Color32::from_rgb(200, 200, 200);
+                ctx.set_visuals(visuals_light);
+            }
+            "Dark" => {
+                let mut visuals_dark = egui::Visuals::dark();
+                // 面板背景颜色
+                visuals_dark.panel_fill = egui::Color32::from_rgb(40, 44, 51);
+                // 设置文本颜色（全局文本色）
+                visuals_dark.override_text_color = Some(egui::Color32::WHITE);
+                // 表单的交替色
+                visuals_dark.faint_bg_color = egui::Color32::from_rgb(45, 49, 59);
+                // 编辑框背景色
+                visuals_dark.text_edit_bg_color = Some(egui::Color32::from_rgb(29, 31, 35));
+                // 右键菜单填充色
+                visuals_dark.window_fill = egui::Color32::from_rgb(33, 37, 43);
+                // 对应主题。用作文本编辑、滚动条和其他需要与其他交互内容区别开来的背景。
+                visuals_dark.extreme_bg_color = egui::Color32::from_rgb(29, 31, 35);
+                ctx.set_visuals(visuals_dark);
+            }
+            _ => {
+                ctx.set_visuals(egui::Visuals::dark());
+            }
+        }
+    }
+
     /// 绘制菜单
     pub fn ongui(&mut self, ctx: &egui::Context) {
         egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
@@ -46,10 +87,10 @@ impl GableMenu {
                     }
                     ui.menu_button("主题", |ui| {
                         if ui.button("Light").clicked() {
-                            ctx.set_visuals(egui::Visuals::light());
+                            self.set_theme(ctx, "Light");
                         }
                         if ui.button("Dark").clicked() {
-                            ctx.set_visuals(egui::Visuals::dark());
+                            self.set_theme(ctx, "Dark");
                         }
                     });
                 });

@@ -28,13 +28,14 @@ impl GableApp {
         Self::init_fonts(cc);
         Self::init_style(cc);
         // 应用字体定义
-        let app = Self {
+        let mut app = Self {
             gable_menu: GableMenu::new(),
             gable_navigation: GableNavigation::new(),
             gable_explorer: GableExplorer::new(),
             gable_form: GableForm::new(),
             gable_log: GableLog::new(),
         };
+        app.gable_menu.set_theme(&cc.egui_ctx, "Dark");
         gables::refresh_gables();
         app
     }

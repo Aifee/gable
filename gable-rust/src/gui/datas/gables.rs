@@ -295,14 +295,16 @@ pub fn edit_gable(item: TreeItem) {
         return;
     }
 
-    // 解析当前项的excel名称
-    let excel_name = if item.item_type == EItemType::Excel {
+    let excel_name: String = if item.item_type == EItemType::Excel {
         item.display_name.clone()
     } else {
-        let file_name = if let Some(last_slash) = item.fullpath.rfind(|c| c == '/' || c == '\\') {
-            &item.fullpath[last_slash + 1..]
-        } else {
-            &item.fullpath
+        let file_name: String = {
+            let path: &Path = std::path::Path::new(&item.fullpath);
+            if let Some(file_name) = path.file_name() {
+                file_name.to_string_lossy().to_string()
+            } else {
+                item.fullpath.clone()
+            }
         };
 
         if let Some(at_pos) = file_name.find('@') {
@@ -313,17 +315,18 @@ pub fn edit_gable(item: TreeItem) {
             item.display_name.clone()
         }
     };
-    let parent_path = if let Some(last_slash) = item.fullpath.rfind(|c| c == '/' || c == '\\') {
-        item.fullpath[..last_slash].to_string()
-    } else {
-        ".".to_string()
+    let parent_path = {
+        let path: &Path = std::path::Path::new(&item.fullpath);
+        if let Some(parent) = path.parent() {
+            parent.to_string_lossy().to_string()
+        } else {
+            ".".to_string()
+        }
     };
-    // 在父目录中查找所有同名excel文件
-    let mut related_files = Vec::new();
-
+    let mut related_files: Vec<String> = Vec::new();
     if let Ok(entries) = fs::read_dir(&parent_path) {
         for entry in entries.filter_map(|e| e.ok()) {
-            let entry_name = entry.file_name().to_string_lossy().to_string();
+            let entry_name: String = entry.file_name().to_string_lossy().to_string();
 
             // 检查是否为.gable文件且excel名称匹配
             if let Some((parsed_excel_name, _)) = parse_gable_filename(&entry_name) {

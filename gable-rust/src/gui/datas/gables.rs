@@ -231,85 +231,98 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     items
 }
 
-/// 根据路径直接获取TreeItem，保证返回的是ItemType::Excel类型
-pub fn find_tree_item_by_path(path: &str) -> Option<TreeItem> {
-    let tree_items = TREE_ITEMS.lock().unwrap();
-
-    // 先直接根据路径找到对应的TreeItem
-    fn find_item_by_path(items: &[TreeItem], path: &str) -> Option<TreeItem> {
-        for item in items.iter() {
-            if item.fullpath == path {
-                return Some(item.clone());
-            }
-
-            if let Some(result) = find_item_by_path(&item.children, path) {
-                return Some(result);
-            }
+// 定义内部函数来递归查找指定路径的项
+fn get_item_by_path(items: &[TreeItem], path: &str) -> Option<TreeItem> {
+    for item in items.iter() {
+        if item.fullpath == path {
+            return Some(item.clone());
         }
-        None
-    }
 
-    // 查找指定路径的项
-    let target_item = {
+        if let Some(result) = get_item_by_path(&item.children, path) {
+            return Some(result);
+        }
+    }
+    None
+}
+
+pub fn find_tree_item(item: TreeItem, item_type: EItemType) -> Option<TreeItem> {
+    if item.item_type == item_type {
+        return Some(item);
+    }
+    let parent_path = item.parent?;
+    let tree_items = TREE_ITEMS.lock().unwrap();
+    // 查找父节点
+    let parent_item = {
         let mut found_item = None;
         for root_item in tree_items.iter() {
-            if let Some(item) = find_item_by_path(&[root_item.clone()], path) {
+            if let Some(item) = get_item_by_path(&[root_item.clone()], &parent_path) {
                 found_item = Some(item);
                 break;
             }
         }
         found_item
     };
-
-    // 根据找到的项类型进行处理
-    if let Some(item) = target_item {
-        match item.item_type {
-            EItemType::Sheet => {
-                // 如果是Sheet类型，查找其父节点（应该是Excel类型）
-                if let Some(parent_path) = &item.parent {
-                    // 在整个树中查找父节点
-                    fn find_excel_parent(
-                        items: &[TreeItem],
-                        parent_path: &str,
-                    ) -> Option<TreeItem> {
-                        for item in items.iter() {
-                            if &item.fullpath == parent_path && item.item_type == EItemType::Excel {
-                                return Some(item.clone());
-                            }
-
-                            if let Some(result) = find_excel_parent(&item.children, parent_path) {
-                                return Some(result);
-                            }
-                        }
-                        None
-                    }
-
-                    // 在所有根节点中查找父节点
-                    for root_item in tree_items.iter() {
-                        if let Some(parent) = find_excel_parent(&[root_item.clone()], parent_path) {
-                            return Some(parent);
-                        }
-                    }
-                }
-                None
-            }
-            EItemType::Excel => {
-                // 如果是Excel类型，直接返回
-                Some(item)
-            }
-            EItemType::Folder => {
-                // 如果是Folder类型，返回None
-                None
-            }
-        }
+    if let Some(parent) = parent_item {
+        find_tree_item(parent, item_type)
     } else {
         None
     }
 }
 
+/// 根据路径直接获取TreeItem，保证返回的是item_type类型
+pub fn find_tree_item_by_path(path: &str, item_type: EItemType) -> Option<TreeItem> {
+    let tree_items: std::sync::MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
+    let target_item: Option<TreeItem> = {
+        let mut found_item: Option<TreeItem> = None;
+        for root_item in tree_items.iter() {
+            if let Some(item) = get_item_by_path(&[root_item.clone()], path) {
+                found_item = Some(item);
+                break;
+            }
+        }
+        found_item
+    };
+    drop(tree_items);
+    // 根据找到的项类型进行处理
+    if let Some(item) = target_item {
+        find_tree_item(item, item_type)
+    } else {
+        None
+    }
+}
+
+/// 编辑gable文件
+pub fn edit_gable(path: &str) {
+    let item = find_tree_item_by_path(path, EItemType::Excel);
+    if let Some(item) = item {
+        log::info!("准备编辑文件: {}", item.fullpath);
+
+        // 在新线程中打开文件，避免阻塞UI
+        let file_path = item.fullpath.clone();
+        std::thread::spawn(move || {
+            #[cfg(target_os = "windows")]
+            use std::process::Command;
+            let result = Command::new("cmd")
+                .args(&["/C", "start", "", &file_path])
+                .spawn();
+
+            #[cfg(target_os = "macos")]
+            let result = Command::new("open").arg(&file_path).spawn();
+
+            #[cfg(target_os = "linux")]
+            let result = Command::new("xdg-open").arg(&file_path).spawn();
+
+            if let Err(e) = result {
+                log::error!("无法打开文件 '{}': {}", file_path, e);
+            }
+        });
+    } else {
+        log::error!("找不到路径为 '{}' 的项", path);
+    }
+}
+
 /// 项目目录调整好重置数据
 pub fn refresh_gables() {
-    // let start_time = Instant::now();
     let workspace = setting::WORKSPACE.lock().unwrap();
     let root_path = if let Some(path) = workspace.as_ref() {
         Path::new(path)

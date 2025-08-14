@@ -1,6 +1,5 @@
-use eframe::egui::{self, util};
-
-use crate::common::{global, utils};
+use crate::common::utils;
+use eframe::egui;
 pub(crate) struct GableNavigation {
     /// 当前选中的导航索引
     selected_navigation_index: u8,

@@ -1,6 +1,5 @@
 use crate::gui::{component, datas::log::LogTrace};
 use eframe::egui;
-use log::Level;
 
 pub(crate) struct GableLog {
     row_height: f32,

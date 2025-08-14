@@ -333,7 +333,7 @@ impl GableForm {
             });
             for col_index in 1..total_cols + 1 {
                 row.col(|ui| {
-                    if row_index < global::TABLE_KV_ROW_TOTAL {
+                    if row_index < global::TABLE_ENUM_ROW_TOTAL {
                         if let Some(row_data) = sheet_content.heads.get(&row_index.to_string()) {
                             if let Some(col_data) = row_data.get(&col_index.to_string()) {
                                 ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);

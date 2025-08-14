@@ -4,7 +4,7 @@ pub const GABLE_FILE_TYPE: &str = ".gable";
 pub const DIR_TEMP: &str = "__Temps";
 pub const DIR_DATA: &str = "__Datas";
 pub const DIR_LOG: &str = "__Temps/__Logs";
-pub const IGNORED_DIRS: &[&str] = &[".vscode", ".git", "_log", DIR_TEMP, DIR_LOG];
+pub const IGNORED_DIRS: &[&str] = &[".vscode", ".git", "_log", DIR_TEMP, DIR_DATA];
 
 ///[数据表单]描述行
 pub const TABLE_DATA_ROW_DES: usize = 1;
@@ -19,6 +19,7 @@ pub const TABLE_DATA_ROW_LINK: usize = 5;
 /// [数据表单]有效数据起始行数
 pub const TABLE_DATA_ROW_TOTAL: usize = 6;
 
+///[KV表单]有效数据起始行数
 pub const TABLE_KV_ROW_TOTAL: usize = 2;
-
+///[枚举表单]有效数据起始行数
 pub const TABLE_ENUM_ROW_TOTAL: usize = 2;

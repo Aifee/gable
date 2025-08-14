@@ -1,4 +1,5 @@
 use crate::gui::datas::esheet_type::ESheetType;
+use eframe::egui;
 use std::path::Path;
 
 /// 将列号转换为Excel风格的列名（A, B, ..., Z, AA, AB, ...）
@@ -29,4 +30,13 @@ pub fn determine_sheet_type(path: &Path) -> ESheetType {
     }
     // 默认类型
     ESheetType::DATA
+}
+
+pub fn get_selected_color(ctx: &egui::Context) -> egui::Color32 {
+    let style = ctx.style();
+    if style.visuals.dark_mode {
+        egui::Color32::from_rgb(60, 100, 150)
+    } else {
+        egui::Color32::from_rgb(173, 216, 230)
+    }
 }

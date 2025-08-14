@@ -1,4 +1,6 @@
-use eframe::egui;
+use eframe::egui::{self, util};
+
+use crate::common::{global, utils};
 pub(crate) struct GableNavigation {
     /// 当前选中的导航索引
     selected_navigation_index: u8,
@@ -20,19 +22,14 @@ impl GableNavigation {
                 ui.with_layout(
                     egui::Layout::top_down_justified(egui::Align::Center),
                     |ui| {
-                        // 顶部区域 - 两个互斥的 Tab 按钮
                         ui.vertical(|ui| {
                             // 设置按钮样式 - 增大按钮和字体大小
                             let button_size = egui::Vec2::new(40.0, 40.0);
-
-                            // Tab1 - 房子图标
                             let tab1_button =
                                 egui::Button::new(egui::RichText::new("🏠").size(24.0)).fill(
                                     if self.selected_navigation_index == 0 {
-                                        // 选中状态背景色
-                                        egui::Color32::from_rgb(0, 120, 200)
+                                        utils::get_selected_color(ctx)
                                     } else {
-                                        // 未选中状态背景色
                                         egui::Color32::TRANSPARENT
                                     },
                                 );
@@ -41,15 +38,11 @@ impl GableNavigation {
                                 self.selected_navigation_index = 0;
                                 // Tab1 点击处理逻辑
                             }
-
-                            // Tab2 - 搜索图标
                             let tab2_button =
                                 egui::Button::new(egui::RichText::new("🔍").size(24.0)).fill(
                                     if self.selected_navigation_index == 1 {
-                                        // 选中状态背景色
-                                        egui::Color32::from_rgb(0, 120, 200)
+                                        utils::get_selected_color(ctx)
                                     } else {
-                                        // 未选中状态背景色
                                         egui::Color32::TRANSPARENT
                                     },
                                 );
@@ -60,7 +53,6 @@ impl GableNavigation {
                             }
                         });
 
-                        // 底部区域 - 一个按钮 (改为设置图标)
                         ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
                             let button_size = egui::Vec2::new(40.0, 40.0);
                             let bottom_button = egui::Button::new(

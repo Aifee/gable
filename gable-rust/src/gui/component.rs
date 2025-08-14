@@ -1,18 +1,18 @@
 use eframe::egui;
 use log::Level;
 
+use crate::common::utils;
+
 pub fn excel_tap(
     ui: &mut egui::Ui,
     text: &str,
     selected: bool,
     padding: egui::Vec2,
 ) -> (egui::Response, Option<egui::Response>) {
-    // 创建 Frame 样式
     let frame = if selected {
-        // 选中状态：蓝色背景
         egui::Frame::NONE
-            .fill(egui::Color32::from_rgb(0, 120, 255))
-            .stroke(egui::Stroke::new(1.0, egui::Color32::from_rgb(0, 80, 200)))
+            .fill(utils::get_selected_color(ui.ctx()))
+            .stroke(egui::Stroke::new(1.0, utils::get_selected_color(ui.ctx())))
             .corner_radius(egui::CornerRadius {
                 nw: 4, // 左上角
                 ne: 4, // 右上角
@@ -40,19 +40,9 @@ pub fn excel_tap(
     // 使用 Frame 包装按钮
     let _ = frame.show(ui, |ui| {
         ui.horizontal(|ui| {
-            // 设置文字颜色
-            let text_color = if selected {
-                egui::Color32::WHITE
-            } else {
-                ui.style().visuals.text_color()
-            };
-
             // 创建可交互的文本标签
             label_response = Some(
-                ui.add(
-                    egui::Label::new(egui::RichText::new(text).color(text_color))
-                        .sense(egui::Sense::click()),
-                ),
+                ui.add(egui::Label::new(egui::RichText::new(text)).sense(egui::Sense::click())),
             );
             ui.add_space(8.0);
             // 创建关闭按钮
@@ -76,10 +66,9 @@ pub fn sheet_tab(
 ) -> egui::Response {
     // 创建 Frame 样式
     let frame = if selected {
-        // 选中状态：蓝色背景
         egui::Frame::NONE
-            .fill(egui::Color32::from_rgb(0, 120, 255))
-            .stroke(egui::Stroke::new(1.0, egui::Color32::from_rgb(0, 80, 200)))
+            .fill(utils::get_selected_color(ui.ctx()))
+            .stroke(egui::Stroke::new(1.0, utils::get_selected_color(ui.ctx())))
             .corner_radius(egui::CornerRadius {
                 nw: 0, // 左上角
                 ne: 0, // 右上角
@@ -102,16 +91,7 @@ pub fn sheet_tab(
     };
     // 使用 Frame 包装按钮
     let response = frame
-        .show(ui, |ui| {
-            // 设置文字颜色
-            let text_color = if selected {
-                egui::Color32::WHITE
-            } else {
-                ui.style().visuals.text_color()
-            };
-
-            ui.label(egui::RichText::new(text).color(text_color))
-        })
+        .show(ui, |ui| ui.label(egui::RichText::new(text)))
         .response;
 
     // 添加interact方法使Frame可以响应点击事件

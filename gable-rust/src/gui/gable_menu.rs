@@ -27,6 +27,8 @@ impl GableMenu {
                 visuals_light.window_fill = egui::Color32::from_rgb(230, 230, 230);
                 // 非常暗或亮的颜色（对应主题）。用作文本编辑、滚动条和其他需要与其他交互内容区别开来的背景。
                 visuals_light.extreme_bg_color = egui::Color32::from_rgb(200, 200, 200);
+                // 表单选中内容色
+                visuals_light.selection.bg_fill = egui::Color32::from_rgb(173, 216, 230);
                 ctx.set_visuals(visuals_light);
             }
             "Dark" => {
@@ -43,6 +45,8 @@ impl GableMenu {
                 visuals_dark.window_fill = egui::Color32::from_rgb(33, 37, 43);
                 // 对应主题。用作文本编辑、滚动条和其他需要与其他交互内容区别开来的背景。
                 visuals_dark.extreme_bg_color = egui::Color32::from_rgb(29, 31, 35);
+                // 表单选中内容色
+                visuals_dark.selection.bg_fill = egui::Color32::from_rgb(60, 100, 150);
                 ctx.set_visuals(visuals_dark);
             }
             _ => {

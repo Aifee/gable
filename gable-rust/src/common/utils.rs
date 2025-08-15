@@ -74,12 +74,11 @@ pub fn get_title() -> String {
 }
 
 /// 获取临时目录
-pub fn get_temp_path(file_name: &str) -> String {
+pub fn get_temp_path() -> String {
     let workspace: MutexGuard<'_, Option<String>> = setting::WORKSPACE.lock().unwrap();
     let temp_dir = global::DIR_TEMP;
     let path: String = PathBuf::from(workspace.as_ref().unwrap())
         .join(temp_dir)
-        .join(file_name)
         .to_string_lossy()
         .to_string();
     path
@@ -88,8 +87,15 @@ pub fn get_temp_path(file_name: &str) -> String {
 /// 写入Excel文件
 pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String, Box<dyn Error>> {
     let file_name: &str = &format!("{}{}", &excel_name, &global::EXCEL_EXTENSION);
-    let excel_file_path_tem: String = get_temp_path(&format!("~${}", &file_name));
-    let excel_file_path: String = get_temp_path(&file_name);
+    let tem_path = get_temp_path();
+    let excel_file_path_tem: String = PathBuf::from(&tem_path)
+        .join(&format!("~${}", &file_name))
+        .to_string_lossy()
+        .to_string();
+    let excel_file_path: String = PathBuf::from(&tem_path)
+        .join(&file_name)
+        .to_string_lossy()
+        .to_string();
     // 检查临时文件是否存在（表示Excel文件已打开）
     if Path::new(&excel_file_path_tem).exists() {
         log::error!("Excel文件 '{}' 已经打开，无法写入", excel_file_path);

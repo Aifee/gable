@@ -1,6 +1,6 @@
 use crate::gui::{component, datas::log::LogTrace};
 use eframe::egui::{Context, Frame, ScrollArea, TopBottomPanel};
-use egui_extras::{Column, TableBuilder};
+use egui_extras::{Column, TableBody, TableBuilder};
 
 pub(crate) struct GableLog {
     row_height: f32,
@@ -54,10 +54,10 @@ impl GableLog {
                                 });
                             });
                         })
-                        .body(|mut body| {
+                        .body(|mut body: TableBody<'_>| {
                             if let Some(log_records) = LogTrace::get_log_records() {
                                 if let Ok(records) = log_records.lock() {
-                                    let row_count = records.len();
+                                    let row_count: usize = records.len();
                                     if row_count > 0 {
                                         body.rows(self.row_height, row_count, |mut row| {
                                             let row_index = row_count - row.index() - 1;

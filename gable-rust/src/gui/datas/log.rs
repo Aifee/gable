@@ -46,7 +46,7 @@ impl LogTrace {
                 let day_file_name: DelayedFormat<StrftimeItems<'_>> =
                     Local::now().format("%Y-%m-%d");
                 let file_path: PathBuf = Path::new(dir_path).join(format!("{}.log", day_file_name));
-                let f = OpenOptions::new()
+                let f: File = OpenOptions::new()
                     .create(true)
                     .append(true)
                     .open(file_path)?;
@@ -74,7 +74,7 @@ impl LogTrace {
                 if GLOBAL_LOG_RECORDS.get().is_none() {
                     let _ = GLOBAL_LOG_RECORDS.set(Arc::new(Mutex::new(Vec::new())));
                 }
-                let logger = LogTrace {
+                let logger: LogTrace = LogTrace {
                     file: Mutex::new(None),
                     level: level,
                 };

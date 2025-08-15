@@ -1,6 +1,7 @@
 use crate::common::{global, utils};
 use crate::gui::component;
 use crate::gui::datas::{esheet_type::ESheetType, gable_data::GableData, tree_item::TreeItem};
+use eframe::egui::Response;
 use eframe::egui::{
     Align, CentralPanel, Context, Label, Layout, ScrollArea, TextWrapMode, Ui, Vec2,
     scroll_area::ScrollBarVisibility, scroll_area::ScrollSource,
@@ -47,7 +48,7 @@ impl GableForm {
                 items.push(v.clone());
             }
             // 如果未打开，添加到打开列表并选中它
-            let opened_item = OpenedExcel {
+            let opened_item: OpenedExcel = OpenedExcel {
                 item,
                 selected_sheet_index: 0,
             };
@@ -123,7 +124,7 @@ impl GableForm {
     }
 
     fn ongui_excel_tab(&mut self, ui: &mut Ui, height: f32) {
-        let tab_padding = Vec2::new(8.0, 4.0);
+        let tab_padding: Vec2 = Vec2::new(8.0, 4.0);
         ui.push_id("excel_tab_scroll", |ui| {
             ScrollArea::horizontal()
                 .auto_shrink(false)
@@ -135,11 +136,11 @@ impl GableForm {
                     ui.horizontal(|ui| {
                         ui.spacing_mut().item_spacing.x = 0.0;
                         ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
-                            let mut selected_index = None;
-                            let mut close_index = None;
+                            let mut selected_index: Option<usize> = None;
+                            let mut close_index: Option<usize> = None;
                             for (index, opened_item) in self.excels.iter().enumerate() {
-                                let is_selected = self.selected_excel_index == Some(index);
-                                let info = &opened_item.item.display_name;
+                                let is_selected: bool = self.selected_excel_index == Some(index);
+                                let info: &String = &opened_item.item.display_name;
                                 let (response, close_response) =
                                     component::excel_tap(ui, info, is_selected, tab_padding);
                                 if response.clicked() {
@@ -164,7 +165,7 @@ impl GableForm {
     }
 
     fn ongui_sheet_tab(&mut self, ui: &mut Ui, height: f32) {
-        let excel = self.get_selected_excel().unwrap();
+        let excel: &mut OpenedExcel = self.get_selected_excel().unwrap();
         let tab_padding = Vec2::new(8.0, 4.0);
         ui.push_id("sheet_tab_scroll", |ui| {
             ScrollArea::horizontal()
@@ -178,10 +179,10 @@ impl GableForm {
                         ui.spacing_mut().item_spacing.x = 0.0;
                         ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
                             for index in 0..excel.item.children.len() {
-                                let sheet_item = &excel.item.children[index];
-                                let is_selected = excel.selected_sheet_index == index;
-                                let info = &sheet_item.display_name;
-                                let response =
+                                let sheet_item: &TreeItem = &excel.item.children[index];
+                                let is_selected: bool = excel.selected_sheet_index == index;
+                                let info: &String = &sheet_item.display_name;
+                                let response: Response =
                                     component::sheet_tab(ui, info, is_selected, tab_padding);
                                 if response.clicked() {
                                     excel.selected_sheet_index = index;
@@ -195,7 +196,7 @@ impl GableForm {
 
     /// 数据表 绘制
     fn ongui_table(&mut self, ui: &mut Ui) {
-        let sheet = self.get_sheet();
+        let sheet: Option<&mut TreeItem> = self.get_sheet();
         if sheet.is_none() {
             ui.centered_and_justified(|ui| ui.label("请选择要浏览的页签"));
             return;
@@ -242,8 +243,8 @@ impl GableForm {
 
     /// 普通数据表绘制
     fn ongui_table_databody(&mut self, body: TableBody<'_>, sheet_content: &GableData) {
-        let total_rows = sheet_content.max_row as usize;
-        let total_cols = sheet_content.max_column as usize;
+        let total_rows: usize = sheet_content.max_row as usize;
+        let total_cols: usize = sheet_content.max_column as usize;
         body.rows(20.0, total_rows, |mut row| {
             let row_index = row.index() + 1;
             row.col(|ui| {
@@ -281,10 +282,10 @@ impl GableForm {
 
     /// KV表绘制
     fn ongui_table_kvbody(&mut self, body: TableBody<'_>, sheet_content: &GableData) {
-        let total_rows = sheet_content.max_row as usize;
-        let total_cols = sheet_content.max_column as usize;
+        let total_rows: usize = sheet_content.max_row as usize;
+        let total_cols: usize = sheet_content.max_column as usize;
         body.rows(20.0, total_rows, |mut row| {
-            let row_index = row.index() + 1;
+            let row_index: usize = row.index() + 1;
             row.col(|ui| {
                 ui.label(&row_index.to_string());
             });
@@ -320,8 +321,8 @@ impl GableForm {
 
     /// 枚举表绘制器
     fn ongui_table_enumbody(&mut self, body: TableBody<'_>, sheet_content: &GableData) {
-        let total_rows = sheet_content.max_row as usize;
-        let total_cols = sheet_content.max_column as usize;
+        let total_rows: usize = sheet_content.max_row as usize;
+        let total_cols: usize = sheet_content.max_column as usize;
         body.rows(20.0, total_rows, |mut row| {
             let row_index = row.index() + 1;
             row.col(|ui| {

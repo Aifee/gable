@@ -35,8 +35,8 @@ pub fn excel_tap(
             .inner_margin(padding)
     };
 
-    let mut close_response = None;
-    let mut label_response = None;
+    let mut close_response: Option<Response> = None;
+    let mut label_response: Option<Response> = None;
 
     // 使用 Frame 包装按钮
     let _ = frame.show(ui, |ui| {
@@ -45,21 +45,21 @@ pub fn excel_tap(
             label_response = Some(ui.add(Label::new(RichText::new(text)).sense(Sense::click())));
             ui.add_space(8.0);
             // 创建关闭按钮
-            let button = Button::new("❌").small().frame(false);
+            let button: Button<'_> = Button::new("❌").small().frame(false);
             close_response = Some(ui.add(button));
         })
         .response
     });
 
     // Frame响应（不包括内部的按钮区域）
-    let frame_response = label_response.unwrap();
+    let frame_response: Response = label_response.unwrap();
 
     (frame_response, close_response)
 }
 
 pub fn sheet_tab(ui: &mut Ui, text: &str, selected: bool, padding: Vec2) -> Response {
     // 创建 Frame 样式
-    let frame = if selected {
+    let frame: Frame = if selected {
         Frame::NONE
             .fill(utils::get_selected_color(ui.ctx()))
             .stroke(Stroke::new(1.0, utils::get_selected_color(ui.ctx())))
@@ -84,15 +84,15 @@ pub fn sheet_tab(ui: &mut Ui, text: &str, selected: bool, padding: Vec2) -> Resp
             .inner_margin(padding)
     };
     // 使用 Frame 包装按钮
-    let response = frame.show(ui, |ui| ui.label(RichText::new(text))).response;
+    let response: Response = frame.show(ui, |ui| ui.label(RichText::new(text))).response;
 
     // 添加interact方法使Frame可以响应点击事件
-    let response = ui.interact(response.rect, response.id, Sense::click());
+    let response: Response = ui.interact(response.rect, response.id, Sense::click());
     response
 }
 
 pub fn log_text(ui: &mut Ui, text: &str, level: log::Level) {
-    let color = match level {
+    let color: Color32 = match level {
         Level::Error => Color32::RED,
         Level::Warn => Color32::YELLOW,
         Level::Info => ui.style().visuals.text_color(),

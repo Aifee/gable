@@ -72,7 +72,7 @@ fn read_all_gable_files_parallel(
     file_paths
         .into_par_iter()
         .map(|file_path| {
-            let content = read_gable_file(&file_path);
+            let content: Option<GableData> = read_gable_file(&file_path);
             (file_path, content)
         })
         .collect()
@@ -317,7 +317,7 @@ pub fn edit_gable(item: TreeItem) {
             item.display_name.clone()
         }
     };
-    let parent_path = {
+    let parent_path: String = {
         let path: &Path = Path::new(&item.fullpath);
         if let Some(parent) = path.parent() {
             parent.to_string_lossy().to_string()
@@ -338,7 +338,7 @@ pub fn edit_gable(item: TreeItem) {
             }
         }
     }
-    log::info!("找到与 '{}' 相关的文件:", excel_name);
+    log::info!("编辑文件 {}:", excel_name);
     for file in &related_files {
         log::info!("  {}", file);
     }

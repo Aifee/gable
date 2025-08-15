@@ -11,7 +11,7 @@ use eframe::egui::{
     Context, FontData, FontDefinitions, FontFamily, FontId, Style, TextStyle, ViewportCommand,
 };
 use eframe::{App, CreationContext, Frame};
-use std::sync::Arc;
+use std::sync::{Arc, MutexGuard};
 
 pub(crate) struct GableApp {
     /// 菜单组件
@@ -98,7 +98,7 @@ impl GableApp {
     }
 
     fn get_title(&self) -> String {
-        let workspace = setting::WORKSPACE.lock().unwrap();
+        let workspace: MutexGuard<'_, Option<String>> = setting::WORKSPACE.lock().unwrap();
         format!(
             "Gable - {}",
             workspace.as_ref().unwrap_or(&"Unknown".to_string())

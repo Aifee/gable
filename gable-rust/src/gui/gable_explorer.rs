@@ -4,6 +4,7 @@ use std::{
     io::{Error, ErrorKind},
     mem,
     path::{Path, PathBuf},
+    sync::MutexGuard,
     thread,
     time::{self, Duration},
 };
@@ -49,7 +50,8 @@ impl GableExplorer {
                 ScrollArea::vertical()
                     .auto_shrink([false; 2])
                     .show(ui, |ui| {
-                        let tree_items = gables::TREE_ITEMS.lock().unwrap();
+                        let tree_items: MutexGuard<'_, Vec<TreeItem>> =
+                            gables::TREE_ITEMS.lock().unwrap();
                         for item in tree_items.iter() {
                             Self::gui_tree_item(
                                 ui,
@@ -111,7 +113,7 @@ impl GableExplorer {
                 .as_ref()
                 .map_or(false, |id: &String| id == &item.fullpath);
 
-            let header_response = match item.item_type {
+            let header_response: Response = match item.item_type {
                 EItemType::Sheet => {
                     // 使用 CollapsingHeader 但禁用展开功能以保持一致的外观和交互
                     CollapsingHeader::new(&header_text)
@@ -194,7 +196,7 @@ impl GableExplorer {
             return;
         }
 
-        let result: Result<(), std::io::Error> = match item.item_type {
+        let result: Result<(), Error> = match item.item_type {
             EItemType::Excel => {
                 // 重命名Excel文件及其所有sheet文件
                 Self::rename_excel_item(item, &new_name)
@@ -226,7 +228,7 @@ impl GableExplorer {
 
     /// 重命名文件夹项
     fn rename_folder_item(item: &TreeItem, new_folder_name: &str) -> Result<(), Error> {
-        let path = Path::new(&item.fullpath);
+        let path: &Path = Path::new(&item.fullpath);
         if let Some(parent_path) = path.parent() {
             let new_path: PathBuf = parent_path.join(new_folder_name);
 

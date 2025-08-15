@@ -86,7 +86,7 @@ pub fn get_temp_path(file_name: &str) -> String {
 }
 
 /// 写入Excel文件
-pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<(), Box<dyn Error>> {
+pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String, Box<dyn Error>> {
     let file_name: &str = &format!("{}{}", &excel_name, &global::EXCEL_EXTENSION);
     let excel_file_path_tem: String = get_temp_path(&format!("~${}", &file_name));
     let excel_file_path: String = get_temp_path(&file_name);
@@ -145,5 +145,5 @@ pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<(), Box
     }
     workbook.save(&excel_file_path)?;
     log::info!("成功写入Excel文件: {}", excel_file_path);
-    Ok(())
+    Ok(excel_file_path)
 }

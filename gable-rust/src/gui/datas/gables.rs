@@ -321,31 +321,61 @@ pub fn edit_gable(item: TreeItem) {
             }
         }
     }
-    log::info!("编辑文件 {}:", excel_name);
-    if let Err(e) = utils::write_excel(&excel_name, related_files) {
-        log::error!("写入Excel文件时出错: {}", e);
+    match utils::write_excel(&excel_name, related_files) {
+        Ok(excel_file_path) => {
+            log::info!("编辑文件 {}:", excel_name);
+            // 使用系统命令打开Excel文件
+            #[cfg(target_os = "windows")]
+            {
+                if let Err(e) = std::process::Command::new("cmd")
+                    .args(&["/C", "start", "", &excel_file_path])
+                    .spawn()
+                {
+                    log::error!("无法打开Excel文件: {}", e);
+                }
+            }
+
+            #[cfg(target_os = "macos")]
+            {
+                if let Err(e) = std::process::Command::new("open")
+                    .arg(&excel_file_path)
+                    .spawn()
+                {
+                    log::error!("无法打开Excel文件: {}", e);
+                }
+            }
+
+            #[cfg(target_os = "linux")]
+            {
+                if let Err(e) = std::process::Command::new("xdg-open")
+                    .arg(&excel_file_path)
+                    .spawn()
+                {
+                    log::error!("无法打开Excel文件: {}", e);
+                }
+            }
+        }
+        Err(e) => {
+            log::error!("写入Excel文件时出错: {}", e);
+        }
     }
 }
 
 /// 项目目录调整好重置数据
 pub fn refresh_gables() {
-    let workspace = setting::WORKSPACE.lock().unwrap();
-    let root_path = if let Some(path) = workspace.as_ref() {
+    let workspace: MutexGuard<'_, Option<String>> = setting::WORKSPACE.lock().unwrap();
+    let root_path: &Path = if let Some(path) = workspace.as_ref() {
         Path::new(path)
     } else {
-        // 如果没有设置工作空间，使用当前目录
         Path::new(".")
     };
 
-    let mut tree_items = Vec::new();
+    let mut tree_items: Vec<TreeItem> = Vec::new();
 
     if root_path.exists() && root_path.is_dir() {
         // 直接读取工作空间下的所有子项作为根节点，而不是将工作空间本身作为根节点
         let children = build_tree_from_path(root_path);
         tree_items.extend(children);
     }
-
-    // let duration = start_time.elapsed();
-    // 使用 lock 安全更新 TREE_ITEMS
     *TREE_ITEMS.lock().unwrap() = tree_items;
 }

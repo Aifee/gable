@@ -5,6 +5,8 @@ pub const DIR_TEMP: &str = "__Temps";
 pub const DIR_DATA: &str = "__Datas";
 pub const DIR_LOG: &str = "__Temps/__Logs";
 pub const IGNORED_DIRS: &[&str] = &[".vscode", ".git", "_log", DIR_TEMP, DIR_DATA];
+/// EXCEL文件扩展名
+pub const EXCEL_EXTENSION: &str = ".xlsx";
 
 ///[数据表单]描述行
 pub const TABLE_DATA_ROW_DES: usize = 1;

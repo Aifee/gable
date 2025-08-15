@@ -1,5 +1,6 @@
 use crate::common::res;
 use crate::common::setting;
+use crate::common::utils;
 use crate::gui::datas::eitem_type::EItemType;
 use crate::gui::datas::gables;
 use crate::gui::gable_explorer::GableExplorer;
@@ -97,17 +98,9 @@ impl GableApp {
         cc.egui_ctx.set_style(style);
     }
 
-    fn get_title(&self) -> String {
-        let workspace: MutexGuard<'_, Option<String>> = setting::WORKSPACE.lock().unwrap();
-        format!(
-            "Gable - {}",
-            workspace.as_ref().unwrap_or(&"Unknown".to_string())
-        )
-    }
-
     /// 绘制窗口标题
     fn gui_title(&mut self, ctx: &Context) {
-        ctx.send_viewport_cmd(ViewportCommand::Title(self.get_title().to_string()));
+        ctx.send_viewport_cmd(ViewportCommand::Title(utils::get_title()));
     }
 }
 

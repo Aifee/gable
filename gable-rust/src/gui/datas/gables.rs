@@ -41,23 +41,6 @@ pub(crate) fn parse_gable_filename(filename: &str) -> Option<(String, Option<Str
     }
 }
 
-/// 读取并解析gable文件
-fn read_gable_file(file_path: &str) -> Option<GableData> {
-    match fs::read_to_string(file_path) {
-        Ok(content) => match serde_json::from_str::<GableData>(&content) {
-            Ok(json_value) => Some(json_value),
-            Err(e) => {
-                log::error!("解析JSON文件失败:'{}': {}", file_path, e);
-                None
-            }
-        },
-        Err(e) => {
-            log::error!("读取文件失败:'{}': {}", file_path, e);
-            None
-        }
-    }
-}
-
 /// 并行读取所有gable文件
 fn read_all_gable_files_parallel(
     gable_files: &HashMap<String, Vec<(String, String)>>,
@@ -72,7 +55,7 @@ fn read_all_gable_files_parallel(
     file_paths
         .into_par_iter()
         .map(|file_path| {
-            let content: Option<GableData> = read_gable_file(&file_path);
+            let content: Option<GableData> = utils::read_gable_file(&file_path);
             (file_path, content)
         })
         .collect()
@@ -339,30 +322,9 @@ pub fn edit_gable(item: TreeItem) {
         }
     }
     log::info!("编辑文件 {}:", excel_name);
-    for file in &related_files {
-        log::info!("  {}", file);
+    if let Err(e) = utils::write_excel(&excel_name, related_files) {
+        log::error!("写入Excel文件时出错: {}", e);
     }
-    // 打开所有相关文件
-    // for file_path in related_files {
-    //     let path = file_path.clone();
-    //     std::thread::spawn(move || {
-    //         #[cfg(target_os = "windows")]
-    //         use std::process::Command;
-    //         let result = Command::new("cmd")
-    //             .args(&["/C", "start", "", &path])
-    //             .spawn();
-
-    //         #[cfg(target_os = "macos")]
-    //         let result = Command::new("open").arg(&path).spawn();
-
-    //         #[cfg(target_os = "linux")]
-    //         let result = Command::new("xdg-open").arg(&path).spawn();
-
-    //         if let Err(e) = result {
-    //             log::error!("无法打开文件 '{}': {}", path, e);
-    //         }
-    //     });
-    // }
 }
 
 /// 项目目录调整好重置数据

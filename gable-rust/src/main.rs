@@ -5,7 +5,6 @@ mod gui;
 mod test;
 use eframe::egui;
 use gui::gable_app::GableApp;
-use test::test_app::TestApp;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> Result<(), eframe::Error> {
@@ -16,12 +15,12 @@ fn main() -> Result<(), eframe::Error> {
         viewport: egui::ViewportBuilder::default().with_inner_size([1920.0, 1080.0]),
         ..Default::default()
     };
-    log::info!("Gable启动");
+    log::error!("Gable启动");
     eframe::run_native(
         "Gable", // 固定的窗口标题
         options,
         Box::new(|cc| {
-            let app = GableApp::new(cc);
+            let app: GableApp = GableApp::new(cc);
             Ok(Box::new(app))
         }),
     )

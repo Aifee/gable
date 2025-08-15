@@ -1,11 +1,11 @@
-use crate::common::global;
-use crate::common::utils;
+use crate::common::{global, utils};
 use crate::gui::component;
-use crate::gui::datas::esheet_type::ESheetType;
-use crate::gui::datas::gable_data::GableData;
-use crate::gui::datas::tree_item::TreeItem;
-use eframe::egui;
-use egui_extras::TableBody;
+use crate::gui::datas::{esheet_type::ESheetType, gable_data::GableData, tree_item::TreeItem};
+use eframe::egui::{
+    Align, CentralPanel, Context, Label, Layout, ScrollArea, TextWrapMode, Ui, Vec2,
+    scroll_area::ScrollBarVisibility, scroll_area::ScrollSource,
+};
+use egui_extras::{Column, TableBody, TableBuilder};
 
 #[derive(Debug, Clone)]
 pub struct OpenedExcel {
@@ -56,8 +56,8 @@ impl GableForm {
         }
     }
 
-    pub fn ongui(&mut self, ctx: &egui::Context) {
-        egui::CentralPanel::default().show(ctx, |ui| {
+    pub fn ongui(&mut self, ctx: &Context) {
+        CentralPanel::default().show(ctx, |ui| {
             if self.excels.is_empty() {
                 ui.centered_and_justified(|ui| ui.label("双击左侧文件树中的项目以打开"));
                 return;
@@ -69,8 +69,8 @@ impl GableForm {
                     ui.available_height() - tab_height - ui.spacing().item_spacing.y;
                 // 表格区域填充剩余空间
                 ui.allocate_ui_with_layout(
-                    egui::Vec2::new(ui.available_width(), table_height),
-                    egui::Layout::top_down(egui::Align::Min),
+                    Vec2::new(ui.available_width(), table_height),
+                    Layout::top_down(Align::Min),
                     |ui| {
                         self.ongui_table(ui);
                     },
@@ -122,19 +122,19 @@ impl GableForm {
         None
     }
 
-    fn ongui_excel_tab(&mut self, ui: &mut egui::Ui, height: f32) {
-        let tab_padding = egui::Vec2::new(8.0, 4.0);
+    fn ongui_excel_tab(&mut self, ui: &mut Ui, height: f32) {
+        let tab_padding = Vec2::new(8.0, 4.0);
         ui.push_id("excel_tab_scroll", |ui| {
-            egui::ScrollArea::horizontal()
+            ScrollArea::horizontal()
                 .auto_shrink(false)
-                .scroll_source(egui::scroll_area::ScrollSource::ALL)
-                .wheel_scroll_multiplier(egui::Vec2::new(1.0, 1.0))
-                .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden)
+                .scroll_source(ScrollSource::ALL)
+                .wheel_scroll_multiplier(Vec2::new(1.0, 1.0))
+                .scroll_bar_visibility(ScrollBarVisibility::AlwaysHidden)
                 .max_height(height)
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         ui.spacing_mut().item_spacing.x = 0.0;
-                        ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
+                        ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
                             let mut selected_index = None;
                             let mut close_index = None;
                             for (index, opened_item) in self.excels.iter().enumerate() {
@@ -163,20 +163,20 @@ impl GableForm {
         });
     }
 
-    fn ongui_sheet_tab(&mut self, ui: &mut egui::Ui, height: f32) {
+    fn ongui_sheet_tab(&mut self, ui: &mut Ui, height: f32) {
         let excel = self.get_selected_excel().unwrap();
-        let tab_padding = egui::Vec2::new(8.0, 4.0);
+        let tab_padding = Vec2::new(8.0, 4.0);
         ui.push_id("sheet_tab_scroll", |ui| {
-            egui::ScrollArea::horizontal()
+            ScrollArea::horizontal()
                 .auto_shrink(false)
-                .scroll_source(egui::scroll_area::ScrollSource::ALL)
-                .wheel_scroll_multiplier(egui::Vec2::new(1.0, 1.0))
-                .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden)
+                .scroll_source(ScrollSource::ALL)
+                .wheel_scroll_multiplier(Vec2::new(1.0, 1.0))
+                .scroll_bar_visibility(ScrollBarVisibility::AlwaysHidden)
                 .max_height(height)
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         ui.spacing_mut().item_spacing.x = 0.0;
-                        ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
+                        ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
                             for index in 0..excel.item.children.len() {
                                 let sheet_item = &excel.item.children[index];
                                 let is_selected = excel.selected_sheet_index == index;
@@ -194,28 +194,25 @@ impl GableForm {
     }
 
     /// 数据表 绘制
-    fn ongui_table(&mut self, ui: &mut egui::Ui) {
+    fn ongui_table(&mut self, ui: &mut Ui) {
         let sheet = self.get_sheet();
         if sheet.is_none() {
             ui.centered_and_justified(|ui| ui.label("请选择要浏览的页签"));
             return;
         }
-        let sheet = sheet.unwrap();
-        let sheet_type = sheet.data.as_ref().unwrap().gable_type.clone();
-        let max_col = sheet.data.as_ref().unwrap().content.max_column as usize;
-        let gable_data = sheet.data.as_ref().unwrap().content.clone();
+        let sheet: &mut TreeItem = sheet.unwrap();
+        let sheet_type: ESheetType = sheet.data.as_ref().unwrap().gable_type.clone();
+        let max_col: usize = sheet.data.as_ref().unwrap().content.max_column as usize;
+        let gable_data: GableData = sheet.data.as_ref().unwrap().content.clone();
 
         ui.push_id("table_scroll", |ui| {
-            egui::ScrollArea::both().auto_shrink(false).show(ui, |ui| {
-                egui_extras::TableBuilder::new(ui)
+            ScrollArea::both().auto_shrink(false).show(ui, |ui| {
+                TableBuilder::new(ui)
                     .striped(true)
                     .resizable(true)
-                    .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
-                    .column(egui_extras::Column::auto())
-                    .columns(
-                        egui_extras::Column::initial(100.0).range(40.0..=300.0),
-                        max_col,
-                    )
+                    .cell_layout(Layout::left_to_right(Align::Center))
+                    .column(Column::auto())
+                    .columns(Column::initial(100.0).range(40.0..=300.0), max_col)
                     .header(20.0, |mut header| {
                         header.col(|ui| {
                             ui.label("");
@@ -257,8 +254,8 @@ impl GableForm {
                     if row_index < global::TABLE_DATA_ROW_TOTAL {
                         if let Some(row_data) = sheet_content.heads.get(&row_index.to_string()) {
                             if let Some(col_data) = row_data.get(&col_index.to_string()) {
-                                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
-                                ui.add(egui::Label::new(&col_data.value).truncate());
+                                ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
+                                ui.add(Label::new(&col_data.value).truncate());
                             } else {
                                 ui.label("");
                             }
@@ -268,8 +265,8 @@ impl GableForm {
                     } else {
                         if let Some(row_data) = sheet_content.cells.get(&row_index.to_string()) {
                             if let Some(col_data) = row_data.get(&col_index.to_string()) {
-                                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
-                                ui.add(egui::Label::new(&col_data.value).truncate());
+                                ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
+                                ui.add(Label::new(&col_data.value).truncate());
                             } else {
                                 ui.label("");
                             }
@@ -296,8 +293,8 @@ impl GableForm {
                     if row_index < global::TABLE_KV_ROW_TOTAL {
                         if let Some(row_data) = sheet_content.heads.get(&row_index.to_string()) {
                             if let Some(col_data) = row_data.get(&col_index.to_string()) {
-                                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
-                                ui.add(egui::Label::new(&col_data.value).truncate());
+                                ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
+                                ui.add(Label::new(&col_data.value).truncate());
                             } else {
                                 ui.label("");
                             }
@@ -307,8 +304,8 @@ impl GableForm {
                     } else {
                         if let Some(row_data) = sheet_content.cells.get(&row_index.to_string()) {
                             if let Some(col_data) = row_data.get(&col_index.to_string()) {
-                                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
-                                ui.add(egui::Label::new(&col_data.value).truncate());
+                                ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
+                                ui.add(Label::new(&col_data.value).truncate());
                             } else {
                                 ui.label("");
                             }
@@ -335,8 +332,8 @@ impl GableForm {
                     if row_index < global::TABLE_ENUM_ROW_TOTAL {
                         if let Some(row_data) = sheet_content.heads.get(&row_index.to_string()) {
                             if let Some(col_data) = row_data.get(&col_index.to_string()) {
-                                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
-                                ui.add(egui::Label::new(&col_data.value).truncate());
+                                ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
+                                ui.add(Label::new(&col_data.value).truncate());
                             } else {
                                 ui.label("");
                             }
@@ -346,8 +343,8 @@ impl GableForm {
                     } else {
                         if let Some(row_data) = sheet_content.cells.get(&row_index.to_string()) {
                             if let Some(col_data) = row_data.get(&col_index.to_string()) {
-                                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
-                                ui.add(egui::Label::new(&col_data.value).truncate());
+                                ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
+                                ui.add(Label::new(&col_data.value).truncate());
                             } else {
                                 ui.label("");
                             }

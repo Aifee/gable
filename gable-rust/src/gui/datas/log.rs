@@ -4,9 +4,11 @@ use chrono::format::StrftimeItems;
 use log::LevelFilter;
 use once_cell::sync::OnceCell;
 use std::fmt::Arguments;
+use std::fs;
 use std::fs::File;
 use std::fs::OpenOptions;
-use std::io::{self, Write};
+use std::io;
+use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -40,10 +42,9 @@ impl LogTrace {
     pub fn new(log_dir_path: Option<&str>) -> Result<LogTrace, io::Error> {
         let file: Option<File> = match log_dir_path {
             Some(dir_path) => {
-                std::fs::create_dir_all(dir_path)?;
-                let day_file_name: chrono::format::DelayedFormat<
-                    chrono::format::StrftimeItems<'_>,
-                > = Local::now().format("%Y-%m-%d");
+                fs::create_dir_all(dir_path)?;
+                let day_file_name: DelayedFormat<StrftimeItems<'_>> =
+                    Local::now().format("%Y-%m-%d");
                 let file_path: PathBuf = Path::new(dir_path).join(format!("{}.log", day_file_name));
                 let f = OpenOptions::new()
                     .create(true)
@@ -138,6 +139,6 @@ impl log::Log for LogTrace {
                 let _ = file.flush();
             }
         }
-        let _ = std::io::stdout().flush();
+        let _ = io::stdout().flush();
     }
 }

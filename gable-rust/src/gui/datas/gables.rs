@@ -1,10 +1,8 @@
 use crate::common::{global, setting, utils};
-use crate::gui::datas::eitem_type::EItemType;
 use crate::gui::datas::{
-    esheet_type::ESheetType, gable_data::GableData, tree_data::TreeData, tree_item::TreeItem,
+    eitem_type::EItemType, esheet_type::ESheetType, gable_data::GableData, tree_data::TreeData,
+    tree_item::TreeItem,
 };
-use chrono::format::Item;
-use image::math;
 use lazy_static::lazy_static;
 use rayon::prelude::*;
 use std::{
@@ -20,25 +18,30 @@ lazy_static! {
         Arc::new(Mutex::new(HashSet::new()));
 
     /// 正在编辑的文件列表
-    pub static ref EDITION_FILES: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+    pub static ref EDITION_FILES: Arc<Mutex<HashMap<String, ESheetType>>> = Arc::new(Mutex::new(HashMap::new()));
 }
 
-fn add_editor_file(file_path: String) {
-    let mut files = EDITION_FILES.lock().unwrap();
-    if !files.contains(&file_path) {
-        files.push(file_path);
-    }
+/// 添加编辑文件到编辑列表
+fn add_editor_file(file_path: String, sheet_type: ESheetType) {
+    let mut editor_files: MutexGuard<'_, HashMap<String, ESheetType>> =
+        EDITION_FILES.lock().unwrap();
+    editor_files.insert(file_path, sheet_type);
 }
+
+// 移除编辑文件
 pub fn remove_editor_file(file_path: String) {
-    let mut editor_files = EDITION_FILES.lock().unwrap();
-    if let Some(index) = editor_files.iter().position(|x| x == &file_path) {
-        editor_files.remove(index);
-    }
+    let mut editor_files: MutexGuard<'_, HashMap<String, ESheetType>> =
+        EDITION_FILES.lock().unwrap();
+    editor_files.remove(&file_path);
 }
-fn has_eidtor_file(file_path: String) -> bool {
+
+// 判断是否是编辑文件
+fn has_eidtor_file(file_path: String) -> (bool, Option<ESheetType>) {
     let files = EDITION_FILES.lock().unwrap();
-    let has = files.contains(&file_path);
-    return has;
+    match files.get(&file_path) {
+        Some(sheet_type) => (true, Some(sheet_type.clone())),
+        None => (false, None),
+    }
 }
 
 // 添加设置展开状态的函数
@@ -345,9 +348,32 @@ pub fn edit_gable(item: TreeItem) {
             }
         }
     }
+    let sheet_type: ESheetType = {
+        // 首先尝试从 item.data 获取
+        if let Some(ref data) = item.data {
+            data.gable_type.clone()
+        } else {
+            let mut found_type: Option<ESheetType> = None;
+            for child in &item.children {
+                if let Some(ref child_data) = child.data {
+                    found_type = Some(child_data.gable_type.clone());
+                    break;
+                }
+            }
+
+            // 如果仍然没有找到，则使用默认值
+            found_type.unwrap_or_else(|| {
+                log::warn!(
+                    "无法从 {} 或其子项中获取 sheet 类型，使用默认类型 DATA",
+                    item.fullpath
+                );
+                ESheetType::DATA
+            })
+        }
+    };
     match utils::write_excel(&excel_name, related_files) {
         Ok(excel_file_path) => {
-            add_editor_file(excel_file_path.clone());
+            add_editor_file(excel_file_path.clone(), sheet_type);
             // 使用系统命令打开Excel文件
             #[cfg(target_os = "windows")]
             {
@@ -405,24 +431,30 @@ pub fn refresh_gables() {
 }
 
 pub fn editor_complete(file_path: String) -> bool {
-    let has = has_eidtor_file(file_path.clone());
+    let (has, sheet_type) = has_eidtor_file(file_path.clone());
     if !has {
         return false;
     }
-    match utils::write_gable(file_path.clone()) {
-        Ok(_) => true,
-        Err(_) => false,
+    let result: bool = if let Some(sheet_type) = sheet_type {
+        match utils::write_gable(file_path.clone(), sheet_type) {
+            Ok(_) => true,
+            Err(_) => false,
+        }
+    } else {
+        log::error!("无法获取文件 '{}' 的 sheet 类型", file_path);
+        false
     };
+
     // let result = reload_gable(file_path);
     // if !result {
     //     return false;
     // }
-    return true;
+    return result;
 }
 
 // 重新加载gable文件
 pub fn reload_gable(file_path: String) -> bool {
-    let has = has_eidtor_file(file_path.clone());
+    let (has, sheet_type) = has_eidtor_file(file_path.clone());
     if !has {
         return false;
     }

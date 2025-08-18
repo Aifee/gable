@@ -162,7 +162,7 @@ pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String,
 }
 
 // Excel数据写入gable文件
-pub fn write_gable(excel_file: String) -> Result<(), Box<dyn Error>> {
+pub fn write_gable(excel_file: String, sheet_type: ESheetType) -> Result<(), Box<dyn Error>> {
     let mut workbook: Xlsx<_> = calamine::open_workbook(&excel_file)?;
     let sheet_names: Vec<String> = workbook.sheet_names().to_owned();
     let file_path: &Path = Path::new(&excel_file);
@@ -180,11 +180,10 @@ pub fn write_gable(excel_file: String) -> Result<(), Box<dyn Error>> {
 
         // 读取数据并填充到GableData中
         for (row_idx, row) in range.rows().enumerate() {
-            let row_key = (row_idx + 1).to_string();
+            let row_key: usize = row_idx + 1;
             let mut row_data: HashMap<String, CellData> = HashMap::new();
-
             for (col_idx, cell) in row.iter().enumerate() {
-                let col_key: String = (col_idx + 1).to_string();
+                let col_key: usize = col_idx + 1;
                 let value: String = match cell {
                     Data::String(s) => s.clone(),
                     Data::Float(f) => f.to_string(),
@@ -201,16 +200,38 @@ pub fn write_gable(excel_file: String) -> Result<(), Box<dyn Error>> {
                 };
 
                 let cell_data: CellData = CellData {
-                    row: row_idx as u32 + 1,
-                    column: col_idx as u32 + 1,
+                    row: row_key as u32,
+                    column: col_key as u32,
                     value,
                 };
 
-                row_data.insert(col_key, cell_data);
+                row_data.insert(col_key.to_string(), cell_data);
             }
 
-            // 将行数据添加到cells中
-            gable_data.cells.insert(row_key, row_data);
+            log::info!("{:?}", row_key);
+            match sheet_type {
+                ESheetType::KV => {
+                    if row_key < global::TABLE_KV_ROW_TOTAL {
+                        gable_data.heads.insert(row_key.to_string(), row_data);
+                    } else {
+                        gable_data.cells.insert(row_key.to_string(), row_data);
+                    }
+                }
+                ESheetType::ENUM => {
+                    if row_key < global::TABLE_ENUM_ROW_TOTAL {
+                        gable_data.heads.insert(row_key.to_string(), row_data);
+                    } else {
+                        gable_data.cells.insert(row_key.to_string(), row_data);
+                    }
+                }
+                _ => {
+                    if row_key < global::TABLE_DATA_ROW_TOTAL {
+                        gable_data.heads.insert(row_key.to_string(), row_data);
+                    } else {
+                        gable_data.cells.insert(row_key.to_string(), row_data);
+                    }
+                }
+            }
         }
 
         // 创建.gable文件路径
@@ -219,6 +240,7 @@ pub fn write_gable(excel_file: String) -> Result<(), Box<dyn Error>> {
 
         // 将GableData序列化为JSON并写入文件
         let json_data: String = serde_json::to_string_pretty(&gable_data)?;
+        log::info!("{:?}", json_data);
         fs::write(&gable_file_path, json_data)?;
         log::info!("成功写入gable文件: {:?}", gable_file_path);
     }

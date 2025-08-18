@@ -1,18 +1,14 @@
-use crate::common::res;
-use crate::common::setting;
-use crate::common::utils;
-use crate::gui::datas::eitem_type::EItemType;
-use crate::gui::datas::gables;
-use crate::gui::gable_explorer::GableExplorer;
-use crate::gui::gable_form::GableForm;
-use crate::gui::gable_log::GableLog;
-use crate::gui::gable_menu::GableMenu;
-use crate::gui::gable_navigation::GableNavigation;
+use crate::common::{res, utils};
+use crate::gui::{
+    datas::eitem_type::EItemType, datas::gables, file_watcher::FileWatcher,
+    gable_explorer::GableExplorer, gable_form::GableForm, gable_log::GableLog,
+    gable_menu::GableMenu, gable_navigation::GableNavigation,
+};
 use eframe::egui::{
     Context, FontData, FontDefinitions, FontFamily, FontId, Style, TextStyle, ViewportCommand,
 };
 use eframe::{App, CreationContext, Frame};
-use std::sync::{Arc, MutexGuard};
+use std::sync::Arc;
 
 pub(crate) struct GableApp {
     /// 菜单组件
@@ -25,6 +21,9 @@ pub(crate) struct GableApp {
     gable_form: GableForm,
     /// 日志组件
     gable_log: GableLog,
+    /// 文件监控器
+    #[allow(dead_code)]
+    file_watcher: Option<FileWatcher>,
 }
 
 impl GableApp {
@@ -38,9 +37,11 @@ impl GableApp {
             gable_explorer: GableExplorer::new(),
             gable_form: GableForm::new(),
             gable_log: GableLog::new(),
+            file_watcher: None,
         };
         app.gable_menu.set_theme(&cc.egui_ctx, "Dark");
         gables::refresh_gables();
+        app.init_watcher();
         app
     }
 
@@ -96,6 +97,26 @@ impl GableApp {
         ]
         .into();
         cc.egui_ctx.set_style(style);
+    }
+
+    // 初始化文件监控器
+    fn init_watcher(&mut self) {
+        // 初始化文件监控器
+        match FileWatcher::new() {
+            Ok(mut file_watcher) => {
+                if let Err(e) = file_watcher.watch_temp_directory(utils::get_temp_path()) {
+                    log::error!("无法监控临时目录: {}", e);
+                } else {
+                    file_watcher.start_watching();
+                    log::info!("文件监控器已启动");
+                    // 保存文件监控器实例，确保它不会被提前释放
+                    self.file_watcher = Some(file_watcher);
+                }
+            }
+            Err(e) => {
+                log::error!("无法创建文件监控器: {}", e);
+            }
+        }
     }
 
     /// 绘制窗口标题

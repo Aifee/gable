@@ -11,10 +11,32 @@ use std::{
 };
 
 lazy_static! {
+    /// 全局存储当前的目录树
     pub static ref TREE_ITEMS: Arc<Mutex<Vec<TreeItem>>> = Arc::new(Mutex::new(Vec::new()));
     // 跟踪需要展开的节点路径
     pub static ref EXPANDED_FOLDERS: Arc<Mutex<HashSet<String>>> =
         Arc::new(Mutex::new(HashSet::new()));
+
+    /// 正在编辑的文件列表
+    pub static ref EDITION_FILES: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+}
+
+fn add_editor_file(file_path: String) {
+    let mut files = EDITION_FILES.lock().unwrap();
+    if !files.contains(&file_path) {
+        files.push(file_path);
+    }
+}
+pub fn remove_editor_file(file_path: String) {
+    let mut editor_files = EDITION_FILES.lock().unwrap();
+    if let Some(index) = editor_files.iter().position(|x| x == &file_path) {
+        editor_files.remove(index);
+    }
+}
+fn has_eidtor_file(file_path: String) -> bool {
+    let files = EDITION_FILES.lock().unwrap();
+    let has = files.contains(&file_path);
+    return has;
 }
 
 // 添加设置展开状态的函数
@@ -323,7 +345,7 @@ pub fn edit_gable(item: TreeItem) {
     }
     match utils::write_excel(&excel_name, related_files) {
         Ok(excel_file_path) => {
-            log::info!("编辑文件 {}:", excel_name);
+            add_editor_file(excel_file_path.clone());
             // 使用系统命令打开Excel文件
             #[cfg(target_os = "windows")]
             {
@@ -378,4 +400,13 @@ pub fn refresh_gables() {
         tree_items.extend(children);
     }
     *TREE_ITEMS.lock().unwrap() = tree_items;
+}
+
+// 重新加载gable文件
+pub fn reload_gable(file_path: String) {
+    let has = has_eidtor_file(file_path.clone());
+    if !has {
+        return;
+    }
+    log::info!("重新加载表格: {}", file_path);
 }

@@ -15,7 +15,6 @@ fn main() -> Result<(), eframe::Error> {
         viewport: egui::ViewportBuilder::default().with_inner_size([1920.0, 1080.0]),
         ..Default::default()
     };
-    log::error!("Gable启动");
     eframe::run_native(
         "Gable", // 固定的窗口标题
         options,

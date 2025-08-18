@@ -84,7 +84,7 @@ pub fn get_temp_path() -> String {
     path
 }
 
-/// 写入Excel文件
+// 写入Excel文件
 pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String, Box<dyn Error>> {
     let file_name: &str = &format!("{}{}", &excel_name, &global::EXCEL_EXTENSION);
     let tem_path = get_temp_path();

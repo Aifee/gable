@@ -1,4 +1,5 @@
 pub mod component;
+pub mod file_watcher;
 pub mod gable_app;
 pub mod gable_explorer;
 pub mod gable_form;

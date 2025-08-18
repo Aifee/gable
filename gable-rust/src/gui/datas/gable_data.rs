@@ -1,8 +1,8 @@
 use crate::gui::datas::cell_data::CellData;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct GableData {
     pub sheetname: String,
     pub max_row: u32,

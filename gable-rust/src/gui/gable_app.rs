@@ -104,7 +104,8 @@ impl GableApp {
         // 初始化文件监控器
         match FileWatcher::new() {
             Ok(mut file_watcher) => {
-                if let Err(e) = file_watcher.watch_temp_directory(utils::get_temp_path()) {
+                let temp_path: String = utils::get_temp_path();
+                if let Err(e) = file_watcher.watch_temp_directory(temp_path) {
                     log::error!("无法监控临时目录: {}", e);
                 } else {
                     file_watcher.start_watching();

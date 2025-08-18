@@ -93,7 +93,7 @@ impl FileWatcher {
                                                         // 使用标准库方法规范化路径
                                                         let path_str: String =
                                                             file_path.to_string_lossy().to_string();
-                                                        gables::reload_gable(path_str);
+                                                        gables::editor_complete(path_str);
                                                     }
                                                 }
                                             }
@@ -125,7 +125,7 @@ impl FileWatcher {
                                                                     original_file_path
                                                                         .to_string_lossy()
                                                                         .to_string();
-                                                                gables::reload_gable(
+                                                                gables::editor_complete(
                                                                     path_str.clone(),
                                                                 );
                                                                 gables::remove_editor_file(

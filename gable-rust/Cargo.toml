@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+calamine = "0.30.0"
 chrono = "0.4.41"
 eframe = "0.32.0"
 egui_extras = "0.32.0"

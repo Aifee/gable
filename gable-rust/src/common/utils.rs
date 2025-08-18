@@ -1,8 +1,11 @@
 use crate::common::{global, setting};
+use crate::gui::datas::cell_data::CellData;
 use crate::gui::datas::esheet_type::ESheetType;
 use crate::gui::datas::gable_data::GableData;
+use calamine::{Data, Range, Reader, Xlsx};
 use eframe::egui::{Color32, Context, Style};
 use rust_xlsxwriter::{Color, Format, FormatBorder, workbook::Workbook, worksheet::Worksheet};
+use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -81,6 +84,13 @@ pub fn get_temp_path() -> String {
         .join(temp_dir)
         .to_string_lossy()
         .to_string();
+    let path_temp = Path::new(&path);
+    if !path_temp.exists() {
+        if let Err(e) = fs::create_dir_all(path_temp) {
+            log::error!("无法创建临时目录: {}", e);
+        }
+    }
+
     path
 }
 
@@ -96,12 +106,10 @@ pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String,
         .join(&file_name)
         .to_string_lossy()
         .to_string();
-    // 检查临时文件是否存在（表示Excel文件已打开）
     if Path::new(&excel_file_path_tem).exists() {
         log::error!("Excel文件 '{}' 已经打开，无法写入", excel_file_path);
         return Err("Excel文件已经打开，无法写入".into());
     }
-    // 如果Excel文件已存在，则删除它
     if Path::new(&excel_file_path).exists() {
         match fs::remove_file(&excel_file_path) {
             Ok(_) => log::info!("已删除旧的Excel文件 '{}'", excel_file_path),
@@ -150,6 +158,69 @@ pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String,
         }
     }
     workbook.save(&excel_file_path)?;
-    log::info!("成功写入Excel文件: {}", excel_file_path);
     Ok(excel_file_path)
+}
+
+// Excel数据写入gable文件
+pub fn write_gable(excel_file: String) -> Result<(), Box<dyn Error>> {
+    let mut workbook: Xlsx<_> = calamine::open_workbook(&excel_file)?;
+    let sheet_names: Vec<String> = workbook.sheet_names().to_owned();
+    let file_path: &Path = Path::new(&excel_file);
+    let file_stem: &str = file_path.file_stem().unwrap().to_str().unwrap();
+    let parent_dir: &Path = file_path.parent().unwrap();
+    for sheet_name in sheet_names {
+        let range: Range<Data> = workbook.worksheet_range(&sheet_name)?;
+        let mut gable_data: GableData = GableData {
+            sheetname: sheet_name.clone(),
+            max_row: range.height() as u32,
+            max_column: range.width() as u32,
+            heads: HashMap::new(),
+            cells: HashMap::new(),
+        };
+
+        // 读取数据并填充到GableData中
+        for (row_idx, row) in range.rows().enumerate() {
+            let row_key = (row_idx + 1).to_string();
+            let mut row_data: HashMap<String, CellData> = HashMap::new();
+
+            for (col_idx, cell) in row.iter().enumerate() {
+                let col_key: String = (col_idx + 1).to_string();
+                let value: String = match cell {
+                    Data::String(s) => s.clone(),
+                    Data::Float(f) => f.to_string(),
+                    Data::Int(i) => i.to_string(),
+                    Data::Bool(b) => b.to_string(),
+                    Data::DateTime(d) => d.to_string(),
+                    Data::DateTimeIso(d) => d.to_string(),
+                    Data::DurationIso(d) => d.to_string(),
+                    Data::Error(e) => {
+                        log::error!("读取单元格数据错误: {:?}", e);
+                        continue;
+                    }
+                    Data::Empty => String::new(),
+                };
+
+                let cell_data: CellData = CellData {
+                    row: row_idx as u32 + 1,
+                    column: col_idx as u32 + 1,
+                    value,
+                };
+
+                row_data.insert(col_key, cell_data);
+            }
+
+            // 将行数据添加到cells中
+            gable_data.cells.insert(row_key, row_data);
+        }
+
+        // 创建.gable文件路径
+        let gable_file_path: PathBuf =
+            parent_dir.join(format!("{}@{}.gable", file_stem, sheet_name));
+
+        // 将GableData序列化为JSON并写入文件
+        let json_data: String = serde_json::to_string_pretty(&gable_data)?;
+        fs::write(&gable_file_path, json_data)?;
+        log::info!("成功写入gable文件: {:?}", gable_file_path);
+    }
+    Ok(())
 }

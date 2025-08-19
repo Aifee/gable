@@ -112,7 +112,7 @@ pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String,
     }
     if Path::new(&excel_file_path).exists() {
         match fs::remove_file(&excel_file_path) {
-            Ok(_) => log::info!("已删除旧的Excel文件 '{}'", excel_file_path),
+            Ok(_) => {}
             Err(e) => {
                 log::error!("无法删除已存在的Excel文件 '{}': {}", excel_file_path, e);
                 return Err(e.into());
@@ -166,11 +166,15 @@ pub fn write_gable(
     excel_file: String,
     target_path: String,
     sheet_type: ESheetType,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<Vec<String>, Box<dyn Error>> {
     let mut workbook: Xlsx<_> = calamine::open_workbook(&excel_file)?;
     let sheet_names: Vec<String> = workbook.sheet_names().to_owned();
     let file_path: &Path = Path::new(&excel_file);
     let file_stem: &str = file_path.file_stem().unwrap().to_str().unwrap();
+
+    // 收集生成的gable文件路径
+    let mut gable_file_paths: Vec<String> = Vec::new();
+
     for sheet_name in sheet_names {
         let range: Range<Data> = workbook.worksheet_range(&sheet_name)?;
         let mut gable_data: GableData = GableData {
@@ -211,7 +215,6 @@ pub fn write_gable(
                 row_data.insert(col_key.to_string(), cell_data);
             }
 
-            log::info!("{:?}", row_key);
             match sheet_type {
                 ESheetType::KV => {
                     if row_key < global::TABLE_KV_ROW_TOTAL {
@@ -241,13 +244,15 @@ pub fn write_gable(
         let gable_file_path: PathBuf =
             PathBuf::from(&target_path).join(format!("{}@{}.gable", file_stem, sheet_name));
 
+        // 将路径添加到返回列表中
+        gable_file_paths.push(gable_file_path.to_string_lossy().to_string());
+
         // 将GableData序列化为JSON并写入文件
         let json_data: String = serde_json::to_string_pretty(&gable_data)?;
-        log::info!("{:?}", json_data);
         fs::write(&gable_file_path, json_data)?;
-        log::info!("成功写入gable文件: {:?}", gable_file_path);
     }
-    Ok(())
+
+    Ok(gable_file_paths)
 }
 
 /// 检查文件名是否合法

@@ -467,115 +467,66 @@ fn add_item_to_parent(items: &mut [TreeItem], new_item: TreeItem, parent_path: &
 }
 
 // 文件编辑完成时触发
-pub fn editor_complete(file_path: String) -> bool {
-    let (has, data) = has_eidtor_file(file_path.clone());
+pub fn editor_complete(excel_path: String) -> bool {
+    let (has, data) = has_eidtor_file(excel_path.clone());
     if !has {
         return false;
     }
-    let result: bool = if let Some(data) = data {
-        match utils::write_gable(file_path, data.target_path, data.sheet_type) {
-            Ok(_) => true,
-            Err(_) => false,
+    let (result, gable_file_paths) = if let Some(data) = data {
+        match utils::write_gable(excel_path.clone(), data.target_path, data.sheet_type) {
+            Ok(gable_file_paths) => (true, Some(gable_file_paths)),
+            Err(_) => (false, None),
         }
     } else {
-        log::error!("无法获取文件 '{}' 的 sheet 类型", file_path);
-        false
+        log::error!("无法获取文件 '{}' 的 sheet 类型", excel_path);
+        (false, None)
     };
-
-    // let result = reload_gable(file_path);
-    // if !result {
-    //     return false;
-    // }
-    return result;
-}
-
-// 重新加载gable文件
-pub fn reload_gable(file_path: String) -> bool {
-    let (has, data) = has_eidtor_file(file_path.clone());
-    if !has {
+    if !result {
         return false;
     }
-    let path: &Path = Path::new(&file_path);
-    let file_stem: String = match path.file_stem() {
-        Some(stem) => stem.to_string_lossy().to_string(),
-        None => {
-            log::error!("无法获取文件名: {}", file_path);
-            return false;
-        }
-    };
-    let tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
-    let mut target_item: Option<usize> = None;
-    fn find_item_by_name<'a>(items: &'a [TreeItem], name: &str) -> Option<&'a TreeItem> {
-        for item in items.iter() {
-            // 检查Excel项
-            if item.item_type == EItemType::Excel && item.display_name == name {
-                return Some(item);
-            }
 
-            // 递归检查子项
-            if let Some(result) = find_item_by_name(&item.children, name) {
-                return Some(result);
-            }
-        }
-        None
-    }
-    for (index, root_item) in tree_items.iter().enumerate() {
-        if let Some(item) = find_item_by_name(std::slice::from_ref(root_item), &file_stem) {
-            target_item = Some(index);
-            break;
-        }
-    }
-    // 释放锁，避免在后续操作中长时间持有锁
-    drop(tree_items);
-    // 如果找到了对应的TreeItem，重新加载其children中的data
-    if let Some(index) = target_item {
-        let tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
-        let children_paths: Vec<String> = tree_items[index]
-            .children
-            .iter()
-            .map(|child| child.fullpath.clone())
-            .collect();
-        drop(tree_items);
-        log::info!("找到对应的TreeItem，索引: {}", index);
-        // 重新加载每个子项的数据
-        for child_path in children_paths {
-            log::info!("重新加载子项数据: {}", child_path);
-            // 读取新的数据
-            let new_data: Option<GableData> = utils::read_gable_file(&child_path);
-
-            // 更新TREE_ITEMS中的数据
-            let mut tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
-
-            // 查找并更新对应子项的数据
-            fn update_child_data(
-                items: &mut [TreeItem],
-                child_path: &str,
-                new_data: Option<GableData>,
-            ) -> bool {
-                for item in items.iter_mut() {
-                    if item.fullpath == child_path {
-                        item.data = new_data.map(|data: GableData| TreeData {
-                            gable_type: utils::determine_sheet_type(Path::new(&child_path)),
-                            content: data,
-                        });
-                        return true;
-                    }
-
-                    // 递归查找子项
-                    if update_child_data(&mut item.children, child_path, new_data.clone()) {
-                        return true;
-                    }
-                }
-                false
-            }
-
-            update_child_data(&mut tree_items, &child_path, new_data);
-        }
-    } else {
-        log::warn!("未找到对应的TreeItem: {}", file_stem);
+    let result = reload_gable(gable_file_paths);
+    if !result {
         return false;
     }
     return true;
+}
+
+// 重新加载gable文件
+fn reload_gable(gable_file_paths: Option<Vec<String>>) -> bool {
+    let file_paths = match gable_file_paths {
+        Some(paths) => paths,
+        None => return true,
+    };
+
+    for file_path in file_paths {
+        let new_data: Option<GableData> = utils::read_gable_file(&file_path);
+        let mut tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
+        fn update_child_data(
+            items: &mut [TreeItem],
+            file_path: &str,
+            new_data: Option<GableData>,
+        ) -> bool {
+            for item in items.iter_mut() {
+                if item.fullpath == file_path {
+                    item.data = new_data.map(|data: GableData| TreeData {
+                        gable_type: utils::determine_sheet_type(Path::new(&file_path)),
+                        content: data,
+                    });
+                    return true;
+                }
+
+                if update_child_data(&mut item.children, file_path, new_data.clone()) {
+                    return true;
+                }
+            }
+            false
+        }
+
+        update_child_data(&mut tree_items, &file_path, new_data);
+    }
+
+    true
 }
 
 pub fn update_item_display_name(fullpath: String, new_path: String, new_name: String) {

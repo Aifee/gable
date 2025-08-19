@@ -85,7 +85,6 @@ impl FileWatcher {
                                     match event.kind {
                                         EventKind::Modify(_) => {
                                             for file_path in &excel_files {
-                                                log::info!("修改Excel文件: {:?}", file_path);
                                                 if let Some(file_name) =
                                                     file_path.file_name().and_then(|f| f.to_str())
                                                 {
@@ -100,7 +99,6 @@ impl FileWatcher {
                                         }
                                         EventKind::Remove(_) => {
                                             for file_path in &excel_files {
-                                                log::info!("删除Excel文件: {:?}", file_path);
                                                 // 只处理包含~$的临时文件
                                                 if let Some(file_name) =
                                                     file_path.file_name().and_then(|f| f.to_str())

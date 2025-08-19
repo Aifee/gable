@@ -165,33 +165,34 @@ impl GableForm {
     }
 
     fn ongui_sheet_tab(&mut self, ui: &mut Ui, height: f32) {
-        let excel: &mut OpenedExcel = self.get_selected_excel().unwrap();
-        let tab_padding = Vec2::new(8.0, 4.0);
-        ui.push_id("sheet_tab_scroll", |ui| {
-            ScrollArea::horizontal()
-                .auto_shrink(false)
-                .scroll_source(ScrollSource::ALL)
-                .wheel_scroll_multiplier(Vec2::new(1.0, 1.0))
-                .scroll_bar_visibility(ScrollBarVisibility::AlwaysHidden)
-                .max_height(height)
-                .show(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        ui.spacing_mut().item_spacing.x = 0.0;
-                        ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
-                            for index in 0..excel.item.children.len() {
-                                let sheet_item: &TreeItem = &excel.item.children[index];
-                                let is_selected: bool = excel.selected_sheet_index == index;
-                                let info: &String = &sheet_item.display_name;
-                                let response: Response =
-                                    component::sheet_tab(ui, info, is_selected, tab_padding);
-                                if response.clicked() {
-                                    excel.selected_sheet_index = index;
+        if let Some(excel) = self.get_selected_excel() {
+            let tab_padding = Vec2::new(8.0, 4.0);
+            ui.push_id("sheet_tab_scroll", |ui| {
+                ScrollArea::horizontal()
+                    .auto_shrink(false)
+                    .scroll_source(ScrollSource::ALL)
+                    .wheel_scroll_multiplier(Vec2::new(1.0, 1.0))
+                    .scroll_bar_visibility(ScrollBarVisibility::AlwaysHidden)
+                    .max_height(height)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.spacing_mut().item_spacing.x = 0.0;
+                            ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
+                                for index in 0..excel.item.children.len() {
+                                    let sheet_item: &TreeItem = &excel.item.children[index];
+                                    let is_selected: bool = excel.selected_sheet_index == index;
+                                    let info: &String = &sheet_item.display_name;
+                                    let response: Response =
+                                        component::sheet_tab(ui, info, is_selected, tab_padding);
+                                    if response.clicked() {
+                                        excel.selected_sheet_index = index;
+                                    }
                                 }
-                            }
+                            });
                         });
                     });
-                });
-        });
+            });
+        }
     }
 
     /// 数据表 绘制

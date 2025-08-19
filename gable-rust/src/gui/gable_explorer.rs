@@ -76,6 +76,14 @@ impl GableExplorer {
                                 );
                                 ui.close();
                             }
+                            if ui.button("在资源管理器中显示").clicked() {
+                                if let Some(path) = setting::get_workspace().to_str() {
+                                    if let Err(e) = utils::open_in_explorer(path) {
+                                        log::error!("无法打开资源管理器: {}", e);
+                                    }
+                                }
+                                ui.close();
+                            }
                         });
                     });
             });
@@ -377,6 +385,13 @@ impl GableExplorer {
                     Self::create_new_folder_and_edit(item, renaming_item, renaming_text);
                     ui.close();
                 }
+                ui.separator();
+                if ui.button("在资源管理器中显示").clicked() {
+                    if let Err(e) = utils::open_in_explorer(&item.fullpath) {
+                        log::error!("无法打开资源管理器: {}", e);
+                    }
+                    ui.close();
+                }
             }
             EItemType::Excel => {
                 if ui.button("新建文件").clicked() {
@@ -397,6 +412,15 @@ impl GableExplorer {
                     // TODO: 实现打开文件逻辑
                     ui.close();
                 }
+                ui.separator();
+                if ui.button("在资源管理器中显示").clicked() {
+                    if let Some(path) = &item.parent {
+                        if let Err(e) = utils::open_in_explorer(&path) {
+                            log::error!("无法打开资源管理器: {}", e);
+                        }
+                    }
+                    ui.close();
+                }
             }
             EItemType::Sheet => {
                 if ui.button("编辑").clicked() {
@@ -411,6 +435,13 @@ impl GableExplorer {
                 }
                 if ui.button("删除").clicked() {
                     // TODO: 实现打开文件逻辑
+                    ui.close();
+                }
+                ui.separator();
+                if ui.button("在资源管理器中显示").clicked() {
+                    if let Err(e) = utils::open_in_explorer(&item.fullpath) {
+                        log::error!("无法打开资源管理器: {}", e);
+                    }
                     ui.close();
                 }
             }

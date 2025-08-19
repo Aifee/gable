@@ -292,3 +292,50 @@ pub fn is_name_exists(full_path: &str, new_name: &str) -> bool {
         false
     }
 }
+pub fn open_in_explorer(path: &str) -> std::io::Result<()> {
+    let path_obj = Path::new(path);
+    let (explorer_path, select_path) = if path_obj.is_file() {
+        let parent = path_obj.parent().unwrap_or(Path::new("."));
+        (parent, Some(path_obj))
+    } else {
+        (path_obj, None)
+    };
+    #[cfg(target_os = "windows")]
+    {
+        if let Some(file_to_select) = select_path {
+            // 在Windows上，使用 /select 参数来选中特定文件
+            std::process::Command::new("explorer")
+                .arg("/select,")
+                .arg(file_to_select)
+                .spawn()?;
+        } else {
+            std::process::Command::new("explorer")
+                .arg(explorer_path)
+                .spawn()?;
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        if let Some(file_to_select) = select_path {
+            // 在macOS上，使用 -R 参数来选中特定文件
+            std::process::Command::new("open")
+                .arg("-R")
+                .arg(file_to_select)
+                .spawn()?;
+        } else {
+            std::process::Command::new("open")
+                .arg(explorer_path)
+                .spawn()?;
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(explorer_path)
+            .spawn()?;
+    }
+
+    Ok(())
+}

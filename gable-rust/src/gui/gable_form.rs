@@ -1,5 +1,8 @@
+use std::collections::HashMap;
+
 use crate::common::{global, utils};
 use crate::gui::component;
+use crate::gui::datas::cell_data::CellData;
 use crate::gui::datas::{esheet_type::ESheetType, gable_data::GableData, tree_item::TreeItem};
 use eframe::egui::Response;
 use eframe::egui::{
@@ -205,7 +208,7 @@ impl GableForm {
         let sheet: &mut TreeItem = sheet.unwrap();
         let sheet_type: ESheetType = sheet.data.as_ref().unwrap().gable_type.clone();
         let max_col: usize = sheet.data.as_ref().unwrap().content.max_column as usize;
-        let gable_data: GableData = sheet.data.as_ref().unwrap().content.clone();
+        let gable_data: &GableData = &sheet.data.as_ref().unwrap().content;
 
         ui.push_id("table_scroll", |ui| {
             ScrollArea::both().auto_shrink(false).show(ui, |ui| {
@@ -229,13 +232,13 @@ impl GableForm {
                     })
                     .body(|body| match sheet_type {
                         ESheetType::DATA => {
-                            self.ongui_table_databody(body, &gable_data);
+                            Self::ongui_table_databody(body, &gable_data);
                         }
                         ESheetType::KV => {
-                            self.ongui_table_kvbody(body, &gable_data);
+                            Self::ongui_table_kvbody(body, &gable_data);
                         }
                         ESheetType::ENUM => {
-                            self.ongui_table_enumbody(body, &gable_data);
+                            Self::ongui_table_enumbody(body, &gable_data);
                         }
                     });
             });
@@ -243,46 +246,7 @@ impl GableForm {
     }
 
     /// 普通数据表绘制
-    fn ongui_table_databody(&mut self, body: TableBody<'_>, sheet_content: &GableData) {
-        let total_rows: usize = sheet_content.max_row as usize;
-        let total_cols: usize = sheet_content.max_column as usize;
-        body.rows(20.0, total_rows, |mut row| {
-            let row_index = row.index() + 1;
-            row.col(|ui| {
-                ui.label(&row_index.to_string());
-            });
-            for col_index in 1..total_cols + 1 {
-                row.col(|ui| {
-                    if row_index < global::TABLE_DATA_ROW_TOTAL {
-                        if let Some(row_data) = sheet_content.heads.get(&row_index.to_string()) {
-                            if let Some(col_data) = row_data.get(&col_index.to_string()) {
-                                ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
-                                ui.add(Label::new(&col_data.value).truncate());
-                            } else {
-                                ui.label("");
-                            }
-                        } else {
-                            ui.label("");
-                        }
-                    } else {
-                        if let Some(row_data) = sheet_content.cells.get(&row_index.to_string()) {
-                            if let Some(col_data) = row_data.get(&col_index.to_string()) {
-                                ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
-                                ui.add(Label::new(&col_data.value).truncate());
-                            } else {
-                                ui.label("");
-                            }
-                        } else {
-                            ui.label("");
-                        }
-                    }
-                });
-            }
-        });
-    }
-
-    /// KV表绘制
-    fn ongui_table_kvbody(&mut self, body: TableBody<'_>, sheet_content: &GableData) {
+    fn ongui_table_databody(body: TableBody<'_>, sheet_content: &GableData) {
         let total_rows: usize = sheet_content.max_row as usize;
         let total_cols: usize = sheet_content.max_column as usize;
         body.rows(20.0, total_rows, |mut row| {
@@ -290,30 +254,60 @@ impl GableForm {
             row.col(|ui| {
                 ui.label(&row_index.to_string());
             });
+
+            let row_data: Option<&HashMap<String, CellData>> =
+                if row_index < global::TABLE_DATA_ROW_TOTAL {
+                    sheet_content.heads.get(&row_index.to_string())
+                } else {
+                    sheet_content.cells.get(&row_index.to_string())
+                };
+
             for col_index in 1..total_cols + 1 {
                 row.col(|ui| {
-                    if row_index < global::TABLE_KV_ROW_TOTAL {
-                        if let Some(row_data) = sheet_content.heads.get(&row_index.to_string()) {
-                            if let Some(col_data) = row_data.get(&col_index.to_string()) {
-                                ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
-                                ui.add(Label::new(&col_data.value).truncate());
-                            } else {
-                                ui.label("");
-                            }
+                    // 通过预先获取的行数据查找列数据
+                    if let Some(row_data) = row_data {
+                        if let Some(col_data) = row_data.get(&col_index.to_string()) {
+                            ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
+                            ui.add(Label::new(&col_data.value).truncate());
                         } else {
                             ui.label("");
                         }
                     } else {
-                        if let Some(row_data) = sheet_content.cells.get(&row_index.to_string()) {
-                            if let Some(col_data) = row_data.get(&col_index.to_string()) {
-                                ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
-                                ui.add(Label::new(&col_data.value).truncate());
-                            } else {
-                                ui.label("");
-                            }
+                        ui.label("");
+                    }
+                });
+            }
+        });
+    }
+
+    /// KV表绘制
+    fn ongui_table_kvbody(body: TableBody<'_>, sheet_content: &GableData) {
+        let total_rows: usize = sheet_content.max_row as usize;
+        let total_cols: usize = sheet_content.max_column as usize;
+        body.rows(20.0, total_rows, |mut row| {
+            let row_index: usize = row.index() + 1;
+            row.col(|ui| {
+                ui.label(&row_index.to_string());
+            });
+
+            let row_data: Option<&HashMap<String, CellData>> =
+                if row_index < global::TABLE_KV_ROW_TOTAL {
+                    sheet_content.heads.get(&row_index.to_string())
+                } else {
+                    sheet_content.cells.get(&row_index.to_string())
+                };
+
+            for col_index in 1..total_cols + 1 {
+                row.col(|ui| {
+                    if let Some(row_data) = row_data {
+                        if let Some(col_data) = row_data.get(&col_index.to_string()) {
+                            ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
+                            ui.add(Label::new(&col_data.value).truncate());
                         } else {
                             ui.label("");
                         }
+                    } else {
+                        ui.label("");
                     }
                 });
             }
@@ -321,38 +315,34 @@ impl GableForm {
     }
 
     /// 枚举表绘制器
-    fn ongui_table_enumbody(&mut self, body: TableBody<'_>, sheet_content: &GableData) {
+    fn ongui_table_enumbody(body: TableBody<'_>, sheet_content: &GableData) {
         let total_rows: usize = sheet_content.max_row as usize;
         let total_cols: usize = sheet_content.max_column as usize;
         body.rows(20.0, total_rows, |mut row| {
-            let row_index = row.index() + 1;
+            let row_index: usize = row.index() + 1;
             row.col(|ui| {
                 ui.label(&row_index.to_string());
             });
+
+            let row_data: Option<&HashMap<String, CellData>> =
+                if row_index < global::TABLE_ENUM_ROW_TOTAL {
+                    sheet_content.heads.get(&row_index.to_string())
+                } else {
+                    sheet_content.cells.get(&row_index.to_string())
+                };
+
             for col_index in 1..total_cols + 1 {
                 row.col(|ui| {
-                    if row_index < global::TABLE_ENUM_ROW_TOTAL {
-                        if let Some(row_data) = sheet_content.heads.get(&row_index.to_string()) {
-                            if let Some(col_data) = row_data.get(&col_index.to_string()) {
-                                ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
-                                ui.add(Label::new(&col_data.value).truncate());
-                            } else {
-                                ui.label("");
-                            }
+                    // 通过预先获取的行数据查找列数据
+                    if let Some(row_data) = row_data {
+                        if let Some(col_data) = row_data.get(&col_index.to_string()) {
+                            ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
+                            ui.add(Label::new(&col_data.value).truncate());
                         } else {
                             ui.label("");
                         }
                     } else {
-                        if let Some(row_data) = sheet_content.cells.get(&row_index.to_string()) {
-                            if let Some(col_data) = row_data.get(&col_index.to_string()) {
-                                ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
-                                ui.add(Label::new(&col_data.value).truncate());
-                            } else {
-                                ui.label("");
-                            }
-                        } else {
-                            ui.label("");
-                        }
+                        ui.label("");
                     }
                 });
             }

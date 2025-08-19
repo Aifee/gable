@@ -246,3 +246,49 @@ pub fn write_gable(excel_file: String, sheet_type: ESheetType) -> Result<(), Box
     }
     Ok(())
 }
+
+/// 检查文件名是否合法
+pub fn is_valid_filename(name: &str) -> bool {
+    // 检查是否为空
+    if name.is_empty() {
+        return false;
+    }
+
+    // 检查是否包含非法字符
+    let invalid_chars: [char; 9] = ['/', '\\', ':', '*', '?', '"', '<', '>', '|'];
+    for c in name.chars() {
+        if invalid_chars.contains(&c) || c.is_control() {
+            return false;
+        }
+    }
+
+    // 检查是否以点或空格结尾
+    if name.ends_with('.') || name.ends_with(' ') {
+        return false;
+    }
+
+    // 检查是否是保留名称
+    let reserved_names: [&'static str; 22] = [
+        "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8",
+        "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+    ];
+
+    let upper_name: String = name.to_uppercase();
+    for reserved in &reserved_names {
+        if &upper_name == reserved {
+            return false;
+        }
+    }
+    true
+}
+
+/// 检查同名文件/文件夹是否已存在
+pub fn is_name_exists(full_path: &str, new_name: &str) -> bool {
+    let path: &Path = Path::new(&full_path);
+    if let Some(parent_path) = path.parent() {
+        let new_path: PathBuf = parent_path.join(new_name);
+        new_path.exists()
+    } else {
+        false
+    }
+}

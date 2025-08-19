@@ -6,17 +6,13 @@ use crate::gui::datas::{
 use lazy_static::lazy_static;
 use rayon::prelude::*;
 use std::{
-    cmp::Ordering, collections::HashMap, collections::HashSet, fs, io::Error, path::Path,
-    path::PathBuf, sync::Arc, sync::Mutex, sync::MutexGuard,
+    cmp::Ordering, collections::HashMap, fs, io::Error, path::Path, path::PathBuf, sync::Arc,
+    sync::Mutex, sync::MutexGuard,
 };
 
 lazy_static! {
     /// 全局存储当前的目录树
     pub static ref TREE_ITEMS: Arc<Mutex<Vec<TreeItem>>> = Arc::new(Mutex::new(Vec::new()));
-    // 跟踪需要展开的节点路径
-    pub static ref EXPANDED_FOLDERS: Arc<Mutex<HashSet<String>>> =
-        Arc::new(Mutex::new(HashSet::new()));
-
     /// 正在编辑的文件列表
     pub static ref EDITION_FILES: Arc<Mutex<HashMap<String, ESheetType>>> = Arc::new(Mutex::new(HashMap::new()));
 }
@@ -42,11 +38,6 @@ fn has_eidtor_file(file_path: String) -> (bool, Option<ESheetType>) {
         Some(sheet_type) => (true, Some(sheet_type.clone())),
         None => (false, None),
     }
-}
-
-// 添加设置展开状态的函数
-pub fn set_folder_expanded(path: &str) {
-    let _ = EXPANDED_FOLDERS.lock().unwrap().insert(path.to_string());
 }
 
 /// 解析 .gable 文件名，返回 (excel_name, sheet_name) 或仅 excel_name
@@ -128,19 +119,11 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     // 处理目录
     for (dir_path, dir_name) in directories {
         let children: Vec<TreeItem> = build_tree_from_path(&dir_path);
-
-        // 检查此路径是否应该展开
-        let should_be_expanded: bool = {
-            let expanded_folders: MutexGuard<'_, HashSet<String>> =
-                EXPANDED_FOLDERS.lock().unwrap();
-            expanded_folders.contains(&dir_path.to_string_lossy().to_string())
-        };
-
         // 创建目录项
         items.push(TreeItem {
             item_type: EItemType::Folder,
             display_name: dir_name,
-            is_open: should_be_expanded,
+            is_open: false,
             fullpath: dir_path.to_string_lossy().to_string(),
             parent: Some(path.to_string_lossy().to_string()),
             children,
@@ -413,21 +396,67 @@ pub fn edit_gable(item: TreeItem) {
 
 /// 项目目录调整好重置数据
 pub fn refresh_gables() {
-    let workspace: MutexGuard<'_, Option<String>> = setting::WORKSPACE.lock().unwrap();
-    let root_path: &Path = if let Some(path) = workspace.as_ref() {
-        Path::new(path)
-    } else {
-        Path::new(".")
-    };
-
+    let root_path: &Path = &setting::get_workspace();
     let mut tree_items: Vec<TreeItem> = Vec::new();
-
     if root_path.exists() && root_path.is_dir() {
-        // 直接读取工作空间下的所有子项作为根节点，而不是将工作空间本身作为根节点
         let children = build_tree_from_path(root_path);
         tree_items.extend(children);
     }
     *TREE_ITEMS.lock().unwrap() = tree_items;
+}
+
+pub fn add_new_item(new_path: &Path, new_item: EItemType) {
+    let mut tree_items = TREE_ITEMS.lock().unwrap();
+    if let Some(file_name) = new_path.file_name() {
+        let file_name: String = file_name.to_string_lossy().to_string();
+        let parent_path = match new_path.parent() {
+            Some(parent) => parent.to_string_lossy().to_string(),
+            None => return,
+        };
+
+        let new_item = TreeItem {
+            item_type: new_item,
+            display_name: file_name,
+            is_open: true,
+            fullpath: new_path.to_string_lossy().to_string(),
+            parent: Some(parent_path.clone()),
+            children: vec![],
+            data: None,
+        };
+        if parent_path == setting::get_workspace().to_string_lossy() {
+            tree_items.push(new_item);
+            tree_items.sort_by(|a, b| match (&a.item_type, &b.item_type) {
+                (EItemType::Folder, EItemType::Folder) => a.display_name.cmp(&b.display_name),
+                (EItemType::Folder, _) => Ordering::Less,
+                (_, EItemType::Folder) => Ordering::Greater,
+                _ => a.display_name.cmp(&b.display_name),
+            });
+        } else {
+            add_item_to_parent(&mut tree_items, new_item, &parent_path);
+        }
+    }
+}
+
+fn add_item_to_parent(items: &mut [TreeItem], new_item: TreeItem, parent_path: &str) -> bool {
+    for item in items.iter_mut() {
+        if item.fullpath == parent_path {
+            item.children.push(new_item);
+            item.children
+                .sort_by(|a, b| match (&a.item_type, &b.item_type) {
+                    (EItemType::Folder, EItemType::Folder) => a.display_name.cmp(&b.display_name),
+                    (EItemType::Folder, _) => Ordering::Less,
+                    (_, EItemType::Folder) => Ordering::Greater,
+                    _ => a.display_name.cmp(&b.display_name),
+                });
+            item.is_open = true;
+            return true;
+        }
+        if add_item_to_parent(&mut item.children, new_item.clone(), parent_path) {
+            item.is_open = true;
+            return true;
+        }
+    }
+    false
 }
 
 pub fn editor_complete(file_path: String) -> bool {
@@ -539,4 +568,26 @@ pub fn reload_gable(file_path: String) -> bool {
         return false;
     }
     return true;
+}
+
+pub fn update_item_display_name(fullpath: String, new_name: String) {
+    let mut tree_items = TREE_ITEMS.lock().unwrap();
+    update_item_display_name_recursive(&mut tree_items, &fullpath, new_name);
+}
+fn update_item_display_name_recursive(
+    items: &mut [TreeItem],
+    target_fullpath: &str,
+    new_name: String,
+) -> bool {
+    for item in items.iter_mut() {
+        if item.fullpath == target_fullpath {
+            item.display_name = new_name;
+            return true;
+        }
+        if update_item_display_name_recursive(&mut item.children, target_fullpath, new_name.clone())
+        {
+            return true;
+        }
+    }
+    false
 }

@@ -10,7 +10,7 @@ use std::{
 };
 
 use crate::{
-    common::global,
+    common::{global, setting, utils},
     gui::datas::{eitem_type::EItemType, gables, tree_item::TreeItem},
 };
 use eframe::egui::{
@@ -50,9 +50,9 @@ impl GableExplorer {
                 ScrollArea::vertical()
                     .auto_shrink([false; 2])
                     .show(ui, |ui| {
-                        let tree_items: MutexGuard<'_, Vec<TreeItem>> =
+                        let mut tree_items: MutexGuard<'_, Vec<TreeItem>> =
                             gables::TREE_ITEMS.lock().unwrap();
-                        for item in tree_items.iter() {
+                        for item in tree_items.iter_mut() {
                             Self::gui_tree_item(
                                 ui,
                                 item,
@@ -62,6 +62,21 @@ impl GableExplorer {
                                 &mut self.double_clicked_item,
                             );
                         }
+                        // 添加空白区域右键菜单
+                        ui.allocate_rect(
+                            ui.available_rect_before_wrap(),
+                            eframe::egui::Sense::click_and_drag(),
+                        )
+                        .context_menu(|ui| {
+                            if ui.button("新建文件夹").clicked() {
+                                Self::create_new_root_folder(
+                                    setting::get_workspace(),
+                                    &mut self.renaming_item,
+                                    &mut self.renaming_text,
+                                );
+                                ui.close();
+                            }
+                        });
                     });
             });
     }
@@ -69,7 +84,7 @@ impl GableExplorer {
     /// 带右键菜单的树形结构绘制
     fn gui_tree_item(
         ui: &mut Ui,
-        item: &TreeItem,
+        item: &mut TreeItem,
         selected_id: &mut Option<String>,
         renaming_item: &mut Option<String>,
         renaming_text: &mut String,
@@ -127,9 +142,14 @@ impl GableExplorer {
                     // 其他类型使用CollapsingHeader
                     CollapsingHeader::new(&header_text)
                         .default_open(item.is_open)
+                        .id_salt(format!(
+                            "{}{}",
+                            &item.fullpath,
+                            if item.is_open { "_open" } else { "" }
+                        ))
                         .show(ui, |ui| {
                             // 显示子项（如果有的话）
-                            for child in &item.children {
+                            for child in &mut item.children {
                                 Self::gui_tree_item(
                                     ui,
                                     child,
@@ -185,13 +205,13 @@ impl GableExplorer {
         }
 
         // 进行合法性校验
-        if !Self::is_valid_filename(&new_name) {
+        if !utils::is_valid_filename(&new_name) {
             log::error!("文件名包含非法字符:{}", &new_name);
             return;
         }
 
         // 检查同名文件/文件夹是否已存在
-        if Self::is_name_exists(item, &new_name) {
+        if utils::is_name_exists(&item.fullpath, &new_name) {
             log::error!("同名文件或文件夹已存在:{}", &new_name);
             return;
         }
@@ -217,13 +237,14 @@ impl GableExplorer {
 
         if let Err(e) = result {
             log::error!("重命名失败:{}", e);
+        } else {
+            let full_path_clone: String = item.fullpath.clone();
+            // 延迟刷新，在下一次update中执行
+            thread::spawn(move || {
+                thread::sleep(time::Duration::from_millis(100));
+                gables::update_item_display_name(full_path_clone, new_name);
+            });
         }
-
-        // 延迟刷新，在下一次update中执行
-        thread::spawn(|| {
-            thread::sleep(time::Duration::from_millis(100));
-            gables::refresh_gables();
-        });
     }
 
     /// 重命名文件夹项
@@ -243,52 +264,6 @@ impl GableExplorer {
             }
         }
         Ok(())
-    }
-
-    /// 检查文件名是否合法
-    fn is_valid_filename(name: &str) -> bool {
-        // 检查是否为空
-        if name.is_empty() {
-            return false;
-        }
-
-        // 检查是否包含非法字符
-        let invalid_chars: [char; 9] = ['/', '\\', ':', '*', '?', '"', '<', '>', '|'];
-        for c in name.chars() {
-            if invalid_chars.contains(&c) || c.is_control() {
-                return false;
-            }
-        }
-
-        // 检查是否以点或空格结尾
-        if name.ends_with('.') || name.ends_with(' ') {
-            return false;
-        }
-
-        // 检查是否是保留名称
-        let reserved_names: [&'static str; 22] = [
-            "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7",
-            "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
-        ];
-
-        let upper_name: String = name.to_uppercase();
-        for reserved in &reserved_names {
-            if &upper_name == reserved {
-                return false;
-            }
-        }
-        true
-    }
-
-    /// 检查同名文件/文件夹是否已存在
-    fn is_name_exists(item: &TreeItem, new_name: &str) -> bool {
-        let path: &Path = Path::new(&item.fullpath);
-        if let Some(parent_path) = path.parent() {
-            let new_path: PathBuf = parent_path.join(new_name);
-            new_path.exists()
-        } else {
-            false
-        }
     }
 
     /// 重命名Excel项及所有相关sheet文件
@@ -388,7 +363,7 @@ impl GableExplorer {
     /// 显示右键菜单
     fn show_context_menu(
         ui: &mut Ui,
-        item: &TreeItem,
+        item: &mut TreeItem,
         renaming_item: &mut Option<String>,
         renaming_text: &mut String,
     ) {
@@ -444,7 +419,7 @@ impl GableExplorer {
 
     /// 创建新文件夹并进入编辑状态
     fn create_new_folder_and_edit(
-        parent_item: &TreeItem,
+        parent_item: &mut TreeItem,
         renaming_item: &mut Option<String>,
         renaming_text: &mut String,
     ) {
@@ -452,19 +427,22 @@ impl GableExplorer {
         if parent_item.item_type != EItemType::Folder {
             return;
         }
-
-        // 标记父节点为展开状态
-        gables::set_folder_expanded(&parent_item.fullpath);
-
-        // 构造新文件夹路径
-        let new_folder_path: PathBuf = Path::new(&parent_item.fullpath).join("新建文件夹");
-
-        // 如果文件夹已存在，则添加序号
+        parent_item.is_open = true;
+        let root_path: PathBuf = PathBuf::from(&parent_item.fullpath);
+        Self::create_new_root_folder(root_path, renaming_item, renaming_text);
+    }
+    /// 在根目录创建新文件夹
+    fn create_new_root_folder(
+        root_path: PathBuf,
+        renaming_item: &mut Option<String>,
+        renaming_text: &mut String,
+    ) {
+        let new_folder_path: PathBuf = Path::new(&root_path).join("新建文件夹");
         let mut new_path: PathBuf = new_folder_path.clone();
         let mut counter: i32 = 1;
         while new_path.exists() {
             let new_name: String = format!("新建文件夹({})", counter);
-            new_path = Path::new(&parent_item.fullpath).join(new_name);
+            new_path = Path::new(&root_path).join(new_name);
             counter += 1;
         }
 
@@ -476,10 +454,11 @@ impl GableExplorer {
                     *renaming_item = Some(new_path.to_string_lossy().to_string());
                     *renaming_text = file_name.to_string_lossy().to_string();
 
+                    let new_path_clone = new_path.clone();
                     // 延迟刷新，在下一次update中执行
-                    thread::spawn(|| {
+                    thread::spawn(move || {
                         thread::sleep(Duration::from_millis(100));
-                        gables::refresh_gables();
+                        gables::add_new_item(&new_path_clone, EItemType::Folder);
                     });
                 }
             }

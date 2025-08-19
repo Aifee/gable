@@ -132,15 +132,21 @@ impl GableApp {
         self.frame_times.add(now, previous_frame_time); // projected
     }
 
+    // 获取帧率消耗的时长
     fn mean_frame_time(&self) -> f32 {
         self.frame_times.average().unwrap_or_default()
+    }
+    // app 帧率
+    fn fps(&self) -> f32 {
+        1.0 / self.frame_times.mean_time_interval().unwrap_or_default()
     }
     /// 绘制窗口标题
     fn gui_title(&mut self, ctx: &Context) {
         let info: String = format!(
-            "{}         CPU usage: {:.2} ms / frame",
+            "{}                         CPU usage: {:.2} ms/frame. FPS: {:.1}",
             utils::get_title(),
-            1e3 * self.mean_frame_time()
+            1e3 * self.mean_frame_time(),
+            self.fps(),
         );
         ctx.send_viewport_cmd(ViewportCommand::Title(info));
     }

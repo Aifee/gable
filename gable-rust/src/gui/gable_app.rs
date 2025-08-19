@@ -7,10 +7,12 @@ use crate::gui::{
 use eframe::egui::{
     Context, FontData, FontDefinitions, FontFamily, FontId, Style, TextStyle, ViewportCommand,
 };
+use eframe::emath::History;
 use eframe::{App, CreationContext, Frame};
 use std::sync::Arc;
 
 pub(crate) struct GableApp {
+    frame_times: History<f32>,
     /// 菜单组件
     gable_menu: GableMenu,
     /// 导航组件
@@ -30,8 +32,10 @@ impl GableApp {
     pub fn new(cc: &CreationContext<'_>) -> Self {
         Self::init_fonts(cc);
         Self::init_style(cc);
-        // 应用字体定义
+        let max_age: f32 = 1.0;
+        let max_len = (max_age * 300.0).round() as usize;
         let mut app: GableApp = Self {
+            frame_times: History::new(0..max_len, max_age),
             gable_menu: GableMenu::new(),
             gable_navigation: GableNavigation::new(),
             gable_explorer: GableExplorer::new(),
@@ -120,14 +124,31 @@ impl GableApp {
         }
     }
 
+    fn on_new_frame(&mut self, now: f64, previous_frame_time: Option<f32>) {
+        let previous_frame_time = previous_frame_time.unwrap_or_default();
+        if let Some(latest) = self.frame_times.latest_mut() {
+            *latest = previous_frame_time; // rewrite history now that we know
+        }
+        self.frame_times.add(now, previous_frame_time); // projected
+    }
+
+    fn mean_frame_time(&self) -> f32 {
+        self.frame_times.average().unwrap_or_default()
+    }
     /// 绘制窗口标题
     fn gui_title(&mut self, ctx: &Context) {
-        ctx.send_viewport_cmd(ViewportCommand::Title(utils::get_title()));
+        let info: String = format!(
+            "{}         CPU usage: {:.2} ms / frame",
+            utils::get_title(),
+            1e3 * self.mean_frame_time()
+        );
+        ctx.send_viewport_cmd(ViewportCommand::Title(info));
     }
 }
 
 impl App for GableApp {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
+        self.on_new_frame(ctx.input(|i| i.time), _frame.info().cpu_usage);
         self.gui_title(ctx);
         self.gable_menu.ongui(ctx);
         self.gable_navigation.ongui(ctx);

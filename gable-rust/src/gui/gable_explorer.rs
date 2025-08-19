@@ -1,3 +1,11 @@
+use crate::{
+    common::{global, setting, utils},
+    gui::datas::{eitem_type::EItemType, gables, tree_item::TreeItem},
+};
+use eframe::egui::{
+    CollapsingHeader, Color32, Context, CornerRadius, Frame, InputState, Key, Response, ScrollArea,
+    SidePanel, Ui,
+};
 use std::{
     borrow::Cow,
     fs::{self, DirEntry},
@@ -7,15 +15,6 @@ use std::{
     sync::MutexGuard,
     thread,
     time::{self, Duration},
-};
-
-use crate::{
-    common::{global, setting, utils},
-    gui::datas::{eitem_type::EItemType, gables, tree_item::TreeItem},
-};
-use eframe::egui::{
-    CollapsingHeader, Color32, Context, CornerRadius, Frame, InputState, Key, Response, ScrollArea,
-    SidePanel, Ui,
 };
 
 pub struct GableExplorer {
@@ -225,18 +224,9 @@ impl GableExplorer {
         }
 
         let result: Result<Option<String>, Error> = match item.item_type {
-            EItemType::Excel => {
-                // 重命名Excel文件及其所有sheet文件
-                Self::rename_excel_item(item, &new_name)
-            }
-            EItemType::Sheet => {
-                // 重命名单个sheet
-                Self::rename_sheet_item(item, &new_name)
-            }
-            EItemType::Folder => {
-                // 重命名文件夹
-                Self::rename_folder_item(item, &new_name)
-            }
+            EItemType::Excel => Self::rename_excel_item(item, &new_name),
+            EItemType::Sheet => Self::rename_sheet_item(item, &new_name),
+            EItemType::Folder => Self::rename_folder_item(item, &new_name),
         };
 
         // 清理重命名状态

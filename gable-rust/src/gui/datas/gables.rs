@@ -571,7 +571,7 @@ pub fn reload_gable(file_path: String) -> bool {
 }
 
 pub fn update_item_display_name(fullpath: String, new_path: String, new_name: String) {
-    let mut tree_items = TREE_ITEMS.lock().unwrap();
+    let mut tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
     update_item_display_name_recursive(&mut tree_items, &fullpath, new_path, new_name);
 }
 fn update_item_display_name_recursive(

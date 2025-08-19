@@ -224,7 +224,7 @@ impl GableExplorer {
             return;
         }
 
-        let result: Result<(), Error> = match item.item_type {
+        let result: Result<Option<String>, Error> = match item.item_type {
             EItemType::Excel => {
                 // 重命名Excel文件及其所有sheet文件
                 Self::rename_excel_item(item, &new_name)
@@ -243,20 +243,27 @@ impl GableExplorer {
         *renaming_item = None;
         renaming_text.clear();
 
-        if let Err(e) = result {
-            log::error!("重命名失败:{}", e);
-        } else {
-            let full_path_clone: String = item.fullpath.clone();
-            // 延迟刷新，在下一次update中执行
-            thread::spawn(move || {
-                thread::sleep(time::Duration::from_millis(100));
-                gables::update_item_display_name(full_path_clone, new_name);
-            });
+        match result {
+            Err(e) => {
+                log::error!("重命名失败:{}", e);
+            }
+            Ok(new_fullpath) => {
+                // 延迟刷新，在下一次update中执行
+                let new_fullpath = new_fullpath.unwrap_or(item.fullpath.clone());
+                let fullpath_clone = item.fullpath.clone();
+                thread::spawn(move || {
+                    thread::sleep(time::Duration::from_millis(100));
+                    gables::update_item_display_name(fullpath_clone, new_fullpath, new_name);
+                });
+            }
         }
     }
 
     /// 重命名文件夹项
-    fn rename_folder_item(item: &TreeItem, new_folder_name: &str) -> Result<(), Error> {
+    fn rename_folder_item(
+        item: &TreeItem,
+        new_folder_name: &str,
+    ) -> Result<(Option<String>), Error> {
         let path: &Path = Path::new(&item.fullpath);
         if let Some(parent_path) = path.parent() {
             let new_path: PathBuf = parent_path.join(new_folder_name);
@@ -269,13 +276,18 @@ impl GableExplorer {
             // 重命名文件夹
             if path.to_string_lossy() != new_path.to_string_lossy() {
                 fs::rename(&path, &new_path)?;
+                return Ok(Some(new_path.to_string_lossy().to_string()));
             }
         }
-        Ok(())
+        Ok(None)
     }
 
     /// 重命名Excel项及所有相关sheet文件
-    pub fn rename_excel_item(item: &TreeItem, new_excel_name: &str) -> Result<(), Error> {
+    pub fn rename_excel_item(
+        item: &TreeItem,
+        new_excel_name: &str,
+    ) -> Result<Option<String>, Error> {
+        let mut new_main_path: Option<String> = None;
         // 获取Excel文件所在目录
         if let Some(parent_path) = Path::new(&item.fullpath).parent() {
             // 查找所有相关的sheet文件
@@ -298,7 +310,7 @@ impl GableExplorer {
                                 // 如果excel名称匹配当前重命名的excel
                                 if excel_name == item.display_name {
                                     // 构造新的文件名
-                                    let new_file_name: String = if let Some(sheet) = sheet_name {
+                                    let new_file_name: String = if let Some(sheet) = &sheet_name {
                                         format!(
                                             "{}@{}{}",
                                             new_excel_name,
@@ -323,6 +335,11 @@ impl GableExplorer {
                                     // 重命名文件
                                     if entry_path.to_string_lossy() != new_path.to_string_lossy() {
                                         fs::rename(&entry_path, &new_path)?;
+                                        // 如果这是主Excel文件（没有sheet部分），记录新路径
+                                        if sheet_name.is_none() {
+                                            new_main_path =
+                                                Some(new_path.to_string_lossy().to_string());
+                                        }
                                     }
                                 }
                             }
@@ -331,11 +348,10 @@ impl GableExplorer {
                 }
             }
         }
-        Ok(())
+        Ok(new_main_path)
     }
-
     /// 重命名单个sheet项
-    fn rename_sheet_item(item: &TreeItem, new_sheet_name: &str) -> Result<(), Error> {
+    fn rename_sheet_item(item: &TreeItem, new_sheet_name: &str) -> Result<Option<String>, Error> {
         // 从完整路径中提取目录和原始文件名
         let path: &Path = Path::new(&item.fullpath);
         if let Some(parent_path) = path.parent() {
@@ -361,11 +377,12 @@ impl GableExplorer {
                     // 重命名文件
                     if path.to_string_lossy() != new_path.to_string_lossy() {
                         fs::rename(&path, &new_path)?;
+                        return Ok(Some(new_path.to_string_lossy().to_string()));
                     }
                 }
             }
         }
-        Ok(())
+        Ok(None)
     }
 
     /// 显示右键菜单

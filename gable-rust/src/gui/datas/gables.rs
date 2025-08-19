@@ -570,22 +570,28 @@ pub fn reload_gable(file_path: String) -> bool {
     return true;
 }
 
-pub fn update_item_display_name(fullpath: String, new_name: String) {
+pub fn update_item_display_name(fullpath: String, new_path: String, new_name: String) {
     let mut tree_items = TREE_ITEMS.lock().unwrap();
-    update_item_display_name_recursive(&mut tree_items, &fullpath, new_name);
+    update_item_display_name_recursive(&mut tree_items, &fullpath, new_path, new_name);
 }
 fn update_item_display_name_recursive(
     items: &mut [TreeItem],
     target_fullpath: &str,
+    new_path: String,
     new_name: String,
 ) -> bool {
     for item in items.iter_mut() {
         if item.fullpath == target_fullpath {
+            item.fullpath = new_path;
             item.display_name = new_name;
             return true;
         }
-        if update_item_display_name_recursive(&mut item.children, target_fullpath, new_name.clone())
-        {
+        if update_item_display_name_recursive(
+            &mut item.children,
+            target_fullpath,
+            new_path.clone(),
+            new_name.clone(),
+        ) {
             return true;
         }
     }

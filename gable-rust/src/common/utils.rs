@@ -162,12 +162,15 @@ pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String,
 }
 
 // Excel数据写入gable文件
-pub fn write_gable(excel_file: String, sheet_type: ESheetType) -> Result<(), Box<dyn Error>> {
+pub fn write_gable(
+    excel_file: String,
+    target_path: String,
+    sheet_type: ESheetType,
+) -> Result<(), Box<dyn Error>> {
     let mut workbook: Xlsx<_> = calamine::open_workbook(&excel_file)?;
     let sheet_names: Vec<String> = workbook.sheet_names().to_owned();
     let file_path: &Path = Path::new(&excel_file);
     let file_stem: &str = file_path.file_stem().unwrap().to_str().unwrap();
-    let parent_dir: &Path = file_path.parent().unwrap();
     for sheet_name in sheet_names {
         let range: Range<Data> = workbook.worksheet_range(&sheet_name)?;
         let mut gable_data: GableData = GableData {
@@ -236,7 +239,7 @@ pub fn write_gable(excel_file: String, sheet_type: ESheetType) -> Result<(), Box
 
         // 创建.gable文件路径
         let gable_file_path: PathBuf =
-            parent_dir.join(format!("{}@{}.gable", file_stem, sheet_name));
+            PathBuf::from(&target_path).join(format!("{}@{}.gable", file_stem, sheet_name));
 
         // 将GableData序列化为JSON并写入文件
         let json_data: String = serde_json::to_string_pretty(&gable_data)?;

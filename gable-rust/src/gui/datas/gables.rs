@@ -1,7 +1,7 @@
 use crate::common::{global, setting, utils};
 use crate::gui::datas::{
     eitem_type::EItemType, esheet_type::ESheetType, gable_data::GableData, tree_data::TreeData,
-    tree_item::TreeItem,
+    tree_item::TreeItem, watcher_data::WatcherData,
 };
 use lazy_static::lazy_static;
 use rayon::prelude::*;
@@ -14,28 +14,35 @@ lazy_static! {
     /// 全局存储当前的目录树
     pub static ref TREE_ITEMS: Arc<Mutex<Vec<TreeItem>>> = Arc::new(Mutex::new(Vec::new()));
     /// 正在编辑的文件列表
-    pub static ref EDITION_FILES: Arc<Mutex<HashMap<String, ESheetType>>> = Arc::new(Mutex::new(HashMap::new()));
+    pub static ref EDITION_FILES: Arc<Mutex<HashMap<String, WatcherData>>> = Arc::new(Mutex::new(HashMap::new()));
 }
 
 /// 添加编辑文件到编辑列表
-fn add_editor_file(file_path: String, sheet_type: ESheetType) {
-    let mut editor_files: MutexGuard<'_, HashMap<String, ESheetType>> =
+fn add_editor_file(file_path: String, targe_path: String, sheet_type: ESheetType) {
+    let mut editor_files: MutexGuard<'_, HashMap<String, WatcherData>> =
         EDITION_FILES.lock().unwrap();
-    editor_files.insert(file_path, sheet_type);
+    editor_files.insert(
+        file_path.clone(),
+        WatcherData {
+            file_path: file_path,
+            target_path: targe_path,
+            sheet_type,
+        },
+    );
 }
 
 // 移除编辑文件
 pub fn remove_editor_file(file_path: String) {
-    let mut editor_files: MutexGuard<'_, HashMap<String, ESheetType>> =
+    let mut editor_files: MutexGuard<'_, HashMap<String, WatcherData>> =
         EDITION_FILES.lock().unwrap();
     editor_files.remove(&file_path);
 }
 
 // 判断是否是编辑文件
-fn has_eidtor_file(file_path: String) -> (bool, Option<ESheetType>) {
-    let files = EDITION_FILES.lock().unwrap();
+fn has_eidtor_file(file_path: String) -> (bool, Option<WatcherData>) {
+    let files: MutexGuard<'_, HashMap<String, WatcherData>> = EDITION_FILES.lock().unwrap();
     match files.get(&file_path) {
-        Some(sheet_type) => (true, Some(sheet_type.clone())),
+        Some(data) => (true, Some(data.clone())),
         None => (false, None),
     }
 }
@@ -356,7 +363,7 @@ pub fn edit_gable(item: TreeItem) {
     };
     match utils::write_excel(&excel_name, related_files) {
         Ok(excel_file_path) => {
-            add_editor_file(excel_file_path.clone(), sheet_type);
+            add_editor_file(excel_file_path.clone(), parent_path, sheet_type);
             // 使用系统命令打开Excel文件
             #[cfg(target_os = "windows")]
             {
@@ -459,13 +466,14 @@ fn add_item_to_parent(items: &mut [TreeItem], new_item: TreeItem, parent_path: &
     false
 }
 
+// 文件编辑完成时触发
 pub fn editor_complete(file_path: String) -> bool {
-    let (has, sheet_type) = has_eidtor_file(file_path.clone());
+    let (has, data) = has_eidtor_file(file_path.clone());
     if !has {
         return false;
     }
-    let result: bool = if let Some(sheet_type) = sheet_type {
-        match utils::write_gable(file_path.clone(), sheet_type) {
+    let result: bool = if let Some(data) = data {
+        match utils::write_gable(file_path, data.target_path, data.sheet_type) {
             Ok(_) => true,
             Err(_) => false,
         }
@@ -483,7 +491,7 @@ pub fn editor_complete(file_path: String) -> bool {
 
 // 重新加载gable文件
 pub fn reload_gable(file_path: String) -> bool {
-    let (has, sheet_type) = has_eidtor_file(file_path.clone());
+    let (has, data) = has_eidtor_file(file_path.clone());
     if !has {
         return false;
     }

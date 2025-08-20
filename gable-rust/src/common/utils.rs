@@ -174,10 +174,10 @@ pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String,
             worksheet.set_name(&gable_data.sheetname)?;
             for (row_key, row_data) in &gable_data.heads {
                 // 为了保证和excel工具统一，起始行从1开始
-                let row_index: u32 = row_key.parse().unwrap_or(0) - 1;
+                let row_index: u32 = row_key - 1;
                 for (col_key, cell_data) in row_data {
                     // 为了保证和excel工具统一，起始列从1开始
-                    let col_index: u16 = col_key.parse().unwrap_or(0) - 1;
+                    let col_index: u16 = col_key - 1;
                     worksheet.write_string(row_index, col_index, &cell_data.value)?;
                     if row_index % 2 == 0 {
                         worksheet.set_cell_format(row_index, col_index, &header_format_1)?;
@@ -187,16 +187,13 @@ pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String,
                 }
             }
 
-            for (row_key, row_data) in &gable_data.cells {
-                let row_index: u32 = row_key.parse().unwrap_or(0);
-                for (col_key, cell_data) in row_data {
-                    let col_index: u16 = col_key.parse().unwrap_or(0);
-                    // worksheet.write_string(row_index, col_index, &cell_data.value)?;
+            for (row_index, row_data) in &gable_data.cells {
+                for (col_index, cell_data) in row_data {
                     write_excel_cell_value(
                         worksheet,
                         &gable_data.heads,
-                        row_index,
-                        col_index,
+                        row_index.clone(),
+                        col_index.clone(),
                         &cell_data,
                     );
                 }
@@ -212,14 +209,14 @@ pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String,
 // excel 单元格数据类型写入
 fn write_excel_cell_value(
     worksheet: &mut Worksheet,
-    heads: &HashMap<String, HashMap<String, CellData>>,
+    heads: &HashMap<u32, HashMap<u16, CellData>>,
     row_index: u32,
     col_index: u16,
     cell: &CellData,
 ) {
-    let row_key = global::TABLE_DATA_ROW_TYPE.to_string();
+    let row_key = global::TABLE_DATA_ROW_TYPE;
     if let Some(row_data) = heads.get(&row_key) {
-        if let Some(cell_data) = row_data.get(&col_index.to_string()) {
+        if let Some(cell_data) = row_data.get(&col_index) {
             match cell_data.get_data_type() {
                 EDataType::INT => worksheet
                     .write_number(row_index - 1, col_index - 1, cell.parse_int())
@@ -260,7 +257,7 @@ pub fn write_gable(
         let mut gable_data: GableData = GableData {
             sheetname: sheet_name.clone(),
             max_row: range.height() as u32,
-            max_column: range.width() as u32,
+            max_column: range.width() as u16,
             heads: HashMap::new(),
             cells: HashMap::new(),
         };
@@ -268,7 +265,7 @@ pub fn write_gable(
         // 读取数据并填充到GableData中
         for (row_idx, row) in range.rows().enumerate() {
             let row_key: u32 = (row_idx + 1) as u32;
-            let mut row_data: HashMap<String, CellData> = HashMap::new();
+            let mut row_data: HashMap<u16, CellData> = HashMap::new();
             for (col_idx, cell) in row.iter().enumerate() {
                 let col_key: u16 = (col_idx + 1) as u16;
                 let value: String = match cell {
@@ -287,29 +284,29 @@ pub fn write_gable(
                 };
 
                 let cell_data: CellData = CellData::new(row_key, col_key, value);
-                row_data.insert(col_key.to_string(), cell_data);
+                row_data.insert(col_key, cell_data);
             }
 
             match sheet_type {
                 ESheetType::KV => {
                     if row_key < global::TABLE_KV_ROW_TOTAL {
-                        gable_data.heads.insert(row_key.to_string(), row_data);
+                        gable_data.heads.insert(row_key, row_data);
                     } else {
-                        gable_data.cells.insert(row_key.to_string(), row_data);
+                        gable_data.cells.insert(row_key, row_data);
                     }
                 }
                 ESheetType::ENUM => {
                     if row_key < global::TABLE_ENUM_ROW_TOTAL {
-                        gable_data.heads.insert(row_key.to_string(), row_data);
+                        gable_data.heads.insert(row_key, row_data);
                     } else {
-                        gable_data.cells.insert(row_key.to_string(), row_data);
+                        gable_data.cells.insert(row_key, row_data);
                     }
                 }
                 _ => {
                     if row_key < global::TABLE_DATA_ROW_TOTAL {
-                        gable_data.heads.insert(row_key.to_string(), row_data);
+                        gable_data.heads.insert(row_key, row_data);
                     } else {
-                        gable_data.cells.insert(row_key.to_string(), row_data);
+                        gable_data.cells.insert(row_key, row_data);
                     }
                 }
             }

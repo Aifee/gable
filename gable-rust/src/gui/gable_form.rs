@@ -248,25 +248,25 @@ impl GableForm {
     /// 普通数据表绘制
     fn ongui_table_databody(body: TableBody<'_>, sheet_content: &GableData) {
         let total_rows: usize = sheet_content.max_row as usize;
-        let total_cols: usize = sheet_content.max_column as usize;
+        let total_cols: u16 = sheet_content.max_column;
         body.rows(20.0, total_rows, |mut row| {
             let row_index: u32 = (row.index() + 1) as u32;
             row.col(|ui| {
                 ui.label(&row_index.to_string());
             });
 
-            let row_data: Option<&HashMap<String, CellData>> =
+            let row_data: Option<&HashMap<u16, CellData>> =
                 if row_index < global::TABLE_DATA_ROW_TOTAL {
-                    sheet_content.heads.get(&row_index.to_string())
+                    sheet_content.heads.get(&row_index)
                 } else {
-                    sheet_content.cells.get(&row_index.to_string())
+                    sheet_content.cells.get(&row_index)
                 };
 
             for col_index in 1..total_cols + 1 {
                 row.col(|ui| {
                     // 通过预先获取的行数据查找列数据
                     if let Some(row_data) = row_data {
-                        if let Some(col_data) = row_data.get(&col_index.to_string()) {
+                        if let Some(col_data) = row_data.get(&col_index) {
                             ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
                             ui.add(Label::new(&col_data.value).truncate());
                         } else {
@@ -283,24 +283,24 @@ impl GableForm {
     /// KV表绘制
     fn ongui_table_kvbody(body: TableBody<'_>, sheet_content: &GableData) {
         let total_rows: usize = sheet_content.max_row as usize;
-        let total_cols: usize = sheet_content.max_column as usize;
+        let total_cols: u16 = sheet_content.max_column;
         body.rows(20.0, total_rows, |mut row| {
             let row_index: u32 = (row.index() + 1) as u32;
             row.col(|ui| {
                 ui.label(&row_index.to_string());
             });
 
-            let row_data: Option<&HashMap<String, CellData>> =
+            let row_data: Option<&HashMap<u16, CellData>> =
                 if row_index < global::TABLE_KV_ROW_TOTAL {
-                    sheet_content.heads.get(&row_index.to_string())
+                    sheet_content.heads.get(&row_index)
                 } else {
-                    sheet_content.cells.get(&row_index.to_string())
+                    sheet_content.cells.get(&row_index)
                 };
 
             for col_index in 1..total_cols + 1 {
                 row.col(|ui| {
                     if let Some(row_data) = row_data {
-                        if let Some(col_data) = row_data.get(&col_index.to_string()) {
+                        if let Some(col_data) = row_data.get(&col_index) {
                             ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
                             ui.add(Label::new(&col_data.value).truncate());
                         } else {
@@ -317,25 +317,25 @@ impl GableForm {
     /// 枚举表绘制器
     fn ongui_table_enumbody(body: TableBody<'_>, sheet_content: &GableData) {
         let total_rows: usize = sheet_content.max_row as usize;
-        let total_cols: usize = sheet_content.max_column as usize;
+        let total_cols: u16 = sheet_content.max_column;
         body.rows(20.0, total_rows, |mut row| {
             let row_index: u32 = (row.index() + 1) as u32;
             row.col(|ui| {
                 ui.label(&row_index.to_string());
             });
 
-            let row_data: Option<&HashMap<String, CellData>> =
+            let row_data: Option<&HashMap<u16, CellData>> =
                 if row_index < global::TABLE_ENUM_ROW_TOTAL {
-                    sheet_content.heads.get(&row_index.to_string())
+                    sheet_content.heads.get(&row_index)
                 } else {
-                    sheet_content.cells.get(&row_index.to_string())
+                    sheet_content.cells.get(&row_index)
                 };
 
             for col_index in 1..total_cols + 1 {
                 row.col(|ui| {
                     // 通过预先获取的行数据查找列数据
                     if let Some(row_data) = row_data {
-                        if let Some(col_data) = row_data.get(&col_index.to_string()) {
+                        if let Some(col_data) = row_data.get(&col_index) {
                             ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
                             ui.add(Label::new(&col_data.value).truncate());
                         } else {

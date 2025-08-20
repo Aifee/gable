@@ -1,5 +1,5 @@
 use crate::gui::{component, datas::log::LogTrace};
-use eframe::egui::{Align, Context, Frame, Layout, ScrollArea, TopBottomPanel, Ui, Vec2};
+use eframe::egui::{Context, Frame, ScrollArea, TopBottomPanel, Ui};
 use egui_extras::{Column, TableBody, TableBuilder};
 
 pub(crate) struct GableLog {
@@ -29,7 +29,7 @@ impl GableLog {
     }
 
     fn ongui_table(&mut self, ui: &mut Ui) {
-        ScrollArea::vertical().auto_shrink(true).show(ui, |ui| {
+        ScrollArea::vertical().auto_shrink(false).show(ui, |ui| {
             TableBuilder::new(ui)
                 .striped(true)
                 .resizable(true)

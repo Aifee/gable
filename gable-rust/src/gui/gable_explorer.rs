@@ -250,10 +250,7 @@ impl GableExplorer {
     }
 
     /// 重命名文件夹项
-    fn rename_folder_item(
-        item: &TreeItem,
-        new_folder_name: &str,
-    ) -> Result<(Option<String>), Error> {
+    fn rename_folder_item(item: &TreeItem, new_folder_name: &str) -> Result<Option<String>, Error> {
         let path: &Path = Path::new(&item.fullpath);
         if let Some(parent_path) = path.parent() {
             let new_path: PathBuf = parent_path.join(new_folder_name);

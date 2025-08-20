@@ -1,9 +1,10 @@
 use crate::common::{global, setting};
-use crate::gui::datas::cell_data::CellData;
-use crate::gui::datas::esheet_type::ESheetType;
-use crate::gui::datas::gable_data::GableData;
+use crate::gui::datas::{
+    cell_data::CellData, edata_type::EDataType, edevelop_type::EDevelopType,
+    esheet_type::ESheetType, gable_data::GableData,
+};
 use calamine::{Data, Range, Reader, Xlsx};
-use eframe::egui::{Color32, Context, Style};
+use eframe::egui::{Color32, Context, Style, TextBuffer};
 use rust_xlsxwriter::{Color, Format, FormatBorder, workbook::Workbook, worksheet::Worksheet};
 use std::collections::HashMap;
 use std::error::Error;
@@ -94,6 +95,46 @@ pub fn get_temp_path() -> String {
     path
 }
 
+pub fn convert_data_type(value: &str, dt: EDevelopType) -> EDataType {
+    match dt {
+        EDevelopType::c => EDataType::Unknown,
+        EDevelopType::csharp => convert_data_csharp(value),
+        EDevelopType::cangjie => EDataType::Unknown,
+        EDevelopType::go => EDataType::Unknown,
+        EDevelopType::java => EDataType::Unknown,
+        EDevelopType::javascript => EDataType::Unknown,
+        EDevelopType::lua => EDataType::Unknown,
+        EDevelopType::python => EDataType::Unknown,
+        EDevelopType::typescript => EDataType::Unknown,
+        _ => EDataType::Unknown,
+    }
+}
+
+fn convert_data_csharp(value: &str) -> EDataType {
+    match value {
+        "int" => EDataType::INT,
+        "string" => EDataType::STRING,
+        "bool" => EDataType::BOOLEAN,
+        "float" => EDataType::FLOAT,
+        "vector2" => EDataType::VECTOR2,
+        "vector3" => EDataType::VECTOR3,
+        "vector4" => EDataType::VECTOR4,
+        "int[]" => EDataType::INT_ARR,
+        "string[]" => EDataType::STRING_ARR,
+        "bool[]" => EDataType::BOOLEAN_ARR,
+        "float[]" => EDataType::FLOAT_ARR,
+        "vector2[]" => EDataType::VECTOR2_ARR,
+        "vector3[]" => EDataType::VECTOR3_ARR,
+        "vector4[]" => EDataType::VECTOR4_ARR,
+        "percentage" => EDataType::PERCENTAGE,
+        "permillage" => EDataType::PERMILLAGE,
+        "permian" => EDataType::PERMIAN,
+        "time" => EDataType::TIME,
+        "enum" => EDataType::ENUM,
+        _ => EDataType::Unknown,
+    }
+}
+
 // 写入Excel文件
 pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String, Box<dyn Error>> {
     let file_name: &str = &format!("{}{}", &excel_name, &global::EXCEL_EXTENSION);
@@ -147,10 +188,17 @@ pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String,
             }
 
             for (row_key, row_data) in &gable_data.cells {
-                let row_index: u32 = row_key.parse().unwrap_or(0) - 1;
+                let row_index: u32 = row_key.parse().unwrap_or(0);
                 for (col_key, cell_data) in row_data {
-                    let col_index: u16 = col_key.parse().unwrap_or(0) - 1;
-                    worksheet.write_string(row_index, col_index, &cell_data.value)?;
+                    let col_index: u16 = col_key.parse().unwrap_or(0);
+                    // worksheet.write_string(row_index, col_index, &cell_data.value)?;
+                    write_excel_cell_value(
+                        worksheet,
+                        &gable_data.heads,
+                        row_index,
+                        col_index,
+                        &cell_data,
+                    );
                 }
             }
         } else {
@@ -159,6 +207,38 @@ pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String,
     }
     workbook.save(&excel_file_path)?;
     Ok(excel_file_path)
+}
+
+// excel 单元格数据类型写入
+fn write_excel_cell_value(
+    worksheet: &mut Worksheet,
+    heads: &HashMap<String, HashMap<String, CellData>>,
+    row_index: u32,
+    col_index: u16,
+    cell: &CellData,
+) {
+    let row_key = global::TABLE_DATA_ROW_TYPE.to_string();
+    if let Some(row_data) = heads.get(&row_key) {
+        if let Some(cell_data) = row_data.get(&col_index.to_string()) {
+            match cell_data.get_data_type() {
+                EDataType::INT => worksheet
+                    .write_number(row_index - 1, col_index - 1, cell.parse_int())
+                    .unwrap(),
+                EDataType::BOOLEAN => worksheet
+                    .write_boolean(row_index - 1, col_index - 1, cell.parse_bool())
+                    .unwrap(),
+                EDataType::FLOAT => worksheet
+                    .write_number(row_index - 1, col_index - 1, cell.parse_float())
+                    .unwrap(),
+                EDataType::VECTOR2 => worksheet
+                    .write_string(row_index - 1, col_index - 1, cell.parse_vector2())
+                    .unwrap(),
+                _ => worksheet
+                    .write_string(row_index - 1, col_index - 1, &cell.value)
+                    .unwrap(),
+            };
+        }
+    }
 }
 
 // Excel数据写入gable文件
@@ -187,10 +267,10 @@ pub fn write_gable(
 
         // 读取数据并填充到GableData中
         for (row_idx, row) in range.rows().enumerate() {
-            let row_key: usize = row_idx + 1;
+            let row_key: u32 = (row_idx + 1) as u32;
             let mut row_data: HashMap<String, CellData> = HashMap::new();
             for (col_idx, cell) in row.iter().enumerate() {
-                let col_key: usize = col_idx + 1;
+                let col_key: u16 = (col_idx + 1) as u16;
                 let value: String = match cell {
                     Data::String(s) => s.clone(),
                     Data::Float(f) => f.to_string(),
@@ -206,12 +286,7 @@ pub fn write_gable(
                     Data::Empty => String::new(),
                 };
 
-                let cell_data: CellData = CellData {
-                    row: row_key as u32,
-                    column: col_key as u32,
-                    value,
-                };
-
+                let cell_data: CellData = CellData::new(row_key, col_key, value);
                 row_data.insert(col_key.to_string(), cell_data);
             }
 

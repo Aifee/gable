@@ -8,6 +8,8 @@ pub mod gable_menu;
 pub mod gable_navigation;
 pub mod datas {
     pub mod cell_data;
+    pub mod edata_type;
+    pub mod edevelop_type;
     pub mod eitem_type;
     pub mod esheet_type;
     pub mod gable_data;

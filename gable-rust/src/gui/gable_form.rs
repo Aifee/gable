@@ -250,7 +250,7 @@ impl GableForm {
         let total_rows: usize = sheet_content.max_row as usize;
         let total_cols: usize = sheet_content.max_column as usize;
         body.rows(20.0, total_rows, |mut row| {
-            let row_index: usize = row.index() + 1;
+            let row_index: u32 = (row.index() + 1) as u32;
             row.col(|ui| {
                 ui.label(&row_index.to_string());
             });
@@ -285,7 +285,7 @@ impl GableForm {
         let total_rows: usize = sheet_content.max_row as usize;
         let total_cols: usize = sheet_content.max_column as usize;
         body.rows(20.0, total_rows, |mut row| {
-            let row_index: usize = row.index() + 1;
+            let row_index: u32 = (row.index() + 1) as u32;
             row.col(|ui| {
                 ui.label(&row_index.to_string());
             });
@@ -319,7 +319,7 @@ impl GableForm {
         let total_rows: usize = sheet_content.max_row as usize;
         let total_cols: usize = sheet_content.max_column as usize;
         body.rows(20.0, total_rows, |mut row| {
-            let row_index: usize = row.index() + 1;
+            let row_index: u32 = (row.index() + 1) as u32;
             row.col(|ui| {
                 ui.label(&row_index.to_string());
             });

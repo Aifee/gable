@@ -9,19 +9,39 @@ pub const IGNORED_DIRS: &[&str] = &[".vscode", ".git", "_log", DIR_TEMP, DIR_DAT
 pub const EXCEL_EXTENSION: &str = ".xlsx";
 
 ///[数据表单]描述行
-pub const TABLE_DATA_ROW_DES: usize = 1;
+pub const TABLE_DATA_ROW_DES: u32 = 1;
 ///[数据表单]字段行
-pub const TABLE_DATA_ROW_FIELD: usize = 2;
+pub const TABLE_DATA_ROW_FIELD: u32 = 2;
 ///[数据表单]类型行
-pub const TABLE_DATA_ROW_TYPE: usize = 3;
+pub const TABLE_DATA_ROW_TYPE: u32 = 3;
 ///[数据表单]平台行
-pub const TABLE_DATA_ROW_TARGET: usize = 4;
+pub const TABLE_DATA_ROW_TARGET: u32 = 4;
 ///[数据表单]关联信息行
-pub const TABLE_DATA_ROW_LINK: usize = 5;
+pub const TABLE_DATA_ROW_LINK: u32 = 5;
 /// [数据表单]有效数据起始行数
-pub const TABLE_DATA_ROW_TOTAL: usize = 6;
+pub const TABLE_DATA_ROW_TOTAL: u32 = 6;
 
 ///[KV表单]有效数据起始行数
-pub const TABLE_KV_ROW_TOTAL: usize = 2;
+pub const TABLE_KV_ROW_TOTAL: u32 = 2;
 ///[枚举表单]有效数据起始行数
-pub const TABLE_ENUM_ROW_TOTAL: usize = 2;
+pub const TABLE_ENUM_ROW_TOTAL: u32 = 2;
+
+pub const DATA_TYPE_KEY_INT: &str = "int";
+pub const DATA_TYPE_KEY_STRING: &str = "string";
+pub const DATA_TYPE_KEY_BOOLEAN: &str = "bool";
+pub const DATA_TYPE_KEY_FLOAT: &str = "float";
+pub const DATA_TYPE_KEY_VECTOR2: &str = "vector2";
+pub const DATA_TYPE_KEY_VECTOR3: &str = "vector3";
+pub const DATA_TYPE_KEY_VECTOR4: &str = "vector4";
+pub const DATA_TYPE_KEY_INT_ARR: &str = "int[]";
+pub const DATA_TYPE_KEY_STRING_ARR: &str = "string[]";
+pub const DATA_TYPE_KEY_BOOLEAN_ARR: &str = "bool[]";
+pub const DATA_TYPE_KEY_FLOAT_ARR: &str = "float[]";
+pub const DATA_TYPE_KEY_VECTOR2_ARR: &str = "vector2[]";
+pub const DATA_TYPE_KEY_VECTOR3_ARR: &str = "vector3[]";
+pub const DATA_TYPE_KEY_VECTOR4_ARR: &str = "vector4[]";
+pub const DATA_TYPE_KEY_PERCENTAGE: &str = "percentage";
+pub const DATA_TYPE_KEY_PERMILLAGE: &str = "permillage";
+pub const DATA_TYPE_KEY_PERMIAN: &str = "permian";
+pub const DATA_TYPE_KEY_TIME: &str = "time";
+pub const DATA_TYPE_KEY_ENUM: &str = "enum";

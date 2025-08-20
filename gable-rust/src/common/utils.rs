@@ -284,6 +284,9 @@ pub fn write_gable(
                 };
 
                 let cell_data: CellData = CellData::new(row_key, col_key, value);
+                if cell_data.is_empty() {
+                    continue;
+                }
                 row_data.insert(col_key, cell_data);
             }
 

@@ -34,7 +34,11 @@ pub fn read_gable_file(file_path: &str) -> Option<GableData> {
 }
 
 // 写入Excel文件
-pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String, Box<dyn Error>> {
+pub fn write_excel(
+    excel_name: &str,
+    sheet_type: &ESheetType,
+    gable_files: Vec<String>,
+) -> Result<String, Box<dyn Error>> {
     let file_name: &str = &format!("{}{}", &excel_name, &global::EXCEL_EXTENSION);
     let tem_path: String = utils::get_temp_path();
     let excel_file_path_tem: String = PathBuf::from(&tem_path)
@@ -77,11 +81,101 @@ pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String,
                     continue;
                 }
             };
+            // 预先设置单元格格式，百分率，千分率，万分率，时间，枚举类型的单元格，如果按照数据填充的话有可能会设置不到
+            // 但又不能全量遍历所有的单元格，故此只针对这几种类型单独设置单元格格式
+            let max_row: u32 = gable_data.max_row + 1;
+            let max_col: u16 = gable_data.max_column + 1;
+            match sheet_type {
+                ESheetType::DATA => {
+                    for col_index in 1..max_col {
+                        let cell_type_data = gable_data
+                            .heads
+                            .get(&global::TABLE_DATA_ROW_TYPE)
+                            .and_then(|row| row.get(&col_index));
+                        let cell_type: EDataType = if let Some(data) = cell_type_data {
+                            utils::convert_data_type(&data.value)
+                        } else {
+                            EDataType::STRING
+                        };
+                        if cell_type != EDataType::PERCENTAGE
+                            && cell_type != EDataType::PERMILLAGE
+                            && cell_type != EDataType::PERMIAN
+                            && cell_type != EDataType::TIME
+                            && cell_type != EDataType::ENUM
+                        {
+                            continue;
+                        }
+                        for row_index in global::TABLE_DATA_ROW_TOTAL..max_row {
+                            let cell: &mut Cell =
+                                worksheet.get_cell_mut((&(col_index as u32), &row_index));
+                            match cell_type {
+                                EDataType::PERCENTAGE => {
+                                    cell.get_style_mut()
+                                        .get_number_format_mut()
+                                        .set_format_code(global::NUMBER_FORMAT_PERCENTAGE);
+                                }
+                                EDataType::PERMILLAGE => {
+                                    cell.get_style_mut()
+                                        .get_number_format_mut()
+                                        .set_format_code(global::NUMBER_FORMAT_PERMILLAGE);
+                                }
+                                EDataType::PERMIAN => {
+                                    cell.get_style_mut()
+                                        .get_number_format_mut()
+                                        .set_format_code(global::NUMBER_FORMAT_PERMIAN);
+                                }
+                                EDataType::TIME => {
+                                    cell.get_style_mut()
+                                        .get_number_format_mut()
+                                        .set_format_code(global::NUMBER_FORMAT_TIME);
+                                }
+                                EDataType::ENUM => {}
+                                _ => {}
+                            }
+                        }
+                    }
+                }
+                ESheetType::KV => {
+                    for row_index in global::TABLE_KV_ROW_TOTAL..max_row {
+                        let cell_type_data: &mut Cell =
+                            worksheet.get_cell_mut((&global::TABLE_KV_COL_TYPE, &row_index));
+                        let cell_type: EDataType =
+                            utils::convert_data_type(&cell_type_data.get_value());
+                        let cell: &mut Cell =
+                            worksheet.get_cell_mut((&global::TABLE_KV_COL_VALUE, &row_index));
+                        match cell_type {
+                            EDataType::PERCENTAGE => {
+                                cell.get_style_mut()
+                                    .get_number_format_mut()
+                                    .set_format_code(global::NUMBER_FORMAT_PERCENTAGE);
+                            }
+                            EDataType::PERMILLAGE => {
+                                cell.get_style_mut()
+                                    .get_number_format_mut()
+                                    .set_format_code(global::NUMBER_FORMAT_PERMILLAGE);
+                            }
+                            EDataType::PERMIAN => {
+                                cell.get_style_mut()
+                                    .get_number_format_mut()
+                                    .set_format_code(global::NUMBER_FORMAT_PERMIAN);
+                            }
+                            EDataType::TIME => {
+                                cell.get_style_mut()
+                                    .get_number_format_mut()
+                                    .set_format_code(global::NUMBER_FORMAT_TIME);
+                            }
+                            EDataType::ENUM => {}
+                            _ => {}
+                        }
+                    }
+                }
+                _ => {}
+            }
             for (row_index, row_data) in &gable_data.heads {
                 for (col_index, cell_data) in row_data {
                     let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));
                     cell.set_value(&cell_data.value);
-                    let style = cell.get_style_mut();
+                    let style: &mut Style = cell.get_style_mut();
                     let borders = style.get_borders_mut();
                     borders
                         .get_left_border_mut()
@@ -95,7 +189,7 @@ pub fn write_excel(excel_name: &str, gable_files: Vec<String>) -> Result<String,
                     borders
                         .get_bottom_border_mut()
                         .set_border_style(Border::BORDER_THIN);
-                    let color = style
+                    let color: &mut Color = style
                         .get_fill_mut()
                         .get_pattern_fill_mut()
                         .set_pattern_type(PatternValues::Solid)
@@ -139,31 +233,16 @@ fn write_excel_cell_value(
     col_index: &u16,
     cell_data: &CellData,
 ) {
-    let row_key = global::TABLE_DATA_ROW_TYPE;
+    let row_key: u32 = global::TABLE_DATA_ROW_TYPE;
     if let Some(row_data) = heads.get(&row_key) {
         if let Some(cell_type_data) = row_data.get(&col_index) {
             match utils::convert_data_type(&cell_type_data.value) {
                 EDataType::INT => cell.set_value_number(cell_data.parse_int()),
                 EDataType::BOOLEAN => cell.set_value_bool(cell_data.parse_bool()),
                 EDataType::FLOAT => cell.set_value_number(cell_data.parse_float()),
-                EDataType::PERCENTAGE => {
-                    cell.get_style_mut()
-                        .get_number_format_mut()
-                        .set_format_code(global::NUMBER_FORMAT_PERCENTAGE);
-                    cell.set_value_number(cell_data.parse_float())
-                }
-                EDataType::PERMILLAGE => {
-                    cell.get_style_mut()
-                        .get_number_format_mut()
-                        .set_format_code(global::NUMBER_FORMAT_PERMILLAGE);
-                    cell.set_value_number(cell_data.parse_float() * 1000.0)
-                }
-                EDataType::PERMIAN => {
-                    cell.get_style_mut()
-                        .get_number_format_mut()
-                        .set_format_code(global::NUMBER_FORMAT_PERMIAN);
-                    cell.set_value_number(cell_data.parse_float() * 10000.0)
-                }
+                EDataType::PERCENTAGE => cell.set_value_number(cell_data.parse_float()),
+                EDataType::PERMILLAGE => cell.set_value_number(cell_data.parse_float() * 1000.0),
+                EDataType::PERMIAN => cell.set_value_number(cell_data.parse_float() * 10000.0),
                 _ => cell.set_value(cell_data.value.clone()),
             };
         }
@@ -185,7 +264,7 @@ fn write_excel_cell_value(
         .get_bottom_border_mut()
         .set_border_style(Border::BORDER_NONE);
     // 背景色
-    let background_type = cell_data.get_background_type();
+    let background_type: i8 = cell_data.get_background_type();
     if background_type == 0 {
         style
             .get_fill_mut()
@@ -196,7 +275,7 @@ fn write_excel_cell_value(
             .set_argb(cell_data.get_background_color());
     } else if background_type == 1 {
         let (theme, tint) = cell_data.get_background_theme_tint();
-        let color = style
+        let color: &mut Color = style
             .get_fill_mut()
             .get_pattern_fill_mut()
             .set_pattern_type(PatternValues::Solid)
@@ -207,7 +286,7 @@ fn write_excel_cell_value(
     }
 
     // 字体颜色
-    let font_type = cell_data.get_font_type();
+    let font_type: i8 = cell_data.get_font_type();
     if font_type == 0 {
         // 字体颜色
         style
@@ -216,7 +295,7 @@ fn write_excel_cell_value(
             .set_argb(cell_data.get_font_color());
     } else if font_type == 1 {
         let (theme, tint) = cell_data.get_font_theme_tint();
-        let color = style.get_font_mut().get_color_mut();
+        let color: &mut Color = style.get_font_mut().get_color_mut();
         color.set_theme_index(theme);
         color.set_tint(tint);
     }
@@ -241,7 +320,7 @@ pub fn write_gable(
             log::error!("无法获取工作表索引: {}", sheet_index);
             continue;
         };
-        let sheet_name = worksheet.get_name().to_string();
+        let sheet_name: String = worksheet.get_name().to_string();
         let (max_col, max_row) = worksheet.get_highest_column_and_row();
         let mut gable_data: GableData = GableData {
             sheetname: sheet_name.clone(),

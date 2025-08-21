@@ -7,6 +7,8 @@ pub const DIR_LOG: &str = "__Temps/__Logs";
 pub const IGNORED_DIRS: &[&str] = &[".vscode", ".git", "_log", DIR_TEMP, DIR_DATA];
 /// EXCEL文件扩展名
 pub const EXCEL_EXTENSION: &str = ".xlsx";
+/// 单元格时间格式
+pub const NUMBER_FORMAT_TIME: &str = "Y-m-d hh:mm:ss";
 /// 单元格百分比格式
 pub const NUMBER_FORMAT_PERCENTAGE: &str = "0%";
 /// 单元格千分比格式
@@ -29,6 +31,10 @@ pub const TABLE_DATA_ROW_TOTAL: u32 = 6;
 
 ///[KV表单]类型列
 pub const TABLE_KV_COL_TYPE: u32 = 2;
+///[KV表单]关联信息列
+pub const TABLE_KV_COL_LINK: u32 = 4;
+///[KV表单]值列
+pub const TABLE_KV_COL_VALUE: u32 = 5;
 ///[KV表单]有效数据起始行数
 pub const TABLE_KV_ROW_TOTAL: u32 = 2;
 ///[枚举表单]有效数据起始行数

@@ -360,7 +360,7 @@ pub fn edit_gable(item: TreeItem) {
             })
         }
     };
-    match excel_util::write_excel(&excel_name, related_files) {
+    match excel_util::write_excel(&excel_name, &sheet_type, related_files) {
         Ok(excel_file_path) => {
             add_editor_file(excel_file_path.clone(), parent_path, sheet_type);
             // 使用系统命令打开Excel文件

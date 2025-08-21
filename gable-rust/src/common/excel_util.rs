@@ -5,13 +5,14 @@ use crate::{
     },
 };
 use std::{
+    borrow::Cow,
     collections::HashMap,
     error::Error,
     fs,
     path::{Path, PathBuf},
 };
 use umya_spreadsheet::{
-    Border, Cell, PatternValues, Spreadsheet, Style, Worksheet, reader, writer,
+    Border, Cell, Color, PatternValues, Spreadsheet, Style, Worksheet, reader, writer,
 };
 
 /// 读取并解析gable文件
@@ -149,8 +150,8 @@ fn write_excel_cell_value(
             };
         }
     }
-    let fill_type = cell_data.get_fill_type();
     let style = cell.get_style_mut();
+    // 边框
     let borders = style.get_borders_mut();
     borders
         .get_left_border_mut()
@@ -164,22 +165,39 @@ fn write_excel_cell_value(
     borders
         .get_bottom_border_mut()
         .set_border_style(Border::BORDER_NONE);
-    if fill_type == 0 {
+    // 背景色
+    let background_type = cell_data.get_background_type();
+    if background_type == 0 {
         style
             .get_fill_mut()
             .get_pattern_fill_mut()
             .set_pattern_type(PatternValues::Solid)
             .remove_background_color()
             .get_foreground_color_mut()
-            .set_argb(cell_data.get_fill_color());
-    } else if fill_type == 1 {
-        let (theme, tint) = cell_data.get_fill_theme_tint();
+            .set_argb(cell_data.get_background_color());
+    } else if background_type == 1 {
+        let (theme, tint) = cell_data.get_background_theme_tint();
         let color = style
             .get_fill_mut()
             .get_pattern_fill_mut()
             .set_pattern_type(PatternValues::Solid)
             .remove_background_color()
             .get_foreground_color_mut();
+        color.set_theme_index(theme);
+        color.set_tint(tint);
+    }
+
+    // 字体颜色
+    let font_type = cell_data.get_font_type();
+    if font_type == 0 {
+        // 字体颜色
+        style
+            .get_font_mut()
+            .get_color_mut()
+            .set_argb(cell_data.get_font_color());
+    } else if font_type == 1 {
+        let (theme, tint) = cell_data.get_font_theme_tint();
+        let color = style.get_font_mut().get_color_mut();
         color.set_theme_index(theme);
         color.set_tint(tint);
     }
@@ -198,13 +216,12 @@ pub fn write_gable(
     let mut gable_file_paths: Vec<String> = Vec::new();
 
     for sheet_index in 0..sheet_counts {
-        let worksheet: &umya_spreadsheet::Worksheet =
-            if let Some(sheet) = workbook.get_sheet(&sheet_index) {
-                sheet
-            } else {
-                log::error!("无法获取工作表索引: {}", sheet_index);
-                continue;
-            };
+        let worksheet: &Worksheet = if let Some(sheet) = workbook.get_sheet(&sheet_index) {
+            sheet
+        } else {
+            log::error!("无法获取工作表索引: {}", sheet_index);
+            continue;
+        };
         let sheet_name = worksheet.get_name().to_string();
         let (max_col, max_row) = worksheet.get_highest_column_and_row();
         let mut gable_data: GableData = GableData {
@@ -222,11 +239,10 @@ pub fn write_gable(
             for col_idx in 0..max_col {
                 let col_key: u32 = col_idx + 1;
                 if let Some(cell) = worksheet.get_cell((&col_key, &row_key)) {
-                    let value: std::borrow::Cow<'static, str> = cell.get_value();
-                    let style: &umya_spreadsheet::Style = cell.get_style();
-                    let bc: Option<&umya_spreadsheet::Color> = style.get_background_color();
-                    let fc: Option<&umya_spreadsheet::Color> = if let Some(font) = style.get_font()
-                    {
+                    let value: Cow<'static, str> = cell.get_value();
+                    let style: &Style = cell.get_style();
+                    let bc: Option<&Color> = style.get_background_color();
+                    let fc: Option<&Color> = if let Some(font) = style.get_font() {
                         Some(font.get_color())
                     } else {
                         None
@@ -265,13 +281,10 @@ pub fn write_gable(
                 }
             }
         }
-        // 创建.gable文件路径
         let gable_file_path: PathBuf =
             PathBuf::from(&target_path).join(format!("{}@{}.gable", file_stem, &sheet_name));
-        // 将路径添加到返回列表中
         gable_file_paths.push(gable_file_path.to_string_lossy().to_string());
         let json_data: String = serde_json::to_string_pretty(&gable_data)?;
-        // log::info!("{}", json_data);
         fs::write(&gable_file_path, json_data)?;
     }
 

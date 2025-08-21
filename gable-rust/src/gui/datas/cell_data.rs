@@ -1,5 +1,4 @@
 use crate::{common::global, gui::datas::edata_type::EDataType};
-use eframe::epaint::color;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use umya_spreadsheet::Color;
@@ -27,7 +26,7 @@ pub struct CellData {
         deserialize_with = "deserialize_string",
         skip_serializing_if = "String::is_empty"
     )]
-    pub font_color: String,
+    pub font_fill: String,
 }
 
 fn default_string() -> String {
@@ -67,8 +66,17 @@ impl CellData {
             } else {
                 String::new()
             },
-            font_color: if let Some(color) = fc {
-                color.get_argb().to_string()
+            font_fill: if let Some(color) = fc {
+                let theme_index: &u32 = color.get_theme_index();
+                let tint: &f64 = color.get_tint();
+                let color_argb: String = color.get_argb().to_string();
+                if !color_argb.is_empty() {
+                    format!("argb:{}", color_argb)
+                } else if *theme_index != 0 && *tint != 0.0 {
+                    format!("theme:{},tint:{}", theme_index, tint)
+                } else {
+                    String::new()
+                }
             } else {
                 String::new()
             },
@@ -76,7 +84,7 @@ impl CellData {
         data
     }
     // 获取填充类型:0-颜色剔重,1-主题填充，其他不填充
-    pub fn get_fill_type(&self) -> i8 {
+    pub fn get_background_type(&self) -> i8 {
         if self.bg_fill.is_empty() {
             return -1;
         }
@@ -89,7 +97,7 @@ impl CellData {
         return -1;
     }
 
-    pub fn get_fill_color(&self) -> String {
+    pub fn get_background_color(&self) -> String {
         if self.bg_fill.is_empty() {
             return String::new();
         }
@@ -99,7 +107,7 @@ impl CellData {
         return String::new();
     }
 
-    pub fn get_fill_theme_tint(&self) -> (u32, f64) {
+    pub fn get_background_theme_tint(&self) -> (u32, f64) {
         if self.bg_fill.is_empty() || !self.bg_fill.starts_with("theme:") {
             return (0, 0.0);
         }
@@ -112,9 +120,45 @@ impl CellData {
         (theme_index, tint)
     }
 
+    pub fn get_font_type(&self) -> i8 {
+        if self.font_fill.is_empty() {
+            return -1;
+        }
+        if self.font_fill.starts_with("argb:") {
+            return 0;
+        }
+        if self.font_fill.starts_with("theme:") {
+            return 1;
+        }
+        return -1;
+    }
+
+    pub fn get_font_color(&self) -> String {
+        if self.font_fill.is_empty() {
+            return String::new();
+        }
+        if self.font_fill.starts_with("argb:") {
+            return self.font_fill.replace("argb:", "");
+        }
+        return String::new();
+    }
+
+    pub fn get_font_theme_tint(&self) -> (u32, f64) {
+        if self.font_fill.is_empty() || !self.font_fill.starts_with("theme:") {
+            return (0, 0.0);
+        }
+        let parts: Vec<&str> = self.font_fill.split(',').collect();
+        if parts.len() < 2 {
+            return (0, 0.0);
+        }
+        let theme_index: u32 = parts[0].replace("theme:", "").parse().unwrap_or(0);
+        let tint: f64 = parts[1].replace("tint:", "").parse().unwrap_or(0.0);
+        (theme_index, tint)
+    }
+
     // 数据是否有效
     pub fn is_empty(&self) -> bool {
-        self.value.is_empty() && self.bg_fill.is_empty() && self.font_color.is_empty()
+        self.value.is_empty() && self.bg_fill.is_empty() && self.font_fill.is_empty()
     }
     // 获取数据类型
     pub fn get_data_type(&self) -> EDataType {

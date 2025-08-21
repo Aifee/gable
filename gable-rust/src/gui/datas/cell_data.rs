@@ -1,32 +1,37 @@
+use crate::{common::global, gui::datas::edata_type::EDataType};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-
-use crate::{common::global, gui::datas::edata_type::EDataType};
+use umya_spreadsheet::Color;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CellData {
     pub row: u32,
     pub column: u16,
-    #[serde(default = "default_string", deserialize_with = "deserialize_string")]
+    #[serde(
+        default = "default_string",
+        deserialize_with = "deserialize_string",
+        skip_serializing_if = "String::is_empty"
+    )]
     pub value: String,
-    //前景色类型
-    #[serde(default = "default_u16", deserialize_with = "deserialize_fg_type")]
-    pub fg_type: u16,
     //前景色色值（argb）
-    #[serde(default = "default_string", deserialize_with = "deserialize_string")]
-    pub fg_color: String,
+    #[serde(
+        default = "default_string",
+        deserialize_with = "deserialize_string",
+        skip_serializing_if = "String::is_empty"
+    )]
+    pub bg_color: String,
     //字体颜色（argb）
-    #[serde(default = "default_string", deserialize_with = "deserialize_string")]
+    #[serde(
+        default = "default_string",
+        deserialize_with = "deserialize_string",
+        skip_serializing_if = "String::is_empty"
+    )]
     pub font_color: String,
 }
 
 fn default_string() -> String {
     String::new()
 }
-fn default_u16() -> u16 {
-    0
-}
-
 fn deserialize_string<'de, D>(deserializer: D) -> Result<String, D::Error>
 where
     D: serde::Deserializer<'de>,
@@ -41,49 +46,29 @@ where
     })
 }
 
-fn deserialize_fg_type<'de, D>(deserializer: D) -> Result<u16, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let value: Value = Value::deserialize(deserializer)?;
-    Ok(match value {
-        Value::String(s) => s.parse::<u16>().unwrap_or(0),
-        Value::Number(n) => {
-            if let Some(i) = n.as_u64() {
-                i as u16
-            } else if let Some(i) = n.as_i64() {
-                i as u16
-            } else if let Some(f) = n.as_f64() {
-                f as u16
-            } else {
-                0
-            }
-        }
-        Value::Bool(b) => b as u16,
-        Value::Null => 0,
-        _ => 0,
-    })
-}
-
 impl CellData {
-    pub fn new(r: u32, c: u16, v: String) -> Self {
+    pub fn new(r: u32, c: u16, v: String, bc: Option<&Color>, fc: Option<&Color>) -> Self {
         let data = Self {
             row: r,
             column: c,
             value: v,
-            fg_type: 0,
-            fg_color: String::new(),
-            font_color: String::new(),
+            bg_color: if let Some(color) = bc {
+                color.get_argb().to_string()
+            } else {
+                String::new()
+            },
+            font_color: if let Some(color) = fc {
+                color.get_argb().to_string()
+            } else {
+                String::new()
+            },
         };
         data
     }
 
     // 数据是否有效
     pub fn is_empty(&self) -> bool {
-        self.value.is_empty()
-            && self.fg_color.is_empty()
-            && self.font_color.is_empty()
-            && self.fg_type == 0
+        self.value.is_empty() && self.bg_color.is_empty() && self.font_color.is_empty()
     }
     // 获取数据类型
     pub fn get_data_type(&self) -> EDataType {

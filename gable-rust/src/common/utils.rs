@@ -3,14 +3,14 @@ use crate::gui::datas::{
     cell_data::CellData, edata_type::EDataType, edevelop_type::EDevelopType,
     esheet_type::ESheetType, gable_data::GableData,
 };
-use calamine::{Data, Range, Reader, Xlsx};
-use eframe::egui::{Color32, Context, Style, TextBuffer};
+use eframe::egui::{Color32, Context, Style};
 use rust_xlsxwriter::{Color, Format, FormatBorder, workbook::Workbook, worksheet::Worksheet};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, MutexGuard};
+use umya_spreadsheet::{Spreadsheet, reader};
 
 /// 将列号转换为Excel风格的列名（A, B, ..., Z, AA, AB, ...）
 pub fn column_index_to_name(col: u32) -> String {
@@ -244,50 +244,54 @@ pub fn write_gable(
     target_path: String,
     sheet_type: ESheetType,
 ) -> Result<Vec<String>, Box<dyn Error>> {
-    let mut workbook: Xlsx<_> = calamine::open_workbook(&excel_file)?;
-    let sheet_names: Vec<String> = workbook.sheet_names().to_owned();
+    let mut workbook: Spreadsheet = reader::xlsx::read(&excel_file).unwrap();
+    let sheet_counts: usize = workbook.get_sheet_count();
     let file_path: &Path = Path::new(&excel_file);
     let file_stem: &str = file_path.file_stem().unwrap().to_str().unwrap();
-
-    // 收集生成的gable文件路径
     let mut gable_file_paths: Vec<String> = Vec::new();
 
-    for sheet_name in sheet_names {
-        let range: Range<Data> = workbook.worksheet_range(&sheet_name)?;
+    for sheet_index in 0..sheet_counts {
+        let worksheet: &umya_spreadsheet::Worksheet =
+            if let Some(sheet) = workbook.get_sheet(&sheet_index) {
+                sheet
+            } else {
+                log::error!("无法获取工作表索引: {}", sheet_index);
+                continue;
+            };
+        let sheet_name = worksheet.get_name().to_string();
+        let (max_col, max_row) = worksheet.get_highest_column_and_row();
         let mut gable_data: GableData = GableData {
             sheetname: sheet_name.clone(),
-            max_row: range.height() as u32,
-            max_column: range.width() as u16,
+            max_row: max_row,
+            max_column: max_col as u16,
             heads: HashMap::new(),
             cells: HashMap::new(),
         };
 
         // 读取数据并填充到GableData中
-        for (row_idx, row) in range.rows().enumerate() {
-            let row_key: u32 = (row_idx + 1) as u32;
+        for row_idx in 0..max_row {
+            let row_key: u32 = row_idx + 1;
             let mut row_data: HashMap<u16, CellData> = HashMap::new();
-            for (col_idx, cell) in row.iter().enumerate() {
-                let col_key: u16 = (col_idx + 1) as u16;
-                let value: String = match cell {
-                    Data::String(s) => s.clone(),
-                    Data::Float(f) => f.to_string(),
-                    Data::Int(i) => i.to_string(),
-                    Data::Bool(b) => b.to_string(),
-                    Data::DateTime(d) => d.to_string(),
-                    Data::DateTimeIso(d) => d.to_string(),
-                    Data::DurationIso(d) => d.to_string(),
-                    Data::Error(e) => {
-                        log::error!("读取单元格数据错误: {:?}", e);
+            for col_idx in 0..max_col {
+                let col_key: u32 = col_idx + 1;
+                if let Some(cell) = worksheet.get_cell((&col_key, &row_key)) {
+                    let value: std::borrow::Cow<'static, str> = cell.get_value();
+                    let style: &umya_spreadsheet::Style = cell.get_style();
+                    let bc: Option<&umya_spreadsheet::Color> = style.get_background_color();
+                    let fc: Option<&umya_spreadsheet::Color> = if let Some(font) = style.get_font()
+                    {
+                        Some(font.get_color())
+                    } else {
+                        None
+                    };
+
+                    let cell_data: CellData =
+                        CellData::new(row_key, col_key as u16, value.to_string(), bc, fc);
+                    if cell_data.is_empty() {
                         continue;
                     }
-                    Data::Empty => String::new(),
-                };
-
-                let cell_data: CellData = CellData::new(row_key, col_key, value);
-                if cell_data.is_empty() {
-                    continue;
+                    row_data.insert(col_key as u16, cell_data);
                 }
-                row_data.insert(col_key, cell_data);
             }
 
             match sheet_type {
@@ -314,16 +318,13 @@ pub fn write_gable(
                 }
             }
         }
-
         // 创建.gable文件路径
         let gable_file_path: PathBuf =
-            PathBuf::from(&target_path).join(format!("{}@{}.gable", file_stem, sheet_name));
-
+            PathBuf::from(&target_path).join(format!("{}@{}.gable", file_stem, &sheet_name));
         // 将路径添加到返回列表中
         gable_file_paths.push(gable_file_path.to_string_lossy().to_string());
-
-        // 将GableData序列化为JSON并写入文件
         let json_data: String = serde_json::to_string_pretty(&gable_data)?;
+        // log::info!("{}", json_data);
         fs::write(&gable_file_path, json_data)?;
     }
 

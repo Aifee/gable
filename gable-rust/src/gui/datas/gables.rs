@@ -1,4 +1,4 @@
-use crate::common::{global, setting, utils};
+use crate::common::{excel_util, global, setting, utils};
 use crate::gui::datas::{
     eitem_type::EItemType, esheet_type::ESheetType, gable_data::GableData, tree_data::TreeData,
     tree_item::TreeItem, watcher_data::WatcherData,
@@ -80,7 +80,7 @@ fn read_all_gable_files_parallel(
     file_paths
         .into_par_iter()
         .map(|file_path| {
-            let content: Option<GableData> = utils::read_gable_file(&file_path);
+            let content: Option<GableData> = excel_util::read_gable_file(&file_path);
             (file_path, content)
         })
         .collect()
@@ -361,7 +361,7 @@ pub fn edit_gable(item: TreeItem) {
             })
         }
     };
-    match utils::write_excel(&excel_name, related_files) {
+    match excel_util::write_excel(&excel_name, related_files) {
         Ok(excel_file_path) => {
             add_editor_file(excel_file_path.clone(), parent_path, sheet_type);
             // 使用系统命令打开Excel文件
@@ -473,7 +473,7 @@ pub fn editor_complete(excel_path: String) -> bool {
         return false;
     }
     let (result, gable_file_paths) = if let Some(data) = data {
-        match utils::write_gable(excel_path.clone(), data.target_path, data.sheet_type) {
+        match excel_util::write_gable(excel_path.clone(), data.target_path, data.sheet_type) {
             Ok(gable_file_paths) => (true, Some(gable_file_paths)),
             Err(_) => (false, None),
         }
@@ -500,7 +500,7 @@ fn reload_gable(gable_file_paths: Option<Vec<String>>) -> bool {
     };
 
     for file_path in file_paths {
-        let new_data: Option<GableData> = utils::read_gable_file(&file_path);
+        let new_data: Option<GableData> = excel_util::read_gable_file(&file_path);
         let mut tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
         fn update_child_data(
             items: &mut [TreeItem],

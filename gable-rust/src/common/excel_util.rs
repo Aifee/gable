@@ -12,7 +12,8 @@ use std::{
     path::{Path, PathBuf},
 };
 use umya_spreadsheet::{
-    Border, Cell, Color, PatternValues, Spreadsheet, Style, Worksheet, reader, writer,
+    Border, Cell, Color, NumberingFormat, PatternValues, Spreadsheet, Style, Worksheet, reader,
+    writer,
 };
 
 /// 读取并解析gable文件
@@ -141,16 +142,34 @@ fn write_excel_cell_value(
     let row_key = global::TABLE_DATA_ROW_TYPE;
     if let Some(row_data) = heads.get(&row_key) {
         if let Some(cell_type_data) = row_data.get(&col_index) {
-            match cell_type_data.get_data_type() {
+            match utils::convert_data_type(&cell_type_data.value) {
                 EDataType::INT => cell.set_value_number(cell_data.parse_int()),
                 EDataType::BOOLEAN => cell.set_value_bool(cell_data.parse_bool()),
                 EDataType::FLOAT => cell.set_value_number(cell_data.parse_float()),
-                EDataType::VECTOR2 => cell.set_value(cell_data.parse_vector2()),
+                EDataType::PERCENTAGE => {
+                    cell.get_style_mut()
+                        .get_number_format_mut()
+                        .set_format_code(global::NUMBER_FORMAT_PERCENTAGE);
+                    cell.set_value_number(cell_data.parse_float())
+                }
+                EDataType::PERMILLAGE => {
+                    cell.get_style_mut()
+                        .get_number_format_mut()
+                        .set_format_code(global::NUMBER_FORMAT_PERMILLAGE);
+                    cell.set_value_number(cell_data.parse_float() * 1000.0)
+                }
+                EDataType::PERMIAN => {
+                    cell.get_style_mut()
+                        .get_number_format_mut()
+                        .set_format_code(global::NUMBER_FORMAT_PERMIAN);
+                    cell.set_value_number(cell_data.parse_float() * 10000.0)
+                }
                 _ => cell.set_value(cell_data.value.clone()),
             };
         }
     }
-    let style = cell.get_style_mut();
+
+    let style: &mut Style = cell.get_style_mut();
     // 边框
     let borders = style.get_borders_mut();
     borders
@@ -232,13 +251,33 @@ pub fn write_gable(
             cells: HashMap::new(),
         };
 
+        let max_row: u32 = max_row + 1;
+        let max_col: u32 = max_col + 1;
         // 读取数据并填充到GableData中
-        for row_idx in 0..max_row {
-            let row_key: u32 = row_idx + 1;
+        for row_idx in 1..max_row {
             let mut row_data: HashMap<u16, CellData> = HashMap::new();
+            let mut cell_type: EDataType = EDataType::STRING;
+            if sheet_type == ESheetType::KV && row_idx >= global::TABLE_KV_ROW_TOTAL {
+                cell_type = if let Some(cell_type_data) =
+                    worksheet.get_cell((&global::TABLE_KV_COL_TYPE, &row_idx))
+                {
+                    utils::convert_data_type(&cell_type_data.get_value())
+                } else {
+                    EDataType::STRING
+                };
+            }
             for col_idx in 0..max_col {
-                let col_key: u32 = col_idx + 1;
-                if let Some(cell) = worksheet.get_cell((&col_key, &row_key)) {
+                if sheet_type == ESheetType::DATA && row_idx >= global::TABLE_DATA_ROW_TOTAL {
+                    cell_type = if let Some(cell_type_data) =
+                        worksheet.get_cell((&col_idx, &global::TABLE_DATA_ROW_TYPE))
+                    {
+                        utils::convert_data_type(&cell_type_data.get_value())
+                    } else {
+                        EDataType::STRING
+                    };
+                }
+
+                if let Some(cell) = worksheet.get_cell((&col_idx, &row_idx)) {
                     let value: Cow<'static, str> = cell.get_value();
                     let style: &Style = cell.get_style();
                     let bc: Option<&Color> = style.get_background_color();
@@ -247,36 +286,74 @@ pub fn write_gable(
                     } else {
                         None
                     };
+                    let cell_data: CellData = if value.is_empty() {
+                        CellData::new(row_idx, col_idx as u16, value.to_string(), bc, fc)
+                    } else {
+                        match cell_type {
+                            EDataType::PERMILLAGE => {
+                                let permillage_value: f64 = value.parse::<f64>().unwrap() / 1000.0;
+                                CellData::new(
+                                    row_idx,
+                                    col_idx as u16,
+                                    format!("{:.3}", permillage_value),
+                                    bc,
+                                    fc,
+                                )
+                            }
+                            EDataType::PERMIAN => {
+                                let permian_value: f64 = value.parse::<f64>().unwrap() / 10000.0;
+                                CellData::new(
+                                    row_idx,
+                                    col_idx as u16,
+                                    format!("{:.4}", permian_value),
+                                    bc,
+                                    fc,
+                                )
+                            }
+                            EDataType::TIME => {
+                                let time_value = value.parse::<u32>().unwrap();
+                                CellData::new(
+                                    row_idx,
+                                    col_idx as u16,
+                                    time_value.to_string(),
+                                    bc,
+                                    fc,
+                                )
+                            }
+                            EDataType::ENUM => {
+                                CellData::new(row_idx, col_idx as u16, value.to_string(), bc, fc)
+                            }
+                            _ => CellData::new(row_idx, col_idx as u16, value.to_string(), bc, fc),
+                        }
+                    };
 
-                    let cell_data: CellData =
-                        CellData::new(row_key, col_key as u16, value.to_string(), bc, fc);
                     if cell_data.is_empty() {
                         continue;
                     }
-                    row_data.insert(col_key as u16, cell_data);
+                    row_data.insert(col_idx as u16, cell_data);
                 }
             }
 
             match sheet_type {
                 ESheetType::KV => {
-                    if row_key < global::TABLE_KV_ROW_TOTAL {
-                        gable_data.heads.insert(row_key, row_data);
+                    if row_idx < global::TABLE_KV_ROW_TOTAL {
+                        gable_data.heads.insert(row_idx, row_data);
                     } else {
-                        gable_data.cells.insert(row_key, row_data);
+                        gable_data.cells.insert(row_idx, row_data);
                     }
                 }
                 ESheetType::ENUM => {
-                    if row_key < global::TABLE_ENUM_ROW_TOTAL {
-                        gable_data.heads.insert(row_key, row_data);
+                    if row_idx < global::TABLE_ENUM_ROW_TOTAL {
+                        gable_data.heads.insert(row_idx, row_data);
                     } else {
-                        gable_data.cells.insert(row_key, row_data);
+                        gable_data.cells.insert(row_idx, row_data);
                     }
                 }
                 _ => {
-                    if row_key < global::TABLE_DATA_ROW_TOTAL {
-                        gable_data.heads.insert(row_key, row_data);
+                    if row_idx < global::TABLE_DATA_ROW_TOTAL {
+                        gable_data.heads.insert(row_idx, row_data);
                     } else {
-                        gable_data.cells.insert(row_key, row_data);
+                        gable_data.cells.insert(row_idx, row_data);
                     }
                 }
             }

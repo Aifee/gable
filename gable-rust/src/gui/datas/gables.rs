@@ -22,9 +22,8 @@ fn add_editor_file(file_path: String, targe_path: String, sheet_type: ESheetType
     let mut editor_files: MutexGuard<'_, HashMap<String, WatcherData>> =
         EDITION_FILES.lock().unwrap();
     editor_files.insert(
-        file_path.clone(),
+        file_path,
         WatcherData {
-            file_path: file_path,
             target_path: targe_path,
             sheet_type,
         },

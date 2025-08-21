@@ -2,7 +2,7 @@ use crate::common::{global, setting};
 use crate::gui::datas::{
     edata_type::EDataType, edevelop_type::EDevelopType, esheet_type::ESheetType,
 };
-use eframe::egui::{Color32, Context, Style};
+use eframe::egui::{Color32, Context, Style, TextBuffer};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, MutexGuard};
@@ -73,45 +73,45 @@ pub fn get_temp_path() -> String {
     path
 }
 
-pub fn convert_data_type(value: &str, dt: EDevelopType) -> EDataType {
-    match dt {
-        EDevelopType::c => EDataType::Unknown,
-        EDevelopType::csharp => convert_data_csharp(value),
-        EDevelopType::cangjie => EDataType::Unknown,
-        EDevelopType::go => EDataType::Unknown,
-        EDevelopType::java => EDataType::Unknown,
-        EDevelopType::javascript => EDataType::Unknown,
-        EDevelopType::lua => EDataType::Unknown,
-        EDevelopType::python => EDataType::Unknown,
-        EDevelopType::typescript => EDataType::Unknown,
-        _ => EDataType::Unknown,
-    }
-}
+// pub fn convert_data_type(value: &str, dt: EDevelopType) -> EDataType {
+//     match dt {
+//         EDevelopType::c => EDataType::Unknown,
+//         EDevelopType::csharp => convert_data_csharp(value),
+//         EDevelopType::cangjie => EDataType::Unknown,
+//         EDevelopType::go => EDataType::Unknown,
+//         EDevelopType::java => EDataType::Unknown,
+//         EDevelopType::javascript => EDataType::Unknown,
+//         EDevelopType::lua => EDataType::Unknown,
+//         EDevelopType::python => EDataType::Unknown,
+//         EDevelopType::typescript => EDataType::Unknown,
+//         _ => EDataType::Unknown,
+//     }
+// }
 
-fn convert_data_csharp(value: &str) -> EDataType {
-    match value {
-        "int" => EDataType::INT,
-        "string" => EDataType::STRING,
-        "bool" => EDataType::BOOLEAN,
-        "float" => EDataType::FLOAT,
-        "vector2" => EDataType::VECTOR2,
-        "vector3" => EDataType::VECTOR3,
-        "vector4" => EDataType::VECTOR4,
-        "int[]" => EDataType::INT_ARR,
-        "string[]" => EDataType::STRING_ARR,
-        "bool[]" => EDataType::BOOLEAN_ARR,
-        "float[]" => EDataType::FLOAT_ARR,
-        "vector2[]" => EDataType::VECTOR2_ARR,
-        "vector3[]" => EDataType::VECTOR3_ARR,
-        "vector4[]" => EDataType::VECTOR4_ARR,
-        "percentage" => EDataType::PERCENTAGE,
-        "permillage" => EDataType::PERMILLAGE,
-        "permian" => EDataType::PERMIAN,
-        "time" => EDataType::TIME,
-        "enum" => EDataType::ENUM,
-        _ => EDataType::Unknown,
-    }
-}
+// fn convert_data_csharp(value: &str) -> EDataType {
+//     match value {
+//         "int" => EDataType::INT,
+//         "string" => EDataType::STRING,
+//         "bool" => EDataType::BOOLEAN,
+//         "float" => EDataType::FLOAT,
+//         "vector2" => EDataType::VECTOR2,
+//         "vector3" => EDataType::VECTOR3,
+//         "vector4" => EDataType::VECTOR4,
+//         "int[]" => EDataType::INT_ARR,
+//         "string[]" => EDataType::STRING_ARR,
+//         "bool[]" => EDataType::BOOLEAN_ARR,
+//         "float[]" => EDataType::FLOAT_ARR,
+//         "vector2[]" => EDataType::VECTOR2_ARR,
+//         "vector3[]" => EDataType::VECTOR3_ARR,
+//         "vector4[]" => EDataType::VECTOR4_ARR,
+//         "percentage" => EDataType::PERCENTAGE,
+//         "permillage" => EDataType::PERMILLAGE,
+//         "permian" => EDataType::PERMIAN,
+//         "time" => EDataType::TIME,
+//         "enum" => EDataType::ENUM,
+//         _ => EDataType::Unknown,
+//     }
+// }
 
 /// 检查文件名是否合法
 pub fn is_valid_filename(name: &str) -> bool {
@@ -204,4 +204,33 @@ pub fn open_in_explorer(path: &str) -> std::io::Result<()> {
     }
 
     Ok(())
+}
+
+// 获取数据类型
+pub fn convert_data_type(value: &str) -> EDataType {
+    if value.is_empty() {
+        return EDataType::STRING;
+    }
+    match value {
+        global::DATA_TYPE_KEY_STRING => EDataType::STRING,
+        global::DATA_TYPE_KEY_INT => EDataType::INT,
+        global::DATA_TYPE_KEY_BOOLEAN => EDataType::BOOLEAN,
+        global::DATA_TYPE_KEY_FLOAT => EDataType::FLOAT,
+        global::DATA_TYPE_KEY_VECTOR2 => EDataType::VECTOR2,
+        global::DATA_TYPE_KEY_VECTOR3 => EDataType::VECTOR3,
+        global::DATA_TYPE_KEY_VECTOR4 => EDataType::VECTOR4,
+        global::DATA_TYPE_KEY_STRING_ARR => EDataType::STRING_ARR,
+        global::DATA_TYPE_KEY_INT_ARR => EDataType::INT_ARR,
+        global::DATA_TYPE_KEY_BOOLEAN_ARR => EDataType::BOOLEAN_ARR,
+        global::DATA_TYPE_KEY_FLOAT_ARR => EDataType::FLOAT_ARR,
+        global::DATA_TYPE_KEY_VECTOR2_ARR => EDataType::VECTOR2_ARR,
+        global::DATA_TYPE_KEY_VECTOR3_ARR => EDataType::VECTOR3_ARR,
+        global::DATA_TYPE_KEY_VECTOR4_ARR => EDataType::VECTOR4_ARR,
+        global::DATA_TYPE_KEY_PERCENTAGE => EDataType::PERCENTAGE,
+        global::DATA_TYPE_KEY_PERMILLAGE => EDataType::PERMILLAGE,
+        global::DATA_TYPE_KEY_PERMIAN => EDataType::PERMIAN,
+        global::DATA_TYPE_KEY_TIME => EDataType::TIME,
+        global::DATA_TYPE_KEY_ENUM => EDataType::ENUM,
+        _ => EDataType::Unknown,
+    }
 }

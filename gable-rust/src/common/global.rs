@@ -7,6 +7,12 @@ pub const DIR_LOG: &str = "__Temps/__Logs";
 pub const IGNORED_DIRS: &[&str] = &[".vscode", ".git", "_log", DIR_TEMP, DIR_DATA];
 /// EXCEL文件扩展名
 pub const EXCEL_EXTENSION: &str = ".xlsx";
+/// 单元格百分比格式
+pub const NUMBER_FORMAT_PERCENTAGE: &str = "0%";
+/// 单元格千分比格式
+pub const NUMBER_FORMAT_PERMILLAGE: &str = "0‰";
+/// 单元格万分比格式
+pub const NUMBER_FORMAT_PERMIAN: &str = "0‱";
 
 ///[数据表单]描述行
 pub const TABLE_DATA_ROW_DES: u32 = 1;
@@ -21,6 +27,8 @@ pub const TABLE_DATA_ROW_LINK: u32 = 5;
 /// [数据表单]有效数据起始行数
 pub const TABLE_DATA_ROW_TOTAL: u32 = 6;
 
+///[KV表单]类型列
+pub const TABLE_KV_COL_TYPE: u32 = 2;
 ///[KV表单]有效数据起始行数
 pub const TABLE_KV_ROW_TOTAL: u32 = 2;
 ///[枚举表单]有效数据起始行数

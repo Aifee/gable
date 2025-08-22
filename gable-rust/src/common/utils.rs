@@ -1,8 +1,6 @@
 use crate::common::{global, setting};
-use crate::gui::datas::{
-    edata_type::EDataType, edevelop_type::EDevelopType, esheet_type::ESheetType,
-};
-use eframe::egui::{Color32, Context, Style, TextBuffer};
+use crate::gui::datas::{edata_type::EDataType, esheet_type::ESheetType};
+use eframe::egui::{Color32, Context, Style};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, MutexGuard};

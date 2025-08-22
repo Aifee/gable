@@ -12,8 +12,8 @@ use std::{
     path::{Path, PathBuf},
 };
 use umya_spreadsheet::{
-    Border, Cell, Color, DataValidation, DataValidationValues, DataValidations, EnumTrait,
-    PatternValues, Spreadsheet, Style, Worksheet, reader, writer,
+    Border, Cell, Color, DataValidation, DataValidationValues, DataValidations, PatternValues,
+    Spreadsheet, Style, Worksheet, reader, writer,
 };
 
 /// 读取并解析gable文件

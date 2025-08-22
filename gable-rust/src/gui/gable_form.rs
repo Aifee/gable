@@ -207,7 +207,7 @@ impl GableForm {
         }
         let sheet: &mut TreeItem = sheet.unwrap();
         let sheet_type: ESheetType = sheet.data.as_ref().unwrap().gable_type.clone();
-        let max_col: usize = sheet.data.as_ref().unwrap().content.max_column as usize;
+        let max_col: usize = sheet.data.as_ref().unwrap().content.max_col as usize;
         let gable_data: &GableData = &sheet.data.as_ref().unwrap().content;
 
         ui.push_id("table_scroll", |ui| {
@@ -248,7 +248,7 @@ impl GableForm {
     /// 普通数据表绘制
     fn ongui_table_databody(body: TableBody<'_>, sheet_content: &GableData) {
         let total_rows: usize = sheet_content.max_row as usize;
-        let total_cols: u16 = sheet_content.max_column;
+        let total_cols: u16 = sheet_content.max_col;
         body.rows(20.0, total_rows, |mut row| {
             let row_index: u32 = (row.index() + 1) as u32;
             row.col(|ui| {
@@ -283,7 +283,7 @@ impl GableForm {
     /// KV表绘制
     fn ongui_table_kvbody(body: TableBody<'_>, sheet_content: &GableData) {
         let total_rows: usize = sheet_content.max_row as usize;
-        let total_cols: u16 = sheet_content.max_column;
+        let total_cols: u16 = sheet_content.max_col;
         body.rows(20.0, total_rows, |mut row| {
             let row_index: u32 = (row.index() + 1) as u32;
             row.col(|ui| {
@@ -317,7 +317,7 @@ impl GableForm {
     /// 枚举表绘制器
     fn ongui_table_enumbody(body: TableBody<'_>, sheet_content: &GableData) {
         let total_rows: usize = sheet_content.max_row as usize;
-        let total_cols: u16 = sheet_content.max_column;
+        let total_cols: u16 = sheet_content.max_col;
         body.rows(20.0, total_rows, |mut row| {
             let row_index: u32 = (row.index() + 1) as u32;
             row.col(|ui| {

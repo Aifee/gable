@@ -81,16 +81,11 @@ pub fn write_excel(
                     continue;
                 }
             };
-            // 预先设置单元格格式，百分率，千分率，万分率，时间，枚举类型的单元格，如果按照数据填充的话有可能会设置不到
-            // 但又不能全量遍历所有的单元格，故此只针对这几种类型单独设置单元格格式
-            let max_row: u32 = gable_data.max_row + 1;
-            let max_col: u16 = gable_data.max_column + 1;
-
             let range = utils::cell_range(
                 global::TABLE_DATA_ROW_TYPE,
                 1,
                 global::TABLE_DATA_ROW_TYPE,
-                max_col,
+                gable_data.max_col,
             );
             println!("设置单元格格式:{}", range);
             let mut data_validation: DataValidation = DataValidation::default();
@@ -102,6 +97,11 @@ pub fn write_excel(
             let mut data_validations = DataValidations::default();
             data_validations.add_data_validation_list(data_validation);
             worksheet.set_data_validations(data_validations);
+
+            // 预先设置单元格格式，百分率，千分率，万分率，时间，枚举类型的单元格，如果按照数据填充的话有可能会设置不到
+            // 但又不能全量遍历所有的单元格，故此只针对这几种类型单独设置单元格格式
+            let max_row: u32 = gable_data.max_row + 1;
+            let max_col: u16 = gable_data.max_col + 1;
 
             match sheet_type {
                 ESheetType::DATA => {
@@ -343,7 +343,7 @@ pub fn write_gable(
         let mut gable_data: GableData = GableData {
             sheetname: sheet_name.clone(),
             max_row: max_row,
-            max_column: max_col as u16,
+            max_col: max_col as u16,
             heads: HashMap::new(),
             cells: HashMap::new(),
         };

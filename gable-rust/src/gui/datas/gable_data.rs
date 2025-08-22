@@ -6,7 +6,7 @@ use std::collections::HashMap;
 pub struct GableData {
     pub sheetname: String,
     pub max_row: u32,
-    pub max_column: u16,
+    pub max_col: u16,
     pub heads: HashMap<u32, HashMap<u16, CellData>>,
     pub cells: HashMap<u32, HashMap<u16, CellData>>,
 }

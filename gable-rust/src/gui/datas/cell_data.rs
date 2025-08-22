@@ -1,4 +1,3 @@
-use crate::{common::global, gui::datas::edata_type::EDataType};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use umya_spreadsheet::Color;

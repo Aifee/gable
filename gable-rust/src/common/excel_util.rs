@@ -12,8 +12,8 @@ use std::{
     path::{Path, PathBuf},
 };
 use umya_spreadsheet::{
-    Border, Cell, Color, NumberingFormat, PatternValues, Spreadsheet, Style, Worksheet, reader,
-    writer,
+    Border, Cell, Color, DataValidation, DataValidationValues, DataValidations, EnumTrait,
+    PatternValues, Spreadsheet, Style, Worksheet, reader, writer,
 };
 
 /// 读取并解析gable文件
@@ -85,10 +85,28 @@ pub fn write_excel(
             // 但又不能全量遍历所有的单元格，故此只针对这几种类型单独设置单元格格式
             let max_row: u32 = gable_data.max_row + 1;
             let max_col: u16 = gable_data.max_column + 1;
+
+            let range = utils::cell_range(
+                global::TABLE_DATA_ROW_TYPE,
+                1,
+                global::TABLE_DATA_ROW_TYPE,
+                max_col,
+            );
+            println!("设置单元格格式:{}", range);
+            let mut data_validation: DataValidation = DataValidation::default();
+            data_validation.set_formula1(format!("\"{}\"", global::DATA_TYPE_KEYS.join(",")));
+            data_validation.set_type(DataValidationValues::List);
+            data_validation
+                .get_sequence_of_references_mut()
+                .set_sqref(range);
+            let mut data_validations = DataValidations::default();
+            data_validations.add_data_validation_list(data_validation);
+            worksheet.set_data_validations(data_validations);
+
             match sheet_type {
                 ESheetType::DATA => {
                     for col_index in 1..max_col {
-                        let cell_type_data = gable_data
+                        let cell_type_data: Option<&CellData> = gable_data
                             .heads
                             .get(&global::TABLE_DATA_ROW_TYPE)
                             .and_then(|row| row.get(&col_index));

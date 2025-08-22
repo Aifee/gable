@@ -21,6 +21,16 @@ pub fn column_index_to_name(col: u32) -> String {
     result
 }
 
+pub fn cell_range(start_row: u32, start_col: u32, end_row: u32, end_col: u16) -> String {
+    format!(
+        "{}{}:{}{}",
+        column_index_to_name(start_col),
+        start_row,
+        column_index_to_name(end_col as u32),
+        end_row
+    )
+}
+
 ///根据文件路径确定ESheetType
 pub fn determine_sheet_type(path: &Path) -> ESheetType {
     // 获取父目录名称

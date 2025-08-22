@@ -83,46 +83,6 @@ pub fn get_temp_path() -> String {
     path
 }
 
-// pub fn convert_data_type(value: &str, dt: EDevelopType) -> EDataType {
-//     match dt {
-//         EDevelopType::c => EDataType::Unknown,
-//         EDevelopType::csharp => convert_data_csharp(value),
-//         EDevelopType::cangjie => EDataType::Unknown,
-//         EDevelopType::go => EDataType::Unknown,
-//         EDevelopType::java => EDataType::Unknown,
-//         EDevelopType::javascript => EDataType::Unknown,
-//         EDevelopType::lua => EDataType::Unknown,
-//         EDevelopType::python => EDataType::Unknown,
-//         EDevelopType::typescript => EDataType::Unknown,
-//         _ => EDataType::Unknown,
-//     }
-// }
-
-// fn convert_data_csharp(value: &str) -> EDataType {
-//     match value {
-//         "int" => EDataType::INT,
-//         "string" => EDataType::STRING,
-//         "bool" => EDataType::BOOLEAN,
-//         "float" => EDataType::FLOAT,
-//         "vector2" => EDataType::VECTOR2,
-//         "vector3" => EDataType::VECTOR3,
-//         "vector4" => EDataType::VECTOR4,
-//         "int[]" => EDataType::INT_ARR,
-//         "string[]" => EDataType::STRING_ARR,
-//         "bool[]" => EDataType::BOOLEAN_ARR,
-//         "float[]" => EDataType::FLOAT_ARR,
-//         "vector2[]" => EDataType::VECTOR2_ARR,
-//         "vector3[]" => EDataType::VECTOR3_ARR,
-//         "vector4[]" => EDataType::VECTOR4_ARR,
-//         "percentage" => EDataType::PERCENTAGE,
-//         "permillage" => EDataType::PERMILLAGE,
-//         "permian" => EDataType::PERMIAN,
-//         "time" => EDataType::TIME,
-//         "enum" => EDataType::ENUM,
-//         _ => EDataType::Unknown,
-//     }
-// }
-
 /// 检查文件名是否合法
 pub fn is_valid_filename(name: &str) -> bool {
     // 检查是否为空

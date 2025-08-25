@@ -479,7 +479,9 @@ pub fn write_gable(
                     if row_idx < global::TABLE_KV_ROW_TOTAL {
                         gable_data.heads.insert(row_idx, row_data);
                     } else {
-                        gable_data.cells.insert(row_idx, row_data);
+                        if row_data.len() > 0 {
+                            gable_data.cells.insert(row_idx, row_data);
+                        }
                     }
                 }
                 ESheetType::ENUM => {
@@ -493,7 +495,9 @@ pub fn write_gable(
                     if row_idx < global::TABLE_DATA_ROW_TOTAL {
                         gable_data.heads.insert(row_idx, row_data);
                     } else {
-                        gable_data.cells.insert(row_idx, row_data);
+                        if row_data.len() > 0 {
+                            gable_data.cells.insert(row_idx, row_data);
+                        }
                     }
                 }
             }

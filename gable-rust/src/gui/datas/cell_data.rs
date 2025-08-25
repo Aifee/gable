@@ -1,3 +1,4 @@
+use chrono::NaiveTime;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use umya_spreadsheet::Color;
@@ -177,5 +178,24 @@ impl CellData {
             return 0.0;
         }
         return self.value.parse::<f64>().unwrap();
+    }
+
+    pub fn parse_time(&self) -> String {
+        if self.value.is_empty() {
+            return String::new();
+        }
+        let seconds = self.value.parse::<u32>().unwrap();
+        let time = NaiveTime::from_num_seconds_from_midnight_opt(seconds, 0)
+            .unwrap_or_else(|| NaiveTime::from_hms_opt(0, 0, 0).unwrap());
+        return time.format("%H:%M:%S").to_string();
+    }
+    pub fn parse_date(&self) -> String {
+        if self.value.is_empty() {
+            return String::new();
+        }
+        let seconds = self.value.parse::<u32>().unwrap();
+        let time = NaiveTime::from_num_seconds_from_midnight_opt(seconds, 0)
+            .unwrap_or_else(|| NaiveTime::from_hms_opt(0, 0, 0).unwrap());
+        return time.format("%Y-%m-%d %H:%M:%S").to_string();
     }
 }

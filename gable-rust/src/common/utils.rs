@@ -198,6 +198,7 @@ pub fn convert_data_type(value: &str) -> EDataType {
         global::DATA_TYPE_KEY_PERMILLAGE => EDataType::PERMILLAGE,
         global::DATA_TYPE_KEY_PERMIAN => EDataType::PERMIAN,
         global::DATA_TYPE_KEY_TIME => EDataType::TIME,
+        global::DATA_TYPE_KEY_DATE => EDataType::DATE,
         global::DATA_TYPE_KEY_ENUM => EDataType::ENUM,
         _ => EDataType::Unknown,
     }

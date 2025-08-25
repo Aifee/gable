@@ -38,6 +38,8 @@ pub enum EDataType {
     PERMIAN = 17,
     /// 时间(int)
     TIME = 18,
+    /// 日期(int)
+    DATE = 19,
     /// 枚举，配合链接使用
     ENUM = 100,
 }

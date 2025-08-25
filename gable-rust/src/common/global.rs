@@ -7,8 +7,10 @@ pub const DIR_LOG: &str = "__Temps/__Logs";
 pub const IGNORED_DIRS: &[&str] = &[".vscode", ".git", "_log", DIR_TEMP, DIR_DATA];
 /// EXCEL文件扩展名
 pub const EXCEL_EXTENSION: &str = ".xlsx";
+/// 日期格时间格式
+pub const NUMBER_FORMAT_DATE: &str = "Y-m-d hh:mm:ss";
 /// 单元格时间格式
-pub const NUMBER_FORMAT_TIME: &str = "Y-m-d hh:mm:ss";
+pub const NUMBER_FORMAT_TIME: &str = "hh:mm:ss";
 /// 单元格百分比格式
 pub const NUMBER_FORMAT_PERCENTAGE: &str = "0%";
 /// 单元格千分比格式
@@ -58,6 +60,7 @@ pub const DATA_TYPE_KEY_PERCENTAGE: &str = "%";
 pub const DATA_TYPE_KEY_PERMILLAGE: &str = "‰";
 pub const DATA_TYPE_KEY_PERMIAN: &str = "‱";
 pub const DATA_TYPE_KEY_TIME: &str = "time";
+pub const DATA_TYPE_KEY_DATE: &str = "date";
 pub const DATA_TYPE_KEY_ENUM: &str = "enum";
 pub const DATA_TYPE_KEYS: &[&str] = &[
     DATA_TYPE_KEY_INT,
@@ -78,5 +81,6 @@ pub const DATA_TYPE_KEYS: &[&str] = &[
     DATA_TYPE_KEY_PERMILLAGE,
     DATA_TYPE_KEY_PERMIAN,
     DATA_TYPE_KEY_TIME,
+    DATA_TYPE_KEY_DATE,
     DATA_TYPE_KEY_ENUM,
 ];

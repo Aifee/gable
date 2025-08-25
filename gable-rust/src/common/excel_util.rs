@@ -4,6 +4,7 @@ use crate::{
         cell_data::CellData, edata_type::EDataType, esheet_type::ESheetType, gable_data::GableData,
     },
 };
+use chrono::{NaiveTime, Timelike};
 use std::{
     borrow::Cow,
     collections::HashMap,
@@ -147,6 +148,11 @@ pub fn write_excel(
                                         .get_number_format_mut()
                                         .set_format_code(global::NUMBER_FORMAT_TIME);
                                 }
+                                EDataType::DATE => {
+                                    cell.get_style_mut()
+                                        .get_number_format_mut()
+                                        .set_format_code(global::NUMBER_FORMAT_DATE);
+                                }
                                 EDataType::ENUM => {}
                                 _ => {}
                             }
@@ -181,6 +187,11 @@ pub fn write_excel(
                                 cell.get_style_mut()
                                     .get_number_format_mut()
                                     .set_format_code(global::NUMBER_FORMAT_TIME);
+                            }
+                            EDataType::DATE => {
+                                cell.get_style_mut()
+                                    .get_number_format_mut()
+                                    .set_format_code(global::NUMBER_FORMAT_DATE);
                             }
                             EDataType::ENUM => {}
                             _ => {}
@@ -261,6 +272,8 @@ fn write_excel_cell_value(
                 EDataType::PERCENTAGE => cell.set_value_number(cell_data.parse_float()),
                 EDataType::PERMILLAGE => cell.set_value_number(cell_data.parse_float() * 1000.0),
                 EDataType::PERMIAN => cell.set_value_number(cell_data.parse_float() * 10000.0),
+                EDataType::TIME => cell.set_value(cell_data.parse_time()),
+                EDataType::DATE => cell.set_value(cell_data.parse_date()),
                 _ => cell.set_value(cell_data.value.clone()),
             };
         }
@@ -408,14 +421,15 @@ pub fn write_gable(
                                 )
                             }
                             EDataType::TIME => {
-                                let time_value = value.parse::<u32>().unwrap();
-                                CellData::new(
-                                    row_idx,
-                                    col_idx as u16,
-                                    time_value.to_string(),
-                                    bc,
-                                    fc,
-                                )
+                                let seconds = if value.is_empty() {
+                                    0
+                                } else {
+                                    match value.parse::<f64>() {
+                                        Ok(decimal_time) => (decimal_time * 86400.0).round() as u32,
+                                        Err(_) => 0,
+                                    }
+                                };
+                                CellData::new(row_idx, col_idx as u16, seconds.to_string(), bc, fc)
                             }
                             EDataType::ENUM => {
                                 CellData::new(row_idx, col_idx as u16, value.to_string(), bc, fc)

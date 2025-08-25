@@ -272,7 +272,7 @@ fn write_excel_cell_value(
                 EDataType::PERCENTAGE => cell.set_value_number(cell_data.parse_float()),
                 EDataType::PERMILLAGE => cell.set_value_number(cell_data.parse_float() * 1000.0),
                 EDataType::PERMIAN => cell.set_value_number(cell_data.parse_float() * 10000.0),
-                EDataType::TIME => cell.set_value(cell_data.parse_time()),
+                EDataType::TIME => cell.set_value_number(cell_data.parse_time()),
                 EDataType::DATE => cell.set_value_number(cell_data.parse_date()),
                 _ => cell.set_value(cell_data.value.clone()),
             };
@@ -426,7 +426,19 @@ pub fn write_gable(
                                 } else {
                                     // excel时间格式的单元格单位是天
                                     match value.parse::<f64>() {
-                                        Ok(decimal_time) => (decimal_time * 86400.0).round() as u32,
+                                        Ok(decimal_time) => {
+                                            log::info!(
+                                                "[excel_util] decimal_time: {}",
+                                                decimal_time
+                                            );
+                                            let total_seconds =
+                                                (decimal_time * 86400.0).round() as u32;
+                                            log::info!(
+                                                "[excel_util] total_seconds: {}",
+                                                total_seconds
+                                            );
+                                            total_seconds
+                                        }
                                         Err(_) => 0,
                                     }
                                 };
@@ -454,10 +466,6 @@ pub fn write_gable(
                                         Err(_) => 0,
                                     }
                                 };
-                                log::info!(
-                                    "[excel_util] excel_date_to_unix_timestamp: {}",
-                                    seconds
-                                );
                                 CellData::new(row_idx, col_idx as u16, seconds.to_string(), bc, fc)
                             }
                             EDataType::ENUM => {

@@ -1,4 +1,3 @@
-use chrono::NaiveTime;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use umya_spreadsheet::Color;
@@ -180,14 +179,15 @@ impl CellData {
         return self.value.parse::<f64>().unwrap();
     }
 
-    pub fn parse_time(&self) -> String {
+    pub fn parse_time(&self) -> f64 {
         if self.value.is_empty() {
-            return String::new();
+            return 0.0;
         }
-        let seconds: u32 = self.value.parse::<u32>().unwrap();
-        let time: NaiveTime = NaiveTime::from_num_seconds_from_midnight_opt(seconds, 0)
-            .unwrap_or_else(|| NaiveTime::from_hms_opt(0, 0, 0).unwrap());
-        return time.format("%H:%M:%S").to_string();
+        let seconds: f64 = self.value.parse::<f64>().unwrap();
+        // log::info!("[parse_time] seconds: {}", seconds);
+        let fraction: f64 = seconds / 86400.0;
+        // log::info!("[parse_time] fraction: {}", fraction);
+        return fraction;
     }
     /**
      * 将单元格中的值解析为日期格式

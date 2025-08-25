@@ -1,3 +1,5 @@
+use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+
 ///数据文件类型
 pub const GABLE_FILE_TYPE: &str = ".gable";
 ///临时目录
@@ -8,9 +10,10 @@ pub const IGNORED_DIRS: &[&str] = &[".vscode", ".git", "_log", DIR_TEMP, DIR_DAT
 /// EXCEL文件扩展名
 pub const EXCEL_EXTENSION: &str = ".xlsx";
 /// 日期格时间格式
-pub const NUMBER_FORMAT_DATE: &str = "Y-m-d hh:mm:ss";
+pub const NUMBER_FORMAT_DATE: &str = "YYYY-mm-dd hh:mm:ss";
 /// 单元格时间格式
 pub const NUMBER_FORMAT_TIME: &str = "hh:mm:ss";
+
 /// 单元格百分比格式
 pub const NUMBER_FORMAT_PERCENTAGE: &str = "0%";
 /// 单元格千分比格式

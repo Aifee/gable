@@ -4,7 +4,6 @@ use crate::{
         cell_data::CellData, edata_type::EDataType, esheet_type::ESheetType, gable_data::GableData,
     },
 };
-use chrono::{NaiveTime, Timelike};
 use std::{
     borrow::Cow,
     collections::HashMap,
@@ -120,6 +119,7 @@ pub fn write_excel(
                             && cell_type != EDataType::PERMILLAGE
                             && cell_type != EDataType::PERMIAN
                             && cell_type != EDataType::TIME
+                            && cell_type != EDataType::DATE
                             && cell_type != EDataType::ENUM
                         {
                             continue;
@@ -273,7 +273,7 @@ fn write_excel_cell_value(
                 EDataType::PERMILLAGE => cell.set_value_number(cell_data.parse_float() * 1000.0),
                 EDataType::PERMIAN => cell.set_value_number(cell_data.parse_float() * 10000.0),
                 EDataType::TIME => cell.set_value(cell_data.parse_time()),
-                EDataType::DATE => cell.set_value(cell_data.parse_date()),
+                EDataType::DATE => cell.set_value_number(cell_data.parse_date()),
                 _ => cell.set_value(cell_data.value.clone()),
             };
         }
@@ -424,11 +424,40 @@ pub fn write_gable(
                                 let seconds = if value.is_empty() {
                                     0
                                 } else {
+                                    // excel时间格式的单元格单位是天
                                     match value.parse::<f64>() {
                                         Ok(decimal_time) => (decimal_time * 86400.0).round() as u32,
                                         Err(_) => 0,
                                     }
                                 };
+                                CellData::new(row_idx, col_idx as u16, seconds.to_string(), bc, fc)
+                            }
+                            EDataType::DATE => {
+                                let seconds: u64 = if value.is_empty() {
+                                    0
+                                } else {
+                                    match value.parse::<f64>() {
+                                        Ok(decimal_seconds) => {
+                                            // 将Excel/WPS的日期序列号转换为秒基准日期：1900年1月0日（Excel/WPS的起始点）
+                                            let days: i64 = decimal_seconds.floor() as i64;
+                                            let fraction = decimal_seconds - days as f64;
+                                            // log::info!("[excel_util] days: {}", days);
+                                            // log::info!("[excel_util] fraction: {}", fraction);
+                                            let total_seconds: i64 = ((days - 1) * 86400)
+                                                + (fraction * 86400.0).round() as i64;
+                                            // log::info!(
+                                            //     "[excel_util] total_seconds: {}",
+                                            //     total_seconds
+                                            // );
+                                            total_seconds as u64
+                                        }
+                                        Err(_) => 0,
+                                    }
+                                };
+                                log::info!(
+                                    "[excel_util] excel_date_to_unix_timestamp: {}",
+                                    seconds
+                                );
                                 CellData::new(row_idx, col_idx as u16, seconds.to_string(), bc, fc)
                             }
                             EDataType::ENUM => {

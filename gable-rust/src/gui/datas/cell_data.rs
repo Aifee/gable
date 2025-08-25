@@ -184,18 +184,33 @@ impl CellData {
         if self.value.is_empty() {
             return String::new();
         }
-        let seconds = self.value.parse::<u32>().unwrap();
-        let time = NaiveTime::from_num_seconds_from_midnight_opt(seconds, 0)
+        let seconds: u32 = self.value.parse::<u32>().unwrap();
+        let time: NaiveTime = NaiveTime::from_num_seconds_from_midnight_opt(seconds, 0)
             .unwrap_or_else(|| NaiveTime::from_hms_opt(0, 0, 0).unwrap());
         return time.format("%H:%M:%S").to_string();
     }
-    pub fn parse_date(&self) -> String {
+    /**
+     * 将单元格中的值解析为日期格式
+     *
+     * 此函数将存储的秒数转换为Excel/WPS格式的日期数值。
+     * Excel/WPS日期格式说明：
+     * - 整数部分：表示从基准日期（1900年1月0日）开始的天数
+     * - 小数部分：表示一天中的时间比例（1天=1.0）
+     *
+     * 返回值：f64格式的日期数值，整数部分为天数，小数部分为时间
+     */
+    pub fn parse_date(&self) -> f64 {
         if self.value.is_empty() {
-            return String::new();
+            return 0.0;
         }
-        let seconds = self.value.parse::<u32>().unwrap();
-        let time = NaiveTime::from_num_seconds_from_midnight_opt(seconds, 0)
-            .unwrap_or_else(|| NaiveTime::from_hms_opt(0, 0, 0).unwrap());
-        return time.format("%Y-%m-%d %H:%M:%S").to_string();
+        // 尝试解析存储的值为秒数
+        let seconds: u64 = self.value.parse::<u64>().unwrap();
+        let days: u64 = seconds / 86400;
+        // log::info!("[parse_date] days: {}", days);
+        let fraction: f64 = (seconds % 86400) as f64;
+        // log::info!("[parse_date] fraction: {}", fraction);
+        let cell_value: f64 = ((days + 1) as f64) + fraction / 86400.0;
+        // log::info!("[parse_date] cell_value: {}", cell_value);
+        cell_value
     }
 }

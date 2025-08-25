@@ -427,16 +427,8 @@ pub fn write_gable(
                                     // excel时间格式的单元格单位是天
                                     match value.parse::<f64>() {
                                         Ok(decimal_time) => {
-                                            log::info!(
-                                                "[excel_util] decimal_time: {}",
-                                                decimal_time
-                                            );
                                             let total_seconds =
                                                 (decimal_time * 86400.0).round() as u32;
-                                            log::info!(
-                                                "[excel_util] total_seconds: {}",
-                                                total_seconds
-                                            );
                                             total_seconds
                                         }
                                         Err(_) => 0,

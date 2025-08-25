@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crate::common::{global, utils};
 use crate::gui::component;
 use crate::gui::datas::cell_data::CellData;
+use crate::gui::datas::edata_type::EDataType;
 use crate::gui::datas::{esheet_type::ESheetType, gable_data::GableData, tree_item::TreeItem};
 use eframe::egui::Response;
 use eframe::egui::{
@@ -247,9 +248,25 @@ impl GableForm {
 
     /// 普通数据表绘制
     fn ongui_table_databody(body: TableBody<'_>, sheet_content: &GableData) {
-        let total_rows: usize = sheet_content.max_row as usize;
+        let total_rows: u32 = sheet_content.max_row;
         let total_cols: u16 = sheet_content.max_col;
-        body.rows(20.0, total_rows, |mut row| {
+
+        let mut cell_types: HashMap<u16, EDataType> = HashMap::<u16, EDataType>::new();
+        // 先遍历列找出需要特殊处理的数据类型
+        if total_rows >= global::TABLE_DATA_ROW_TOTAL {
+            for col_index in 1..total_cols + 1 {
+                let row_type_data: Option<&HashMap<u16, CellData>> =
+                    sheet_content.heads.get(&global::TABLE_DATA_ROW_TYPE);
+                if let Some(row_type_data) = row_type_data {
+                    let type_cell = row_type_data.get(&col_index);
+                    if let Some(type_cell) = type_cell {
+                        let cell_type: EDataType = utils::convert_data_type(&type_cell.value);
+                        cell_types.insert(col_index, cell_type);
+                    }
+                }
+            }
+        }
+        body.rows(20.0, total_rows as usize, |mut row| {
             let row_index: u32 = (row.index() + 1) as u32;
             row.col(|ui| {
                 ui.label(&row_index.to_string());
@@ -267,8 +284,45 @@ impl GableForm {
                     // 通过预先获取的行数据查找列数据
                     if let Some(row_data) = row_data {
                         if let Some(col_data) = row_data.get(&col_index) {
-                            ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
-                            ui.add(Label::new(&col_data.value).truncate());
+                            if row_index >= global::TABLE_DATA_ROW_TOTAL {
+                                ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
+                                let cell_type = cell_types.get(&col_index);
+                                if let Some(cell_type) = cell_type {
+                                    match cell_type {
+                                        EDataType::PERCENTAGE => {
+                                            ui.label(format!(
+                                                "{:.0}%",
+                                                col_data.parse_float() * 100.0
+                                            ));
+                                        }
+                                        EDataType::PERMILLAGE => {
+                                            ui.label(format!(
+                                                "{:.0}‰",
+                                                col_data.parse_float() * 1000.0
+                                            ));
+                                        }
+                                        EDataType::PERMIAN => {
+                                            ui.label(format!(
+                                                "{:.0}‱",
+                                                col_data.parse_float() * 10000.0
+                                            ));
+                                        }
+                                        // EDataType::TIME => {
+                                        //     ui.label(format!("{}%", col_data.value));
+                                        // }
+                                        // EDataType::DATE => {
+                                        //     ui.label(format!("{}%", col_data.value));
+                                        // }
+                                        _ => {
+                                            ui.add(Label::new(&col_data.value).truncate());
+                                        }
+                                    }
+                                } else {
+                                    ui.add(Label::new(&col_data.value).truncate());
+                                }
+                            } else {
+                                ui.add(Label::new(&col_data.value).truncate());
+                            }
                         } else {
                             ui.label("");
                         }

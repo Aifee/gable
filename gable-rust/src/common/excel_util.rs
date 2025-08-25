@@ -445,14 +445,8 @@ pub fn write_gable(
                                             // 将Excel/WPS的日期序列号转换为秒基准日期：1900年1月0日（Excel/WPS的起始点）
                                             let days: i64 = decimal_seconds.floor() as i64;
                                             let fraction = decimal_seconds - days as f64;
-                                            // log::info!("[excel_util] days: {}", days);
-                                            // log::info!("[excel_util] fraction: {}", fraction);
                                             let total_seconds: i64 = ((days - 1) * 86400)
                                                 + (fraction * 86400.0).round() as i64;
-                                            // log::info!(
-                                            //     "[excel_util] total_seconds: {}",
-                                            //     total_seconds
-                                            // );
                                             total_seconds as u64
                                         }
                                         Err(_) => 0,

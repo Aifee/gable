@@ -192,9 +192,7 @@ impl CellData {
             return 0.0;
         }
         let seconds: f64 = self.value.parse::<f64>().unwrap();
-        // log::info!("[parse_time] seconds: {}", seconds);
         let fraction: f64 = seconds / 86400.0;
-        // log::info!("[parse_time] fraction: {}", fraction);
         return fraction;
     }
     /**
@@ -214,11 +212,8 @@ impl CellData {
         // 尝试解析存储的值为秒数
         let seconds: u64 = self.value.parse::<u64>().unwrap();
         let days: u64 = seconds / 86400;
-        // log::info!("[parse_date] days: {}", days);
         let fraction: f64 = (seconds % 86400) as f64;
-        // log::info!("[parse_date] fraction: {}", fraction);
         let cell_value: f64 = ((days + 1) as f64) + fraction / 86400.0;
-        // log::info!("[parse_date] cell_value: {}", cell_value);
         cell_value
     }
 }

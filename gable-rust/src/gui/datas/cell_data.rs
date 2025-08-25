@@ -178,7 +178,15 @@ impl CellData {
         }
         return self.value.parse::<f64>().unwrap();
     }
-
+    /**
+     * 将单元格中的值解析为时间格式：
+     *
+     * 此函数将存储的秒数转换为Excel/WPS格式的日期数值。
+     * Excel/WPS日期格式说明：
+     * - 小数部分：表示一天中的时间比例（1天=1.0）
+     *
+     * 返回值：f64格式的日期数值，整数部分为天数，小数部分为时间
+     */
     pub fn parse_time(&self) -> f64 {
         if self.value.is_empty() {
             return 0.0;

@@ -36,7 +36,7 @@ pub enum EDataType {
     PERMILLAGE = 16,
     /// 万分比(四位数的float)
     PERMIAN = 17,
-    /// 时间(int)
+    /// 时间(int)，注意此数据类型最大值是1天
     TIME = 18,
     /// 日期(int)
     DATE = 19,

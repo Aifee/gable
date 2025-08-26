@@ -549,3 +549,106 @@ fn update_item_display_name_recursive(
     }
     false
 }
+
+pub fn remove_item(fullpath: &str, item_type: &EItemType) -> bool {
+    log::info!("删除条目: {:?} {:?}", item_type, fullpath);
+
+    let result = match item_type {
+        // 文件夹不需要处理
+        EItemType::Folder => {
+            log::info!("文件夹项目不需要删除操作: {}", fullpath);
+            true
+        }
+        // 删除sheet文件
+        EItemType::Sheet => {
+            // 删除文件
+            if let Err(e) = std::fs::remove_file(fullpath) {
+                log::error!("删除sheet文件失败: {}", e);
+                false
+            } else {
+                log::info!("成功删除sheet文件: {}", fullpath);
+                true
+            }
+        }
+        // 删除Excel及其相关文件
+        EItemType::Excel => {
+            let path = Path::new(fullpath);
+            let parent_path = match path.parent() {
+                Some(parent) => parent,
+                None => {
+                    log::error!("无法获取Excel文件的父目录: {}", fullpath);
+                    return false;
+                }
+            };
+            let excel_name = if let Some((file_name)) = path.file_name() {
+                file_name.to_string_lossy().to_string()
+            } else {
+                log::error!("无法解析Excel文件名: {}", fullpath);
+                return false;
+            };
+
+            // 查找并删除所有相关文件
+            let mut delete_success = true;
+            if let Ok(entries) = std::fs::read_dir(parent_path) {
+                for entry in entries.filter_map(|e| e.ok()) {
+                    let entry_name = entry.file_name().to_string_lossy().to_string();
+                    // 检查是否为.gable文件且excel名称匹配
+                    if let Some((parsed_excel_name, _)) = parse_gable_filename(&entry_name) {
+                        if parsed_excel_name == excel_name {
+                            let entry_path = entry.path();
+                            if let Err(e) = std::fs::remove_file(&entry_path) {
+                                log::error!(
+                                    "删除Excel相关文件失败: {} - {}",
+                                    entry_path.display(),
+                                    e
+                                );
+                                delete_success = false;
+                            } else {
+                                log::info!("成功删除Excel相关文件: {}", entry_path.display());
+                            }
+                        }
+                    }
+                }
+            } else {
+                log::error!("无法读取目录: {}", parent_path.display());
+                return false;
+            }
+
+            delete_success
+        }
+    };
+
+    result
+}
+
+/// 请求从TREE_ITEMS树结构中移除条目
+/// 使用通道或其他机制在下一帧更新，避免锁冲突
+pub fn request_remove_item_from_tree(fullpath: String) {
+    // 使用线程来延迟执行删除操作，避免当前上下文中的锁冲突
+    std::thread::spawn(move || {
+        // 等待一小段时间，让当前操作完成
+        std::thread::sleep(std::time::Duration::from_millis(100));
+
+        // 然后执行删除
+        let mut tree_items = TREE_ITEMS.lock().unwrap();
+        remove_item_from_tree_recursive(&mut tree_items, &fullpath);
+    });
+}
+
+/// 递归地从树结构中移除条目
+fn remove_item_from_tree_recursive(items: &mut Vec<TreeItem>, fullpath: &str) -> bool {
+    // 先尝试直接在当前层级找到并移除
+    if let Some(pos) = items.iter().position(|item| item.fullpath == fullpath) {
+        items.remove(pos);
+        return true;
+    }
+
+    // 否则在子项中递归查找
+    for item in items.iter_mut() {
+        if remove_item_from_tree_recursive(&mut item.children, fullpath) {
+            return true;
+        }
+    }
+
+    false
+}

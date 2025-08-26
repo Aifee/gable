@@ -413,7 +413,9 @@ impl GableExplorer {
                     ui.close();
                 }
                 if ui.button("删除").clicked() {
-                    // TODO: 实现打开文件逻辑
+                    if gables::remove_item(&item.fullpath, &item.item_type) {
+                        gables::request_remove_item_from_tree(item.fullpath.clone());
+                    }
                     ui.close();
                 }
                 ui.separator();
@@ -438,7 +440,9 @@ impl GableExplorer {
                     ui.close();
                 }
                 if ui.button("删除").clicked() {
-                    // TODO: 实现打开文件逻辑
+                    if gables::remove_item(&item.fullpath, &item.item_type) {
+                        gables::request_remove_item_from_tree(item.fullpath.clone());
+                    }
                     ui.close();
                 }
                 ui.separator();

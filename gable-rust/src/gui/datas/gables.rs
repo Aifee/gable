@@ -129,6 +129,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
         items.push(TreeItem {
             item_type: EItemType::Folder,
             display_name: dir_name,
+            link_name: None,
             is_open: false,
             fullpath: dir_path.to_string_lossy().to_string(),
             parent: Some(path.to_string_lossy().to_string()),
@@ -151,7 +152,8 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
             });
             items.push(TreeItem {
                 item_type: EItemType::Excel,
-                display_name: excel_name,
+                display_name: excel_name.clone(),
+                link_name: Some(excel_name),
                 is_open: false,
                 fullpath: sheets[0].0.clone(),
                 parent: Some(path.to_string_lossy().to_string()),
@@ -185,18 +187,8 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                 if !sheet_name.is_empty() {
                     children.push(TreeItem {
                         item_type: EItemType::Sheet,
-                        display_name: sheet_name,
-                        is_open: false,
-                        fullpath: full_path.clone(),
-                        parent: Some(excel_fullpath.clone()),
-                        children: vec![],
-                        data: tree_data,
-                    });
-                } else {
-                    // 没有 sheet 部分的文件作为默认 sheet
-                    children.push(TreeItem {
-                        item_type: EItemType::Sheet,
-                        display_name: "默认".to_string(),
+                        display_name: sheet_name.clone(),
+                        link_name: Some(format!("{}@{}", excel_name, &sheet_name)),
                         is_open: false,
                         fullpath: full_path.clone(),
                         parent: Some(excel_fullpath.clone()),
@@ -211,7 +203,8 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
 
             items.push(TreeItem {
                 item_type: EItemType::Excel,
-                display_name: excel_name,
+                display_name: excel_name.clone(),
+                link_name: Some(excel_name),
                 is_open: false,
                 fullpath: excel_fullpath,
                 parent: Some(path.to_string_lossy().to_string()),
@@ -422,7 +415,8 @@ pub fn add_new_item(new_path: &Path, new_item: EItemType) {
 
         let new_item = TreeItem {
             item_type: new_item,
-            display_name: file_name,
+            display_name: file_name.clone(),
+            link_name: Some(file_name),
             is_open: true,
             fullpath: new_path.to_string_lossy().to_string(),
             parent: Some(parent_path.clone()),

@@ -307,12 +307,12 @@ impl GableForm {
                                                 col_data.parse_float() * 10000.0
                                             ));
                                         }
-                                        // EDataType::TIME => {
-                                        //     ui.label(format!("{}%", col_data.value));
-                                        // }
-                                        // EDataType::DATE => {
-                                        //     ui.label(format!("{}%", col_data.value));
-                                        // }
+                                        EDataType::TIME => {
+                                            ui.label(col_data.convert_time());
+                                        }
+                                        EDataType::DATE => {
+                                            ui.label(col_data.convert_date());
+                                        }
                                         _ => {
                                             ui.add(Label::new(&col_data.value).truncate());
                                         }

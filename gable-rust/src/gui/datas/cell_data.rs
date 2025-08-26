@@ -1,3 +1,4 @@
+use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use umya_spreadsheet::Color;
@@ -195,6 +196,17 @@ impl CellData {
         let fraction: f64 = seconds / 86400.0;
         return fraction;
     }
+    pub fn convert_time(&self) -> String {
+        if self.value.is_empty() {
+            return String::new();
+        }
+        let seconds: f64 = self.value.parse::<f64>().unwrap();
+        let total_seconds = seconds as u32;
+        let hours = total_seconds / 3600;
+        let minutes = (total_seconds % 3600) / 60;
+        let secs = total_seconds % 60;
+        format!("{:02}:{:02}:{:02}", hours, minutes, secs)
+    }
     /**
      * 将单元格中的值解析为日期格式
      *
@@ -215,5 +227,42 @@ impl CellData {
         let fraction: f64 = (seconds % 86400) as f64;
         let cell_value: f64 = ((days + 1) as f64) + fraction / 86400.0;
         cell_value
+    }
+
+    pub fn convert_date(&self) -> String {
+        if self.value.is_empty() {
+            return String::new();
+        }
+        let seconds: u64 = self.value.parse::<u64>().unwrap();
+        // 根据Excel日期系统处理日期转换
+        // Excel基准日期是1900-01-01，但存在一个特殊问题：
+        // 1. Excel认为1900年是闰年（实际上不是）
+        // 2. Excel有一个错误，将1900-01-00作为第1天（实际上是不存在的日期）
+        // 3. 为了兼容Excel，需要特殊处理
+        // 先计算天数和当天的秒数
+        let days: u64 = seconds / 86400;
+        let remaining_seconds: u64 = seconds % 86400;
+        // 根据parse_date函数的逻辑，需要将天数加1来补偿Excel的偏移
+        // 但同时需要处理1900年2月29日这个不存在的日期问题
+        let excel_days = days + 1;
+        // 从1900-01-01开始计算日期
+        let base_date = NaiveDate::from_ymd_opt(1900, 1, 1).unwrap();
+        // 如果天数超过60天（1900-02-28之后），需要减去1天来补偿1900年非闰年的问题
+        let date: NaiveDate = if excel_days <= 60 {
+            // 60对应的是1900-02-28（在Excel中被认为是1900-02-29）
+            base_date + Duration::days(excel_days as i64 - 1)
+        } else {
+            // 超过60天后，需要补偿1900年不是闰年的问题
+            base_date + Duration::days(excel_days as i64 - 2)
+        };
+        // 计算时间部分
+        let hours: u32 = (remaining_seconds / 3600) as u32;
+        let minutes: u32 = ((remaining_seconds % 3600) / 60) as u32;
+        let secs: u32 = (remaining_seconds % 60) as u32;
+        let time: NaiveTime = NaiveTime::from_hms_opt(hours, minutes, secs).unwrap();
+        // 组合日期和时间
+        let datetime: NaiveDateTime = date.and_time(time);
+        // 格式化为 YYYY-mm-dd hh:mm:ss 格式
+        datetime.format("%Y-%m-%d %H:%M:%S").to_string()
     }
 }

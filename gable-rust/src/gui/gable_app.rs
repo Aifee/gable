@@ -59,18 +59,31 @@ impl GableApp {
             "chinese_font".to_owned(),
             Arc::new(FontData::from_static(res::FONT_ASSETS)),
         );
-        // 设置字体族，优先使用中文字体
+        fonts.font_data.insert(
+            "fallback_font".to_owned(),
+            Arc::new(FontData::from_static(res::FONT_FALLBACK)),
+        );
         fonts
             .families
             .entry(FontFamily::Proportional)
             .or_default()
             .insert(0, "chinese_font".to_owned());
+        fonts
+            .families
+            .entry(FontFamily::Proportional)
+            .or_default()
+            .push("fallback_font".to_owned());
 
         fonts
             .families
             .entry(FontFamily::Monospace)
             .or_default()
             .insert(0, "chinese_font".to_owned());
+        fonts
+            .families
+            .entry(FontFamily::Monospace)
+            .or_default()
+            .push("fallback_font".to_owned());
 
         cc.egui_ctx.set_fonts(fonts);
     }

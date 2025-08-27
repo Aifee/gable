@@ -81,13 +81,13 @@ pub fn write_excel(
                     continue;
                 }
             };
-            let range = utils::cell_range(
+            let range: String = utils::cell_range(
                 global::TABLE_DATA_ROW_TYPE,
                 1,
                 global::TABLE_DATA_ROW_TYPE,
                 gable_data.max_col,
             );
-            println!("设置单元格格式:{}", range);
+            // println!("设置单元格格式:{}", range);
             let mut data_validation: DataValidation = DataValidation::default();
             data_validation.set_formula1(format!("\"{}\"", global::DATA_TYPE_KEYS.join(",")));
             data_validation.set_type(DataValidationValues::List);
@@ -102,104 +102,6 @@ pub fn write_excel(
             // 但又不能全量遍历所有的单元格，故此只针对这几种类型单独设置单元格格式
             let max_row: u32 = gable_data.max_row + 1;
             let max_col: u16 = gable_data.max_col + 1;
-
-            match sheet_type {
-                ESheetType::DATA => {
-                    for col_index in 1..max_col {
-                        let cell_type_data: Option<&CellData> = gable_data
-                            .heads
-                            .get(&global::TABLE_DATA_ROW_TYPE)
-                            .and_then(|row| row.get(&col_index));
-                        let cell_type: EDataType = if let Some(data) = cell_type_data {
-                            utils::convert_data_type(&data.value)
-                        } else {
-                            EDataType::STRING
-                        };
-                        if cell_type != EDataType::PERCENTAGE
-                            && cell_type != EDataType::PERMILLAGE
-                            && cell_type != EDataType::PERMIAN
-                            && cell_type != EDataType::TIME
-                            && cell_type != EDataType::DATE
-                            && cell_type != EDataType::ENUM
-                        {
-                            continue;
-                        }
-                        for row_index in global::TABLE_DATA_ROW_TOTAL..max_row {
-                            let cell: &mut Cell =
-                                worksheet.get_cell_mut((&(col_index as u32), &row_index));
-                            match cell_type {
-                                EDataType::PERCENTAGE => {
-                                    cell.get_style_mut()
-                                        .get_number_format_mut()
-                                        .set_format_code(global::NUMBER_FORMAT_PERCENTAGE);
-                                }
-                                EDataType::PERMILLAGE => {
-                                    cell.get_style_mut()
-                                        .get_number_format_mut()
-                                        .set_format_code(global::NUMBER_FORMAT_PERMILLAGE);
-                                }
-                                EDataType::PERMIAN => {
-                                    cell.get_style_mut()
-                                        .get_number_format_mut()
-                                        .set_format_code(global::NUMBER_FORMAT_PERMIAN);
-                                }
-                                EDataType::TIME => {
-                                    cell.get_style_mut()
-                                        .get_number_format_mut()
-                                        .set_format_code(global::NUMBER_FORMAT_TIME);
-                                }
-                                EDataType::DATE => {
-                                    cell.get_style_mut()
-                                        .get_number_format_mut()
-                                        .set_format_code(global::NUMBER_FORMAT_DATE);
-                                }
-                                EDataType::ENUM => {}
-                                _ => {}
-                            }
-                        }
-                    }
-                }
-                ESheetType::KV => {
-                    for row_index in global::TABLE_KV_ROW_TOTAL..max_row {
-                        let cell_type_data: &mut Cell =
-                            worksheet.get_cell_mut((&global::TABLE_KV_COL_TYPE, &row_index));
-                        let cell_type: EDataType =
-                            utils::convert_data_type(&cell_type_data.get_value());
-                        let cell: &mut Cell =
-                            worksheet.get_cell_mut((&global::TABLE_KV_COL_VALUE, &row_index));
-                        match cell_type {
-                            EDataType::PERCENTAGE => {
-                                cell.get_style_mut()
-                                    .get_number_format_mut()
-                                    .set_format_code(global::NUMBER_FORMAT_PERCENTAGE);
-                            }
-                            EDataType::PERMILLAGE => {
-                                cell.get_style_mut()
-                                    .get_number_format_mut()
-                                    .set_format_code(global::NUMBER_FORMAT_PERMILLAGE);
-                            }
-                            EDataType::PERMIAN => {
-                                cell.get_style_mut()
-                                    .get_number_format_mut()
-                                    .set_format_code(global::NUMBER_FORMAT_PERMIAN);
-                            }
-                            EDataType::TIME => {
-                                cell.get_style_mut()
-                                    .get_number_format_mut()
-                                    .set_format_code(global::NUMBER_FORMAT_TIME);
-                            }
-                            EDataType::DATE => {
-                                cell.get_style_mut()
-                                    .get_number_format_mut()
-                                    .set_format_code(global::NUMBER_FORMAT_DATE);
-                            }
-                            EDataType::ENUM => {}
-                            _ => {}
-                        }
-                    }
-                }
-                _ => {}
-            }
             for (row_index, row_data) in &gable_data.heads {
                 for (col_index, cell_data) in row_data {
                     let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));
@@ -234,12 +136,10 @@ pub fn write_excel(
                     }
                 }
             }
-
-            for (row_index, row_data) in &gable_data.cells {
-                for (col_index, cell_data) in row_data {
-                    let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));
-                    write_excel_cell_value(cell, &gable_data.heads, &col_index, &cell_data);
-                }
+            match sheet_type {
+                ESheetType::DATA => write_excel_data(worksheet, &gable_data),
+                ESheetType::KV => write_excel_kv(worksheet, &gable_data),
+                ESheetType::ENUM => write_excel_enum(worksheet, &gable_data),
             }
         } else {
             log::error!("无法读取或解析文件: {}", file_path);
@@ -255,30 +155,175 @@ pub fn write_excel(
     Ok(excel_file_path)
 }
 
-// excel 单元格数据类型写入
-fn write_excel_cell_value(
-    cell: &mut Cell,
-    heads: &HashMap<u32, HashMap<u16, CellData>>,
-    col_index: &u16,
-    cell_data: &CellData,
-) {
-    let row_key: u32 = global::TABLE_DATA_ROW_TYPE;
-    if let Some(row_data) = heads.get(&row_key) {
-        if let Some(cell_type_data) = row_data.get(&col_index) {
-            match utils::convert_data_type(&cell_type_data.value) {
-                EDataType::INT => cell.set_value_number(cell_data.parse_int()),
-                EDataType::BOOLEAN => cell.set_value_bool(cell_data.parse_bool()),
-                EDataType::FLOAT => cell.set_value_number(cell_data.parse_float()),
-                EDataType::PERCENTAGE => cell.set_value_number(cell_data.parse_float()),
-                EDataType::PERMILLAGE => cell.set_value_number(cell_data.parse_float() * 1000.0),
-                EDataType::PERMIAN => cell.set_value_number(cell_data.parse_float() * 10000.0),
-                EDataType::TIME => cell.set_value_number(cell_data.parse_time()),
-                EDataType::DATE => cell.set_value_number(cell_data.parse_date()),
-                _ => cell.set_value(cell_data.value.clone()),
-            };
+fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
+    let max_row: u32 = gable_data.max_row + 1;
+    let max_col: u16 = gable_data.max_col + 1;
+    // 数据类型数据
+    for col_index in 1..max_col {
+        let cell_type_data: Option<&CellData> = gable_data
+            .heads
+            .get(&global::TABLE_DATA_ROW_TYPE)
+            .and_then(|row| row.get(&col_index));
+        let cell_type: EDataType = if let Some(data) = cell_type_data {
+            utils::convert_data_type(&data.value)
+        } else {
+            EDataType::STRING
+        };
+        if cell_type != EDataType::PERCENTAGE
+            && cell_type != EDataType::PERMILLAGE
+            && cell_type != EDataType::PERMIAN
+            && cell_type != EDataType::TIME
+            && cell_type != EDataType::DATE
+            && cell_type != EDataType::ENUM
+        {
+            continue;
+        }
+        for row_index in global::TABLE_DATA_ROW_TOTAL..max_row {
+            let cell: &mut Cell = worksheet.get_cell_mut((&(col_index as u32), &row_index));
+            match cell_type {
+                EDataType::PERCENTAGE => {
+                    cell.get_style_mut()
+                        .get_number_format_mut()
+                        .set_format_code(global::NUMBER_FORMAT_PERCENTAGE);
+                }
+                EDataType::PERMILLAGE => {
+                    cell.get_style_mut()
+                        .get_number_format_mut()
+                        .set_format_code(global::NUMBER_FORMAT_PERMILLAGE);
+                }
+                EDataType::PERMIAN => {
+                    cell.get_style_mut()
+                        .get_number_format_mut()
+                        .set_format_code(global::NUMBER_FORMAT_PERMIAN);
+                }
+                EDataType::TIME => {
+                    cell.get_style_mut()
+                        .get_number_format_mut()
+                        .set_format_code(global::NUMBER_FORMAT_TIME);
+                }
+                EDataType::DATE => {
+                    cell.get_style_mut()
+                        .get_number_format_mut()
+                        .set_format_code(global::NUMBER_FORMAT_DATE);
+                }
+                EDataType::ENUM => {}
+                _ => {}
+            }
         }
     }
+    // 数据内容处理
+    for (row_index, row_data) in &gable_data.cells {
+        for (col_index, cell_data) in row_data {
+            let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));
+            if let Some(row_data) = &gable_data.heads.get(&global::TABLE_DATA_ROW_TYPE) {
+                if let Some(cell_type_data) = row_data.get(&col_index) {
+                    match utils::convert_data_type(&cell_type_data.value) {
+                        EDataType::INT => cell.set_value_number(cell_data.parse_int()),
+                        EDataType::BOOLEAN => cell.set_value_bool(cell_data.parse_bool()),
+                        EDataType::FLOAT => cell.set_value_number(cell_data.parse_float()),
+                        EDataType::PERCENTAGE => cell.set_value_number(cell_data.parse_float()),
+                        EDataType::PERMILLAGE => {
+                            cell.set_value_number(cell_data.parse_float() * 1000.0)
+                        }
+                        EDataType::PERMIAN => {
+                            cell.set_value_number(cell_data.parse_float() * 10000.0)
+                        }
+                        EDataType::TIME => cell.set_value_number(cell_data.parse_time()),
+                        EDataType::DATE => cell.set_value_number(cell_data.parse_date()),
+                        _ => cell.set_value(&cell_data.value),
+                    };
+                }
+            }
 
+            write_excel_cell_style(cell, &cell_data);
+        }
+    }
+}
+
+fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
+    let max_row: u32 = gable_data.max_row + 1;
+
+    // 数据类型处理
+    for row_index in global::TABLE_KV_ROW_TOTAL..max_row {
+        let cell_type_data: &mut Cell =
+            worksheet.get_cell_mut((&global::TABLE_KV_COL_TYPE, &row_index));
+        let cell_type: EDataType = utils::convert_data_type(&cell_type_data.get_value());
+        let cell: &mut Cell = worksheet.get_cell_mut((&global::TABLE_KV_COL_VALUE, &row_index));
+        match cell_type {
+            EDataType::PERCENTAGE => {
+                cell.get_style_mut()
+                    .get_number_format_mut()
+                    .set_format_code(global::NUMBER_FORMAT_PERCENTAGE);
+            }
+            EDataType::PERMILLAGE => {
+                cell.get_style_mut()
+                    .get_number_format_mut()
+                    .set_format_code(global::NUMBER_FORMAT_PERMILLAGE);
+            }
+            EDataType::PERMIAN => {
+                cell.get_style_mut()
+                    .get_number_format_mut()
+                    .set_format_code(global::NUMBER_FORMAT_PERMIAN);
+            }
+            EDataType::TIME => {
+                cell.get_style_mut()
+                    .get_number_format_mut()
+                    .set_format_code(global::NUMBER_FORMAT_TIME);
+            }
+            EDataType::DATE => {
+                cell.get_style_mut()
+                    .get_number_format_mut()
+                    .set_format_code(global::NUMBER_FORMAT_DATE);
+            }
+            EDataType::ENUM => {}
+            _ => {}
+        }
+    }
+    let mut cell_type_data_temp: Option<&CellData> = None;
+    // 数据内容处理
+    for (row_index, row_data) in &gable_data.cells {
+        for (col_index, cell_data) in row_data {
+            let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));
+            if *col_index == global::TABLE_KV_COL_TYPE as u16 {
+                cell_type_data_temp = Some(cell_data);
+            }
+            if *col_index == global::TABLE_KV_COL_VALUE as u16 {
+                if let Some(cell_type_data) = cell_type_data_temp {
+                    match utils::convert_data_type(&cell_type_data.value) {
+                        EDataType::INT => cell.set_value_number(cell_data.parse_int()),
+                        EDataType::BOOLEAN => cell.set_value_bool(cell_data.parse_bool()),
+                        EDataType::FLOAT => cell.set_value_number(cell_data.parse_float()),
+                        EDataType::PERCENTAGE => cell.set_value_number(cell_data.parse_float()),
+                        EDataType::PERMILLAGE => {
+                            cell.set_value_number(cell_data.parse_float() * 1000.0)
+                        }
+                        EDataType::PERMIAN => {
+                            cell.set_value_number(cell_data.parse_float() * 10000.0)
+                        }
+                        EDataType::TIME => cell.set_value_number(cell_data.parse_time()),
+                        EDataType::DATE => cell.set_value_number(cell_data.parse_date()),
+                        _ => cell.set_value(&cell_data.value),
+                    };
+                }
+            } else {
+                cell.set_value(&cell_data.value);
+            }
+            write_excel_cell_style(cell, &cell_data);
+        }
+    }
+}
+fn write_excel_enum(worksheet: &mut Worksheet, gable_data: &GableData) {
+    // 数据内容处理
+    for (row_index, row_data) in &gable_data.cells {
+        for (col_index, cell_data) in row_data {
+            let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));
+            cell.set_value(&cell_data.value);
+            write_excel_cell_style(cell, &cell_data);
+        }
+    }
+}
+// excel 单元格数据类型写入
+fn write_excel_cell_style(cell: &mut Cell, cell_data: &CellData) {
     let style: &mut Style = cell.get_style_mut();
     // 边框
     let borders = style.get_borders_mut();

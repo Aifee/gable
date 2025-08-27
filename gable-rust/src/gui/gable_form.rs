@@ -208,8 +208,18 @@ impl GableForm {
         }
         let sheet: &mut TreeItem = sheet.unwrap();
         let sheet_type: ESheetType = sheet.data.as_ref().unwrap().gable_type.clone();
-        let max_col: usize = sheet.data.as_ref().unwrap().content.max_col as usize;
         let gable_data: &GableData = &sheet.data.as_ref().unwrap().content;
+
+        let show_rows: u32 = if gable_data.max_row < global::FORM_MIN_ROW {
+            global::FORM_MIN_ROW
+        } else {
+            gable_data.max_row
+        };
+        let show_cols: u16 = if gable_data.max_col < global::FORM_MIN_COL {
+            global::FORM_MIN_COL
+        } else {
+            gable_data.max_col
+        };
 
         ui.push_id("table_scroll", |ui| {
             ScrollArea::both().auto_shrink(false).show(ui, |ui| {
@@ -218,12 +228,15 @@ impl GableForm {
                     .resizable(true)
                     .cell_layout(Layout::left_to_right(Align::Center))
                     .column(Column::auto())
-                    .columns(Column::initial(100.0).range(40.0..=300.0), max_col)
+                    .columns(
+                        Column::initial(100.0).range(40.0..=300.0),
+                        show_cols as usize,
+                    )
                     .header(20.0, |mut header| {
                         header.col(|ui| {
                             ui.label("");
                         });
-                        for col in 1..=max_col {
+                        for col in 1..=show_cols {
                             header.col(|ui| {
                                 ui.centered_and_justified(|ui| {
                                     ui.label(utils::column_index_to_name(col as u32));
@@ -233,13 +246,13 @@ impl GableForm {
                     })
                     .body(|body| match sheet_type {
                         ESheetType::DATA => {
-                            Self::ongui_table_databody(body, &gable_data);
+                            Self::ongui_table_databody(body, &gable_data, show_rows, show_cols);
                         }
                         ESheetType::KV => {
-                            Self::ongui_table_kvbody(body, &gable_data);
+                            Self::ongui_table_kvbody(body, &gable_data, show_rows, show_cols);
                         }
                         ESheetType::ENUM => {
-                            Self::ongui_table_enumbody(body, &gable_data);
+                            Self::ongui_table_enumbody(body, &gable_data, show_rows, show_cols);
                         }
                     });
             });
@@ -247,7 +260,12 @@ impl GableForm {
     }
 
     /// 普通数据表绘制
-    fn ongui_table_databody(body: TableBody<'_>, sheet_content: &GableData) {
+    fn ongui_table_databody(
+        body: TableBody<'_>,
+        sheet_content: &GableData,
+        show_rows: u32,
+        show_cols: u16,
+    ) {
         let total_rows: u32 = sheet_content.max_row;
         let total_cols: u16 = sheet_content.max_col;
 
@@ -266,7 +284,7 @@ impl GableForm {
                 }
             }
         }
-        body.rows(20.0, total_rows as usize, |mut row| {
+        body.rows(20.0, show_rows as usize, |mut row| {
             let row_index: u32 = (row.index() + 1) as u32;
             row.col(|ui| {
                 ui.label(&row_index.to_string());
@@ -275,11 +293,13 @@ impl GableForm {
             let row_data: Option<&HashMap<u16, CellData>> =
                 if row_index < global::TABLE_DATA_ROW_TOTAL {
                     sheet_content.heads.get(&row_index)
-                } else {
+                } else if row_index < total_rows {
                     sheet_content.cells.get(&row_index)
+                } else {
+                    None
                 };
 
-            for col_index in 1..total_cols + 1 {
+            for col_index in 1..show_cols + 1 {
                 row.col(|ui| {
                     // 通过预先获取的行数据查找列数据
                     if let Some(row_data) = row_data {
@@ -335,10 +355,15 @@ impl GableForm {
     }
 
     /// KV表绘制
-    fn ongui_table_kvbody(body: TableBody<'_>, sheet_content: &GableData) {
-        let total_rows: usize = sheet_content.max_row as usize;
-        let total_cols: u16 = sheet_content.max_col;
-        body.rows(20.0, total_rows, |mut row| {
+    fn ongui_table_kvbody(
+        body: TableBody<'_>,
+        sheet_content: &GableData,
+        show_rows: u32,
+        show_cols: u16,
+    ) {
+        let total_rows: u32 = sheet_content.max_row;
+
+        body.rows(20.0, show_rows as usize, |mut row| {
             let row_index: u32 = (row.index() + 1) as u32;
             row.col(|ui| {
                 ui.label(&row_index.to_string());
@@ -347,11 +372,13 @@ impl GableForm {
             let row_data: Option<&HashMap<u16, CellData>> =
                 if row_index < global::TABLE_KV_ROW_TOTAL {
                     sheet_content.heads.get(&row_index)
-                } else {
+                } else if row_index < total_rows {
                     sheet_content.cells.get(&row_index)
+                } else {
+                    None
                 };
 
-            for col_index in 1..total_cols + 1 {
+            for col_index in 1..show_cols + 1 {
                 row.col(|ui| {
                     if let Some(row_data) = row_data {
                         if let Some(col_data) = row_data.get(&col_index) {
@@ -369,10 +396,14 @@ impl GableForm {
     }
 
     /// 枚举表绘制器
-    fn ongui_table_enumbody(body: TableBody<'_>, sheet_content: &GableData) {
-        let total_rows: usize = sheet_content.max_row as usize;
-        let total_cols: u16 = sheet_content.max_col;
-        body.rows(20.0, total_rows, |mut row| {
+    fn ongui_table_enumbody(
+        body: TableBody<'_>,
+        sheet_content: &GableData,
+        show_rows: u32,
+        show_cols: u16,
+    ) {
+        let total_rows: u32 = sheet_content.max_row;
+        body.rows(20.0, show_rows as usize, |mut row| {
             let row_index: u32 = (row.index() + 1) as u32;
             row.col(|ui| {
                 ui.label(&row_index.to_string());
@@ -381,11 +412,13 @@ impl GableForm {
             let row_data: Option<&HashMap<u16, CellData>> =
                 if row_index < global::TABLE_ENUM_ROW_TOTAL {
                     sheet_content.heads.get(&row_index)
-                } else {
+                } else if row_index < total_rows {
                     sheet_content.cells.get(&row_index)
+                } else {
+                    None
                 };
 
-            for col_index in 1..total_cols + 1 {
+            for col_index in 1..show_cols + 1 {
                 row.col(|ui| {
                     // 通过预先获取的行数据查找列数据
                     if let Some(row_data) = row_data {

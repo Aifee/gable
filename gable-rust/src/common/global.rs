@@ -21,6 +21,11 @@ pub const NUMBER_FORMAT_PERMILLAGE: &str = "0‰";
 /// 单元格万分比格式
 pub const NUMBER_FORMAT_PERMIAN: &str = "0‱";
 
+/// 表单最小行数
+pub const FORM_MIN_ROW: u32 = 47;
+/// 表单最小列数
+pub const FORM_MIN_COL: u16 = 25;
+
 ///[数据表单]描述行
 pub const TABLE_DATA_ROW_DES: u32 = 1;
 ///[数据表单]字段行

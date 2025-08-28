@@ -1,4 +1,4 @@
-use crate::common::{excel_util, global, setting, utils};
+use crate::common::{constant, excel_util, setting, utils};
 use crate::gui::datas::{
     eitem_type::EItemType, esheet_type::ESheetType, gable_data::GableData, tree_data::TreeData,
     tree_item::TreeItem, watcher_data::WatcherData,
@@ -48,11 +48,11 @@ fn has_eidtor_file(file_path: String) -> (bool, Option<WatcherData>) {
 
 /// 解析 .gable 文件名，返回 (excel_name, sheet_name) 或仅 excel_name
 pub(crate) fn parse_gable_filename(filename: &str) -> Option<(String, Option<String>)> {
-    if !filename.ends_with(global::GABLE_FILE_TYPE) {
+    if !filename.ends_with(constant::GABLE_FILE_TYPE) {
         return None;
     }
 
-    let name_without_ext: &str = &filename[..filename.len() - global::GABLE_FILE_TYPE.len()];
+    let name_without_ext: &str = &filename[..filename.len() - constant::GABLE_FILE_TYPE.len()];
 
     if let Some(pos) = name_without_ext.find('@') {
         // 格式为 excelname@sheetname
@@ -103,7 +103,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
             let entry_name: String = entry.file_name().to_string_lossy().to_string();
 
             if entry_path.is_dir() {
-                if !global::IGNORED_DIRS.contains(&entry_name.as_str()) {
+                if !constant::IGNORED_DIRS.contains(&entry_name.as_str()) {
                     directories.push((entry_path, entry_name));
                 }
             } else if let Some((excel_name, sheet_name)) = parse_gable_filename(&entry_name) {

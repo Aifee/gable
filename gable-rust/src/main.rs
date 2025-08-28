@@ -9,7 +9,8 @@ use gui::gable_app::GableApp;
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> Result<(), eframe::Error> {
     // 初始化日志系统
-    let _ = gui::datas::log::LogTrace::init(Some(common::global::DIR_LOG), log::LevelFilter::Info);
+    let _ =
+        gui::datas::log::LogTrace::init(Some(common::constant::DIR_LOG), log::LevelFilter::Info);
 
     let options: eframe::NativeOptions = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_inner_size([1920.0, 1080.0]),

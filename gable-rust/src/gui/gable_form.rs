@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::common::{global, utils};
+use crate::common::{constant, utils};
 use crate::gui::component;
 use crate::gui::datas::cell_data::CellData;
 use crate::gui::datas::edata_type::EDataType;
@@ -211,13 +211,13 @@ impl GableForm {
         let sheet_type: ESheetType = sheet.data.as_ref().unwrap().gable_type.clone();
         let gable_data: &GableData = &sheet.data.as_ref().unwrap().content;
 
-        let show_rows: u32 = if gable_data.max_row < global::FORM_MIN_ROW {
-            global::FORM_MIN_ROW
+        let show_rows: u32 = if gable_data.max_row < constant::FORM_MIN_ROW {
+            constant::FORM_MIN_ROW
         } else {
             gable_data.max_row
         };
-        let show_cols: u16 = if gable_data.max_col < global::FORM_MIN_COL {
-            global::FORM_MIN_COL
+        let show_cols: u16 = if gable_data.max_col < constant::FORM_MIN_COL {
+            constant::FORM_MIN_COL
         } else {
             gable_data.max_col
         };
@@ -272,10 +272,10 @@ impl GableForm {
 
         let mut cell_types: HashMap<u16, EDataType> = HashMap::<u16, EDataType>::new();
         // 先遍历列找出需要特殊处理的数据类型
-        if total_rows >= global::TABLE_DATA_ROW_TOTAL {
+        if total_rows >= constant::TABLE_DATA_ROW_TOTAL {
             for col_index in 1..total_cols + 1 {
                 let row_type_data: Option<&HashMap<u16, CellData>> =
-                    sheet_content.heads.get(&global::TABLE_DATA_ROW_TYPE);
+                    sheet_content.heads.get(&constant::TABLE_DATA_ROW_TYPE);
                 if let Some(row_type_data) = row_type_data {
                     let type_cell = row_type_data.get(&col_index);
                     if let Some(type_cell) = type_cell {
@@ -292,7 +292,7 @@ impl GableForm {
             });
 
             let row_data: Option<&HashMap<u16, CellData>> =
-                if row_index < global::TABLE_DATA_ROW_TOTAL {
+                if row_index < constant::TABLE_DATA_ROW_TOTAL {
                     sheet_content.heads.get(&row_index)
                 } else if row_index < total_rows {
                     sheet_content.cells.get(&row_index)
@@ -305,7 +305,7 @@ impl GableForm {
                     // 通过预先获取的行数据查找列数据
                     if let Some(row_data) = row_data {
                         if let Some(col_data) = row_data.get(&col_index) {
-                            if row_index >= global::TABLE_DATA_ROW_TOTAL {
+                            if row_index >= constant::TABLE_DATA_ROW_TOTAL {
                                 ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
                                 let cell_type = cell_types.get(&col_index);
                                 if let Some(cell_type) = cell_type {
@@ -371,7 +371,7 @@ impl GableForm {
             });
 
             let row_data: Option<&HashMap<u16, CellData>> =
-                if row_index < global::TABLE_KV_ROW_TOTAL {
+                if row_index < constant::TABLE_KV_ROW_TOTAL {
                     sheet_content.heads.get(&row_index)
                 } else if row_index < total_rows {
                     sheet_content.cells.get(&row_index)
@@ -411,7 +411,7 @@ impl GableForm {
             });
 
             let row_data: Option<&HashMap<u16, CellData>> =
-                if row_index < global::TABLE_ENUM_ROW_TOTAL {
+                if row_index < constant::TABLE_ENUM_ROW_TOTAL {
                     sheet_content.heads.get(&row_index)
                 } else if row_index < total_rows {
                     sheet_content.cells.get(&row_index)

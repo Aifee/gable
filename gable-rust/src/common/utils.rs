@@ -1,4 +1,4 @@
-use crate::common::{global, setting};
+use crate::common::{constant, setting};
 use crate::gui::datas::{edata_type::EDataType, esheet_type::ESheetType};
 use eframe::egui::{Color32, Context, Style};
 use std::fs;
@@ -66,7 +66,7 @@ pub fn get_title() -> String {
 /// 获取临时目录
 pub fn get_temp_path() -> String {
     let workspace: MutexGuard<'_, Option<String>> = setting::WORKSPACE.lock().unwrap();
-    let temp_dir = global::DIR_TEMP;
+    let temp_dir = constant::DIR_TEMP;
     let path: String = PathBuf::from(workspace.as_ref().unwrap())
         .join(temp_dir)
         .to_string_lossy()
@@ -180,26 +180,26 @@ pub fn convert_data_type(value: &str) -> EDataType {
         return EDataType::STRING;
     }
     match value {
-        global::DATA_TYPE_KEY_STRING => EDataType::STRING,
-        global::DATA_TYPE_KEY_INT => EDataType::INT,
-        global::DATA_TYPE_KEY_BOOLEAN => EDataType::BOOLEAN,
-        global::DATA_TYPE_KEY_FLOAT => EDataType::FLOAT,
-        global::DATA_TYPE_KEY_VECTOR2 => EDataType::VECTOR2,
-        global::DATA_TYPE_KEY_VECTOR3 => EDataType::VECTOR3,
-        global::DATA_TYPE_KEY_VECTOR4 => EDataType::VECTOR4,
-        global::DATA_TYPE_KEY_STRING_ARR => EDataType::STRING_ARR,
-        global::DATA_TYPE_KEY_INT_ARR => EDataType::INT_ARR,
-        global::DATA_TYPE_KEY_BOOLEAN_ARR => EDataType::BOOLEAN_ARR,
-        global::DATA_TYPE_KEY_FLOAT_ARR => EDataType::FLOAT_ARR,
-        global::DATA_TYPE_KEY_VECTOR2_ARR => EDataType::VECTOR2_ARR,
-        global::DATA_TYPE_KEY_VECTOR3_ARR => EDataType::VECTOR3_ARR,
-        global::DATA_TYPE_KEY_VECTOR4_ARR => EDataType::VECTOR4_ARR,
-        global::DATA_TYPE_KEY_PERCENTAGE => EDataType::PERCENTAGE,
-        global::DATA_TYPE_KEY_PERMILLAGE => EDataType::PERMILLAGE,
-        global::DATA_TYPE_KEY_PERMIAN => EDataType::PERMIAN,
-        global::DATA_TYPE_KEY_TIME => EDataType::TIME,
-        global::DATA_TYPE_KEY_DATE => EDataType::DATE,
-        global::DATA_TYPE_KEY_ENUM => EDataType::ENUM,
+        constant::DATA_TYPE_KEY_STRING => EDataType::STRING,
+        constant::DATA_TYPE_KEY_INT => EDataType::INT,
+        constant::DATA_TYPE_KEY_BOOLEAN => EDataType::BOOLEAN,
+        constant::DATA_TYPE_KEY_FLOAT => EDataType::FLOAT,
+        constant::DATA_TYPE_KEY_VECTOR2 => EDataType::VECTOR2,
+        constant::DATA_TYPE_KEY_VECTOR3 => EDataType::VECTOR3,
+        constant::DATA_TYPE_KEY_VECTOR4 => EDataType::VECTOR4,
+        constant::DATA_TYPE_KEY_STRING_ARR => EDataType::STRING_ARR,
+        constant::DATA_TYPE_KEY_INT_ARR => EDataType::INT_ARR,
+        constant::DATA_TYPE_KEY_BOOLEAN_ARR => EDataType::BOOLEAN_ARR,
+        constant::DATA_TYPE_KEY_FLOAT_ARR => EDataType::FLOAT_ARR,
+        constant::DATA_TYPE_KEY_VECTOR2_ARR => EDataType::VECTOR2_ARR,
+        constant::DATA_TYPE_KEY_VECTOR3_ARR => EDataType::VECTOR3_ARR,
+        constant::DATA_TYPE_KEY_VECTOR4_ARR => EDataType::VECTOR4_ARR,
+        constant::DATA_TYPE_KEY_PERCENTAGE => EDataType::PERCENTAGE,
+        constant::DATA_TYPE_KEY_PERMILLAGE => EDataType::PERMILLAGE,
+        constant::DATA_TYPE_KEY_PERMIAN => EDataType::PERMIAN,
+        constant::DATA_TYPE_KEY_TIME => EDataType::TIME,
+        constant::DATA_TYPE_KEY_DATE => EDataType::DATE,
+        constant::DATA_TYPE_KEY_ENUM => EDataType::ENUM,
         _ => EDataType::Unknown,
     }
 }

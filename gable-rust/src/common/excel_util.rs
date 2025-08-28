@@ -1,5 +1,5 @@
 use crate::{
-    common::{global, utils},
+    common::{constant, utils},
     gui::datas::{
         cell_data::CellData, edata_type::EDataType, esheet_type::ESheetType, gable_data::GableData,
     },
@@ -39,7 +39,7 @@ pub fn write_excel(
     sheet_type: &ESheetType,
     gable_files: Vec<String>,
 ) -> Result<String, Box<dyn Error>> {
-    let file_name: &str = &format!("{}{}", &excel_name, &global::EXCEL_EXTENSION);
+    let file_name: &str = &format!("{}{}", &excel_name, &constant::EXCEL_EXTENSION);
     let tem_path: String = utils::get_temp_path();
     let excel_file_path_tem: String = PathBuf::from(&tem_path)
         .join(&format!("~${}", &file_name))
@@ -82,14 +82,14 @@ pub fn write_excel(
                 }
             };
             let range: String = utils::cell_range(
-                global::TABLE_DATA_ROW_TYPE,
+                constant::TABLE_DATA_ROW_TYPE,
                 1,
-                global::TABLE_DATA_ROW_TYPE,
+                constant::TABLE_DATA_ROW_TYPE,
                 gable_data.max_col,
             );
             // println!("设置单元格格式:{}", range);
             let mut data_validation: DataValidation = DataValidation::default();
-            data_validation.set_formula1(format!("\"{}\"", global::DATA_TYPE_KEYS.join(",")));
+            data_validation.set_formula1(format!("\"{}\"", constant::DATA_TYPE_KEYS.join(",")));
             data_validation.set_type(DataValidationValues::List);
             data_validation
                 .get_sequence_of_references_mut()
@@ -162,7 +162,7 @@ fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
     for col_index in 1..max_col {
         let cell_type_data: Option<&CellData> = gable_data
             .heads
-            .get(&global::TABLE_DATA_ROW_TYPE)
+            .get(&constant::TABLE_DATA_ROW_TYPE)
             .and_then(|row| row.get(&col_index));
         let cell_type: EDataType = if let Some(data) = cell_type_data {
             utils::convert_data_type(&data.value)
@@ -178,33 +178,33 @@ fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
         {
             continue;
         }
-        for row_index in global::TABLE_DATA_ROW_TOTAL..max_row {
+        for row_index in constant::TABLE_DATA_ROW_TOTAL..max_row {
             let cell: &mut Cell = worksheet.get_cell_mut((&(col_index as u32), &row_index));
             match cell_type {
                 EDataType::PERCENTAGE => {
                     cell.get_style_mut()
                         .get_number_format_mut()
-                        .set_format_code(global::NUMBER_FORMAT_PERCENTAGE);
+                        .set_format_code(constant::NUMBER_FORMAT_PERCENTAGE);
                 }
                 EDataType::PERMILLAGE => {
                     cell.get_style_mut()
                         .get_number_format_mut()
-                        .set_format_code(global::NUMBER_FORMAT_PERMILLAGE);
+                        .set_format_code(constant::NUMBER_FORMAT_PERMILLAGE);
                 }
                 EDataType::PERMIAN => {
                     cell.get_style_mut()
                         .get_number_format_mut()
-                        .set_format_code(global::NUMBER_FORMAT_PERMIAN);
+                        .set_format_code(constant::NUMBER_FORMAT_PERMIAN);
                 }
                 EDataType::TIME => {
                     cell.get_style_mut()
                         .get_number_format_mut()
-                        .set_format_code(global::NUMBER_FORMAT_TIME);
+                        .set_format_code(constant::NUMBER_FORMAT_TIME);
                 }
                 EDataType::DATE => {
                     cell.get_style_mut()
                         .get_number_format_mut()
-                        .set_format_code(global::NUMBER_FORMAT_DATE);
+                        .set_format_code(constant::NUMBER_FORMAT_DATE);
                 }
                 EDataType::ENUM => {}
                 _ => {}
@@ -215,7 +215,7 @@ fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
     for (row_index, row_data) in &gable_data.cells {
         for (col_index, cell_data) in row_data {
             let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));
-            if let Some(row_data) = &gable_data.heads.get(&global::TABLE_DATA_ROW_TYPE) {
+            if let Some(row_data) = &gable_data.heads.get(&constant::TABLE_DATA_ROW_TYPE) {
                 if let Some(cell_type_data) = row_data.get(&col_index) {
                     match utils::convert_data_type(&cell_type_data.value) {
                         EDataType::INT => cell.set_value_number(cell_data.parse_int()),
@@ -244,36 +244,36 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
     let max_row: u32 = gable_data.max_row + 1;
 
     // 数据类型处理
-    for row_index in global::TABLE_KV_ROW_TOTAL..max_row {
+    for row_index in constant::TABLE_KV_ROW_TOTAL..max_row {
         let cell_type_data: &mut Cell =
-            worksheet.get_cell_mut((&global::TABLE_KV_COL_TYPE, &row_index));
+            worksheet.get_cell_mut((&constant::TABLE_KV_COL_TYPE, &row_index));
         let cell_type: EDataType = utils::convert_data_type(&cell_type_data.get_value());
-        let cell: &mut Cell = worksheet.get_cell_mut((&global::TABLE_KV_COL_VALUE, &row_index));
+        let cell: &mut Cell = worksheet.get_cell_mut((&constant::TABLE_KV_COL_VALUE, &row_index));
         match cell_type {
             EDataType::PERCENTAGE => {
                 cell.get_style_mut()
                     .get_number_format_mut()
-                    .set_format_code(global::NUMBER_FORMAT_PERCENTAGE);
+                    .set_format_code(constant::NUMBER_FORMAT_PERCENTAGE);
             }
             EDataType::PERMILLAGE => {
                 cell.get_style_mut()
                     .get_number_format_mut()
-                    .set_format_code(global::NUMBER_FORMAT_PERMILLAGE);
+                    .set_format_code(constant::NUMBER_FORMAT_PERMILLAGE);
             }
             EDataType::PERMIAN => {
                 cell.get_style_mut()
                     .get_number_format_mut()
-                    .set_format_code(global::NUMBER_FORMAT_PERMIAN);
+                    .set_format_code(constant::NUMBER_FORMAT_PERMIAN);
             }
             EDataType::TIME => {
                 cell.get_style_mut()
                     .get_number_format_mut()
-                    .set_format_code(global::NUMBER_FORMAT_TIME);
+                    .set_format_code(constant::NUMBER_FORMAT_TIME);
             }
             EDataType::DATE => {
                 cell.get_style_mut()
                     .get_number_format_mut()
-                    .set_format_code(global::NUMBER_FORMAT_DATE);
+                    .set_format_code(constant::NUMBER_FORMAT_DATE);
             }
             EDataType::ENUM => {}
             _ => {}
@@ -284,10 +284,10 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
     for (row_index, row_data) in &gable_data.cells {
         for (col_index, cell_data) in row_data {
             let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));
-            if *col_index == global::TABLE_KV_COL_TYPE as u16 {
+            if *col_index == constant::TABLE_KV_COL_TYPE as u16 {
                 cell_type_data_temp = Some(cell_data);
             }
-            if *col_index == global::TABLE_KV_COL_VALUE as u16 {
+            if *col_index == constant::TABLE_KV_COL_VALUE as u16 {
                 if let Some(cell_type_data) = cell_type_data_temp {
                     match utils::convert_data_type(&cell_type_data.value) {
                         EDataType::INT => cell.set_value_number(cell_data.parse_int()),
@@ -412,9 +412,9 @@ pub fn write_gable(
         for row_idx in 1..max_row {
             let mut row_data: HashMap<u16, CellData> = HashMap::new();
             let mut cell_type: EDataType = EDataType::STRING;
-            if sheet_type == ESheetType::KV && row_idx >= global::TABLE_KV_ROW_TOTAL {
+            if sheet_type == ESheetType::KV && row_idx >= constant::TABLE_KV_ROW_TOTAL {
                 cell_type = if let Some(cell_type_data) =
-                    worksheet.get_cell((&global::TABLE_KV_COL_TYPE, &row_idx))
+                    worksheet.get_cell((&constant::TABLE_KV_COL_TYPE, &row_idx))
                 {
                     utils::convert_data_type(&cell_type_data.get_value())
                 } else {
@@ -422,9 +422,9 @@ pub fn write_gable(
                 };
             }
             for col_idx in 0..max_col {
-                if sheet_type == ESheetType::DATA && row_idx >= global::TABLE_DATA_ROW_TOTAL {
+                if sheet_type == ESheetType::DATA && row_idx >= constant::TABLE_DATA_ROW_TOTAL {
                     cell_type = if let Some(cell_type_data) =
-                        worksheet.get_cell((&col_idx, &global::TABLE_DATA_ROW_TYPE))
+                        worksheet.get_cell((&col_idx, &constant::TABLE_DATA_ROW_TYPE))
                     {
                         utils::convert_data_type(&cell_type_data.get_value())
                     } else {
@@ -515,7 +515,7 @@ pub fn write_gable(
 
             match sheet_type {
                 ESheetType::KV => {
-                    if row_idx < global::TABLE_KV_ROW_TOTAL {
+                    if row_idx < constant::TABLE_KV_ROW_TOTAL {
                         gable_data.heads.insert(row_idx, row_data);
                     } else {
                         if row_data.len() > 0 {
@@ -524,14 +524,14 @@ pub fn write_gable(
                     }
                 }
                 ESheetType::ENUM => {
-                    if row_idx < global::TABLE_ENUM_ROW_TOTAL {
+                    if row_idx < constant::TABLE_ENUM_ROW_TOTAL {
                         gable_data.heads.insert(row_idx, row_data);
                     } else {
                         gable_data.cells.insert(row_idx, row_data);
                     }
                 }
                 _ => {
-                    if row_idx < global::TABLE_DATA_ROW_TOTAL {
+                    if row_idx < constant::TABLE_DATA_ROW_TOTAL {
                         gable_data.heads.insert(row_idx, row_data);
                     } else {
                         if row_data.len() > 0 {

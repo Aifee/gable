@@ -1,5 +1,5 @@
 use crate::{
-    common::{global, setting, utils},
+    common::{constant, setting, utils},
     gui::datas::{eitem_type::EItemType, gables, tree_item::TreeItem},
 };
 use eframe::egui::{
@@ -289,7 +289,7 @@ impl GableExplorer {
                             .to_string();
 
                         // 检查是否为.gable文件
-                        if file_name.ends_with(global::GABLE_FILE_TYPE) {
+                        if file_name.ends_with(constant::GABLE_FILE_TYPE) {
                             // 解析文件名
                             if let Some((excel_name, sheet_name)) =
                                 gables::parse_gable_filename(&file_name)
@@ -302,10 +302,10 @@ impl GableExplorer {
                                             "{}@{}{}",
                                             new_excel_name,
                                             sheet,
-                                            global::GABLE_FILE_TYPE
+                                            constant::GABLE_FILE_TYPE
                                         )
                                     } else {
-                                        format!("{}{}", new_excel_name, global::GABLE_FILE_TYPE)
+                                        format!("{}{}", new_excel_name, constant::GABLE_FILE_TYPE)
                                     };
 
                                     // 构造新的完整路径
@@ -352,7 +352,7 @@ impl GableExplorer {
                         "{}@{}{}",
                         excel_name,
                         new_sheet_name,
-                        global::GABLE_FILE_TYPE
+                        constant::GABLE_FILE_TYPE
                     );
                     let new_path: PathBuf = parent_path.join(new_file_name);
 

@@ -406,138 +406,10 @@ pub fn write_gable(
 
         let max_row: u32 = max_row + 1;
         let max_col: u32 = max_col + 1;
-        // 读取数据并填充到GableData中
-        for row_idx in 1..max_row {
-            let mut row_data: HashMap<u16, CellData> = HashMap::new();
-            let mut cell_type: EDataType = EDataType::STRING;
-            if sheet_type == ESheetType::KV && row_idx >= constant::TABLE_KV_ROW_TOTAL {
-                cell_type = if let Some(cell_type_data) =
-                    worksheet.get_cell((&constant::TABLE_KV_COL_TYPE, &row_idx))
-                {
-                    utils::convert_data_type(&cell_type_data.get_value())
-                } else {
-                    EDataType::STRING
-                };
-            }
-            for col_idx in 0..max_col {
-                if sheet_type == ESheetType::DATA && row_idx >= constant::TABLE_DATA_ROW_TOTAL {
-                    cell_type = if let Some(cell_type_data) =
-                        worksheet.get_cell((&col_idx, &constant::TABLE_DATA_ROW_TYPE))
-                    {
-                        utils::convert_data_type(&cell_type_data.get_value())
-                    } else {
-                        EDataType::STRING
-                    };
-                }
-
-                if let Some(cell) = worksheet.get_cell((&col_idx, &row_idx)) {
-                    let value: Cow<'static, str> = cell.get_value();
-                    let style: &Style = cell.get_style();
-                    let bc: Option<&Color> = style.get_background_color();
-                    let fc: Option<&Color> = if let Some(font) = style.get_font() {
-                        Some(font.get_color())
-                    } else {
-                        None
-                    };
-                    let cell_data: CellData = if value.is_empty() {
-                        CellData::new(row_idx, col_idx as u16, value.to_string(), bc, fc)
-                    } else {
-                        match cell_type {
-                            EDataType::PERMILLAGE => {
-                                let permillage_value: f64 = value.parse::<f64>().unwrap() / 1000.0;
-                                CellData::new(
-                                    row_idx,
-                                    col_idx as u16,
-                                    format!("{:.3}", permillage_value),
-                                    bc,
-                                    fc,
-                                )
-                            }
-                            EDataType::PERMIAN => {
-                                let permian_value: f64 = value.parse::<f64>().unwrap() / 10000.0;
-                                CellData::new(
-                                    row_idx,
-                                    col_idx as u16,
-                                    format!("{:.4}", permian_value),
-                                    bc,
-                                    fc,
-                                )
-                            }
-                            EDataType::TIME => {
-                                let seconds = if value.is_empty() {
-                                    0
-                                } else {
-                                    // excel时间格式的单元格单位是天
-                                    match value.parse::<f64>() {
-                                        Ok(decimal_time) => {
-                                            let total_seconds =
-                                                (decimal_time * 86400.0).round() as u32;
-                                            total_seconds
-                                        }
-                                        Err(_) => 0,
-                                    }
-                                };
-                                CellData::new(row_idx, col_idx as u16, seconds.to_string(), bc, fc)
-                            }
-                            EDataType::DATE => {
-                                let seconds: u64 = if value.is_empty() {
-                                    0
-                                } else {
-                                    match value.parse::<f64>() {
-                                        Ok(decimal_seconds) => {
-                                            // 将Excel/WPS的日期序列号转换为秒基准日期：1900年1月0日（Excel/WPS的起始点）
-                                            let days: i64 = decimal_seconds.floor() as i64;
-                                            let fraction = decimal_seconds - days as f64;
-                                            let total_seconds: i64 = ((days - 1) * 86400)
-                                                + (fraction * 86400.0).round() as i64;
-                                            total_seconds as u64
-                                        }
-                                        Err(_) => 0,
-                                    }
-                                };
-                                CellData::new(row_idx, col_idx as u16, seconds.to_string(), bc, fc)
-                            }
-                            EDataType::ENUM => {
-                                CellData::new(row_idx, col_idx as u16, value.to_string(), bc, fc)
-                            }
-                            _ => CellData::new(row_idx, col_idx as u16, value.to_string(), bc, fc),
-                        }
-                    };
-
-                    if cell_data.is_empty() {
-                        continue;
-                    }
-                    row_data.insert(col_idx as u16, cell_data);
-                }
-            }
-
-            match sheet_type {
-                ESheetType::KV => {
-                    if row_idx < constant::TABLE_KV_ROW_TOTAL {
-                        gable_data.heads.insert(row_idx, row_data);
-                    } else {
-                        if row_data.len() > 0 {
-                            gable_data.cells.insert(row_idx, row_data);
-                        }
-                    }
-                }
-                ESheetType::ENUM => {
-                    if row_idx < constant::TABLE_ENUM_ROW_TOTAL {
-                        gable_data.heads.insert(row_idx, row_data);
-                    } else {
-                        gable_data.cells.insert(row_idx, row_data);
-                    }
-                }
-                _ => {
-                    if row_idx < constant::TABLE_DATA_ROW_TOTAL {
-                        gable_data.heads.insert(row_idx, row_data);
-                    } else {
-                        if row_data.len() > 0 {
-                            gable_data.cells.insert(row_idx, row_data);
-                        }
-                    }
-                }
-            }
+        match sheet_type {
+            ESheetType::DATA => write_gable_data(worksheet, &mut gable_data, max_row, max_col),
+            ESheetType::KV => write_gable_kv(worksheet, &mut gable_data, max_row, max_col),
+            ESheetType::ENUM => write_gable_enum(worksheet, &mut gable_data, max_row, max_col),
         }
         let gable_file_path: PathBuf =
             PathBuf::from(&target_path).join(format!("{}@{}.gable", file_stem, &sheet_name));
@@ -547,4 +419,183 @@ pub fn write_gable(
     }
 
     Ok(gable_file_paths)
+}
+
+fn write_gable_data(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u32, max_col: u32) {
+    for row_idx in 1..max_row {
+        let mut row_data: HashMap<u16, CellData> = HashMap::new();
+        let mut cell_type: EDataType = EDataType::STRING;
+        for col_idx in 0..max_col {
+            if row_idx >= constant::TABLE_DATA_ROW_TOTAL {
+                cell_type = if let Some(cell_type_data) =
+                    worksheet.get_cell((&col_idx, &constant::TABLE_DATA_ROW_TYPE))
+                {
+                    utils::convert_data_type(&cell_type_data.get_value())
+                } else {
+                    EDataType::STRING
+                };
+            }
+            if let Some(cell) = worksheet.get_cell((&col_idx, &row_idx)) {
+                let value: Cow<'static, str> = cell.get_value();
+                let style: &Style = cell.get_style();
+                let bc: Option<&Color> = style.get_background_color();
+                let fc: Option<&Color> = if let Some(font) = style.get_font() {
+                    Some(font.get_color())
+                } else {
+                    None
+                };
+                if !value.is_empty() {
+                    let cell_value: String = match cell_type {
+                        EDataType::PERMILLAGE => {
+                            let permillage_value: f64 = value.parse::<f64>().unwrap() / 1000.0;
+                            format!("{:.3}", permillage_value)
+                        }
+                        EDataType::PERMIAN => {
+                            let permian_value: f64 = value.parse::<f64>().unwrap() / 10000.0;
+                            format!("{:.4}", permian_value)
+                        }
+                        EDataType::TIME => match value.parse::<f64>() {
+                            Ok(decimal_time) => {
+                                let total_seconds = (decimal_time * 86400.0).round() as u32;
+                                total_seconds.to_string()
+                            }
+                            Err(_) => String::new(),
+                        },
+                        EDataType::DATE => {
+                            match value.parse::<f64>() {
+                                Ok(decimal_seconds) => {
+                                    // 将Excel/WPS的日期序列号转换为秒基准日期：1900年1月0日（Excel/WPS的起始点）
+                                    let days: i64 = decimal_seconds.floor() as i64;
+                                    let fraction = decimal_seconds - days as f64;
+                                    let total_seconds: i64 =
+                                        ((days - 1) * 86400) + (fraction * 86400.0).round() as i64;
+                                    total_seconds.to_string()
+                                }
+                                Err(_) => String::new(),
+                            }
+                        }
+                        EDataType::ENUM => value.to_string(),
+                        _ => value.to_string(),
+                    };
+                    let cell_data: CellData =
+                        CellData::new(row_idx, col_idx as u16, cell_value, bc, fc);
+                    if cell_data.is_empty() {
+                        continue;
+                    }
+                    row_data.insert(col_idx as u16, cell_data);
+                }
+            }
+        }
+        if row_idx < constant::TABLE_DATA_ROW_TOTAL {
+            gable_data.heads.insert(row_idx, row_data);
+        } else {
+            if row_data.len() > 0 {
+                gable_data.cells.insert(row_idx, row_data);
+            }
+        }
+    }
+}
+fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u32, max_col: u32) {
+    // 读取数据并填充到GableData中
+    for row_idx in 1..max_row {
+        let mut row_data: HashMap<u16, CellData> = HashMap::new();
+        let cell_type: EDataType = if row_idx >= constant::TABLE_KV_ROW_TOTAL {
+            if let Some(cell_type_data) =
+                worksheet.get_cell((&constant::TABLE_KV_COL_TYPE, &row_idx))
+            {
+                utils::convert_data_type(&cell_type_data.get_value())
+            } else {
+                EDataType::STRING
+            }
+        } else {
+            EDataType::STRING
+        };
+        for col_idx in 0..max_col {
+            if let Some(cell) = worksheet.get_cell((&col_idx, &row_idx)) {
+                let value: Cow<'static, str> = cell.get_value();
+                let style: &Style = cell.get_style();
+                let bc: Option<&Color> = style.get_background_color();
+                let fc: Option<&Color> = if let Some(font) = style.get_font() {
+                    Some(font.get_color())
+                } else {
+                    None
+                };
+                if !value.is_empty() {
+                    let cell_value: String = match cell_type {
+                        EDataType::PERMILLAGE => {
+                            let permillage_value: f64 = value.parse::<f64>().unwrap() / 1000.0;
+                            format!("{:.3}", permillage_value)
+                        }
+                        EDataType::PERMIAN => {
+                            let permian_value: f64 = value.parse::<f64>().unwrap() / 10000.0;
+                            format!("{:.4}", permian_value)
+                        }
+                        EDataType::TIME => match value.parse::<f64>() {
+                            Ok(decimal_time) => (decimal_time * 86400.0).round().to_string(),
+                            Err(_) => String::new(),
+                        },
+                        EDataType::DATE => {
+                            match value.parse::<f64>() {
+                                Ok(decimal_seconds) => {
+                                    // 将Excel/WPS的日期序列号转换为秒基准日期：1900年1月0日（Excel/WPS的起始点）
+                                    let days: i64 = decimal_seconds.floor() as i64;
+                                    let fraction = decimal_seconds - days as f64;
+                                    let total_seconds: i64 =
+                                        ((days - 1) * 86400) + (fraction * 86400.0).round() as i64;
+                                    total_seconds.to_string()
+                                }
+                                Err(_) => String::new(),
+                            }
+                        }
+                        EDataType::ENUM => value.to_string(),
+                        _ => value.to_string(),
+                    };
+                    let cell_data: CellData =
+                        CellData::new(row_idx, col_idx as u16, cell_value, bc, fc);
+                    if cell_data.is_empty() {
+                        continue;
+                    }
+                    row_data.insert(col_idx as u16, cell_data);
+                }
+            }
+        }
+        if row_idx < constant::TABLE_KV_ROW_TOTAL {
+            gable_data.heads.insert(row_idx, row_data);
+        } else {
+            if row_data.len() > 0 {
+                gable_data.cells.insert(row_idx, row_data);
+            }
+        }
+    }
+}
+fn write_gable_enum(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u32, max_col: u32) {
+    // 读取数据并填充到GableData中
+    for row_idx in 1..max_row {
+        let mut row_data: HashMap<u16, CellData> = HashMap::new();
+        for col_idx in 0..max_col {
+            if let Some(cell) = worksheet.get_cell((&col_idx, &row_idx)) {
+                let value: Cow<'static, str> = cell.get_value();
+                let style: &Style = cell.get_style();
+                let bc: Option<&Color> = style.get_background_color();
+                let fc: Option<&Color> = if let Some(font) = style.get_font() {
+                    Some(font.get_color())
+                } else {
+                    None
+                };
+                if !value.is_empty() {
+                    let cell_data: CellData =
+                        CellData::new(row_idx, col_idx as u16, value.to_string(), bc, fc);
+                    if cell_data.is_empty() {
+                        continue;
+                    }
+                    row_data.insert(col_idx as u16, cell_data);
+                }
+            }
+        }
+        if row_idx < constant::TABLE_ENUM_ROW_TOTAL {
+            gable_data.heads.insert(row_idx, row_data);
+        } else {
+            gable_data.cells.insert(row_idx, row_data);
+        }
+    }
 }

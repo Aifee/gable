@@ -63,6 +63,7 @@ impl GableForm {
 
     pub fn ongui(&mut self, ctx: &Context) {
         CentralPanel::default().show(ctx, |ui| {
+            ui.set_min_height(100.0);
             if self.excels.is_empty() {
                 ui.centered_and_justified(|ui| ui.label("双击左侧文件树中的项目以打开"));
                 return;

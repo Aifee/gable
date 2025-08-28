@@ -580,7 +580,7 @@ pub fn remove_item(fullpath: &str, item_type: &EItemType) -> bool {
                     return false;
                 }
             };
-            let excel_name = if let Some((file_name)) = path.file_name() {
+            let excel_name = if let Some(file_name) = path.file_name() {
                 file_name.to_string_lossy().to_string()
             } else {
                 log::error!("无法解析Excel文件名: {}", fullpath);

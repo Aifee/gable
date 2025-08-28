@@ -100,8 +100,6 @@ pub fn write_excel(
 
             // 预先设置单元格格式，百分率，千分率，万分率，时间，枚举类型的单元格，如果按照数据填充的话有可能会设置不到
             // 但又不能全量遍历所有的单元格，故此只针对这几种类型单独设置单元格格式
-            let max_row: u32 = gable_data.max_row + 1;
-            let max_col: u16 = gable_data.max_col + 1;
             for (row_index, row_data) in &gable_data.heads {
                 for (col_index, cell_data) in row_data {
                     let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));

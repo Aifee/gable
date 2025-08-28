@@ -7,7 +7,7 @@ use crate::{
 };
 use std::{
     borrow::Cow,
-    collections::HashMap,
+    collections::BTreeMap,
     error::Error,
     fs,
     path::{Path, PathBuf},
@@ -157,7 +157,7 @@ pub fn write_excel(
 fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
     let max_row: u32 = gable_data.max_row + 1;
     let max_col: u16 = gable_data.max_col + 1;
-    let mut enum_cells: HashMap<u16, HashMap<u32, HashMap<u16, CellData>>> = HashMap::new();
+    let mut enum_cells: BTreeMap<u16, BTreeMap<u32, BTreeMap<u16, CellData>>> = BTreeMap::new();
     // 数据类型数据
     for col_index in 1..max_col {
         let cell_type_data: Option<&CellData> = gable_data
@@ -190,7 +190,7 @@ fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
             } else {
                 None
             };
-            let datas: Option<HashMap<u32, HashMap<u16, CellData>>> =
+            let datas: Option<BTreeMap<u32, BTreeMap<u16, CellData>>> =
                 if let Some(cell_link_value) = cell_link_value {
                     gables::get_enum_cells(cell_link_value)
                 } else {
@@ -467,8 +467,8 @@ pub fn write_gable(
             sheetname: sheet_name.clone(),
             max_row: max_row,
             max_col: max_col as u16,
-            heads: HashMap::new(),
-            cells: HashMap::new(),
+            heads: BTreeMap::new(),
+            cells: BTreeMap::new(),
         };
 
         let max_row: u32 = max_row + 1;
@@ -490,7 +490,7 @@ pub fn write_gable(
 
 fn write_gable_data(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u32, max_col: u32) {
     // 收集所有enum的link信息
-    let mut links: HashMap<u32, HashMap<u32, HashMap<u16, CellData>>> = HashMap::new();
+    let mut links: BTreeMap<u32, BTreeMap<u32, BTreeMap<u16, CellData>>> = BTreeMap::new();
     if max_row >= constant::TABLE_DATA_ROW_TOTAL {
         for col_idx in 0..max_col {
             let cell_link: Option<String> = if let Some(cell_link_cell) =
@@ -509,7 +509,7 @@ fn write_gable_data(worksheet: &Worksheet, gable_data: &mut GableData, max_row: 
     }
 
     for row_idx in 1..max_row {
-        let mut row_data: HashMap<u16, CellData> = HashMap::new();
+        let mut row_data: BTreeMap<u16, CellData> = BTreeMap::new();
         let mut cell_type: EDataType = EDataType::STRING;
         for col_idx in 0..max_col {
             if row_idx >= constant::TABLE_DATA_ROW_TOTAL {
@@ -561,7 +561,7 @@ fn write_gable_data(worksheet: &Worksheet, gable_data: &mut GableData, max_row: 
                             }
                         }
                         EDataType::ENUM => {
-                            let mut enum_datas: Option<&HashMap<u16, CellData>> = None;
+                            let mut enum_datas: Option<&BTreeMap<u16, CellData>> = None;
                             if let Some(datas) = links.get(&col_idx) {
                                 for (_, data_row) in datas.iter() {
                                     if let Some(data) = data_row.get(&constant::TABLE_ENUM_COL_DESC)
@@ -605,7 +605,7 @@ fn write_gable_data(worksheet: &Worksheet, gable_data: &mut GableData, max_row: 
 fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u32, max_col: u32) {
     // 读取数据并填充到GableData中
     for row_idx in 1..max_row {
-        let mut row_data: HashMap<u16, CellData> = HashMap::new();
+        let mut row_data: BTreeMap<u16, CellData> = BTreeMap::new();
         let cell_type: EDataType = if row_idx >= constant::TABLE_KV_ROW_TOTAL {
             if let Some(cell_type_data) =
                 worksheet.get_cell((&constant::TABLE_KV_COL_TYPE, &row_idx))
@@ -678,7 +678,7 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
 fn write_gable_enum(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u32, max_col: u32) {
     // 读取数据并填充到GableData中
     for row_idx in 1..max_row {
-        let mut row_data: HashMap<u16, CellData> = HashMap::new();
+        let mut row_data: BTreeMap<u16, CellData> = BTreeMap::new();
         for col_idx in 0..max_col {
             if let Some(cell) = worksheet.get_cell((&col_idx, &row_idx)) {
                 let value: Cow<'static, str> = cell.get_value();

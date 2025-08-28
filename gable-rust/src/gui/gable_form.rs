@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use crate::common::{constant, utils};
 use crate::gui::component;
@@ -274,7 +274,7 @@ impl GableForm {
         // 先遍历列找出需要特殊处理的数据类型
         if total_rows >= constant::TABLE_DATA_ROW_TOTAL {
             for col_index in 1..total_cols + 1 {
-                let row_type_data: Option<&HashMap<u16, CellData>> =
+                let row_type_data: Option<&BTreeMap<u16, CellData>> =
                     sheet_content.heads.get(&constant::TABLE_DATA_ROW_TYPE);
                 if let Some(row_type_data) = row_type_data {
                     let type_cell = row_type_data.get(&col_index);
@@ -291,7 +291,7 @@ impl GableForm {
                 ui.label(&row_index.to_string());
             });
 
-            let row_data: Option<&HashMap<u16, CellData>> =
+            let row_data: Option<&BTreeMap<u16, CellData>> =
                 if row_index < constant::TABLE_DATA_ROW_TOTAL {
                     sheet_content.heads.get(&row_index)
                 } else if row_index < total_rows {
@@ -370,7 +370,7 @@ impl GableForm {
                 ui.label(&row_index.to_string());
             });
 
-            let row_data: Option<&HashMap<u16, CellData>> =
+            let row_data: Option<&BTreeMap<u16, CellData>> =
                 if row_index < constant::TABLE_KV_ROW_TOTAL {
                     sheet_content.heads.get(&row_index)
                 } else if row_index < total_rows {
@@ -410,7 +410,7 @@ impl GableForm {
                 ui.label(&row_index.to_string());
             });
 
-            let row_data: Option<&HashMap<u16, CellData>> =
+            let row_data: Option<&BTreeMap<u16, CellData>> =
                 if row_index < constant::TABLE_ENUM_ROW_TOTAL {
                     sheet_content.heads.get(&row_index)
                 } else if row_index < total_rows {

@@ -88,7 +88,7 @@ pub fn write_excel(
                 constant::TABLE_DATA_ROW_TYPE,
                 gable_data.max_col,
             );
-            // println!("设置单元格格式:{}", range);
+
             let mut data_validation: DataValidation = DataValidation::default();
             data_validation.set_formula1(format!("\"{}\"", constant::DATA_TYPE_KEYS.join(",")));
             data_validation.set_type(DataValidationValues::List);
@@ -157,6 +157,7 @@ pub fn write_excel(
 fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
     let max_row: u32 = gable_data.max_row + 1;
     let max_col: u16 = gable_data.max_col + 1;
+    let mut enum_cells: HashMap<u16, HashMap<u32, HashMap<u16, CellData>>> = HashMap::new();
     // 数据类型数据
     for col_index in 1..max_col {
         let cell_type_data: Option<&CellData> = gable_data
@@ -177,6 +178,52 @@ fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
         {
             continue;
         }
+
+        // 枚举单独设置
+        if cell_type == EDataType::ENUM {
+            let cell_link_data: Option<&CellData> = gable_data
+                .heads
+                .get(&constant::TABLE_DATA_ROW_LINK)
+                .and_then(|row| row.get(&col_index));
+            let cell_link_value: Option<&String> = if let Some(cell_link_data) = cell_link_data {
+                Some(&cell_link_data.value)
+            } else {
+                None
+            };
+            let datas: Option<HashMap<u32, HashMap<u16, CellData>>> =
+                if let Some(cell_link_value) = cell_link_value {
+                    gables::get_enum_cells(cell_link_value)
+                } else {
+                    None
+                };
+            if let Some(cells) = datas {
+                let mut formula_vec: Vec<String> = Vec::new();
+                for (_, r_d) in cells.iter() {
+                    if let Some(r_c) = r_d.get(&constant::TABLE_ENUM_COL_DESC) {
+                        if !r_c.value.is_empty() {
+                            formula_vec.push(r_c.value.clone());
+                        }
+                    }
+                }
+                let range: String = utils::cell_range(
+                    constant::TABLE_DATA_ROW_TOTAL,
+                    col_index as u32,
+                    max_col as u32,
+                    col_index,
+                );
+                let mut enum_validation: DataValidation = DataValidation::default();
+                enum_validation.set_formula1(format!("\"{}\"", formula_vec.join(",")));
+                enum_validation.set_type(DataValidationValues::List);
+                enum_validation
+                    .get_sequence_of_references_mut()
+                    .set_sqref(range);
+                let mut data_validations: DataValidations = DataValidations::default();
+                data_validations.add_data_validation_list(enum_validation);
+                worksheet.set_data_validations(data_validations);
+                enum_cells.insert(col_index, cells);
+            }
+        }
+
         for row_index in constant::TABLE_DATA_ROW_TOTAL..max_row {
             let cell: &mut Cell = worksheet.get_cell_mut((&(col_index as u32), &row_index));
             match cell_type {
@@ -205,7 +252,6 @@ fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
                         .get_number_format_mut()
                         .set_format_code(constant::NUMBER_FORMAT_DATE);
                 }
-                EDataType::ENUM => {}
                 _ => {}
             }
         }
@@ -229,6 +275,26 @@ fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
                         }
                         EDataType::TIME => cell.set_value_number(cell_data.parse_time()),
                         EDataType::DATE => cell.set_value_number(cell_data.parse_date()),
+                        EDataType::ENUM => {
+                            let mut cell_value = &cell_data.value;
+                            if let Some(enum_item_cells) = enum_cells.get(&col_index) {
+                                for (_, enum_row_cell) in enum_item_cells.iter() {
+                                    if let Some(enum_value_cell) =
+                                        enum_row_cell.get(&constant::TABLE_ENUM_COL_VALUE)
+                                    {
+                                        if enum_value_cell.value == cell_data.value {
+                                            if let Some(enum_desc_cell) =
+                                                enum_row_cell.get(&constant::TABLE_ENUM_COL_DESC)
+                                            {
+                                                cell_value = &enum_desc_cell.value;
+                                            }
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            cell.set_value(cell_value)
+                        }
                         _ => cell.set_value(&cell_data.value),
                     };
                 }

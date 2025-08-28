@@ -49,9 +49,13 @@ impl GableExplorer {
                 ScrollArea::vertical()
                     .auto_shrink([false; 2])
                     .show(ui, |ui| {
-                        let mut tree_items: MutexGuard<'_, Vec<TreeItem>> =
-                            gables::TREE_ITEMS.lock().unwrap();
-                        for item in tree_items.iter_mut() {
+                        let tree_items_clone: Vec<TreeItem> = {
+                            let tree_items: MutexGuard<'_, Vec<TreeItem>> =
+                                gables::TREE_ITEMS.lock().unwrap();
+                            tree_items.clone()
+                        };
+                        let mut updated_tree_items: Vec<TreeItem> = tree_items_clone.clone();
+                        for item in updated_tree_items.iter_mut() {
                             Self::gui_tree_item(
                                 ui,
                                 item,

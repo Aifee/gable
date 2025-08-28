@@ -45,6 +45,11 @@ pub const TABLE_KV_COL_LINK: u32 = 4;
 pub const TABLE_KV_COL_VALUE: u32 = 5;
 ///[KV表单]有效数据起始行数
 pub const TABLE_KV_ROW_TOTAL: u32 = 2;
+
+///[枚举表单]值列
+pub const TABLE_ENUM_COL_VALUE: u16 = 2;
+///[枚举表单]描述列
+pub const TABLE_ENUM_COL_DESC: u16 = 3;
 ///[枚举表单]有效数据起始行数
 pub const TABLE_ENUM_ROW_TOTAL: u32 = 2;
 

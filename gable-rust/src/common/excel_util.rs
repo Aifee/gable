@@ -2,6 +2,7 @@ use crate::{
     common::{constant, utils},
     gui::datas::{
         cell_data::CellData, edata_type::EDataType, esheet_type::ESheetType, gable_data::GableData,
+        gables,
     },
 };
 use std::{
@@ -422,6 +423,25 @@ pub fn write_gable(
 }
 
 fn write_gable_data(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u32, max_col: u32) {
+    // 收集所有enum的link信息
+    let mut links: HashMap<u32, HashMap<u32, HashMap<u16, CellData>>> = HashMap::new();
+    if max_row >= constant::TABLE_DATA_ROW_TOTAL {
+        for col_idx in 0..max_col {
+            let cell_link: Option<String> = if let Some(cell_link_cell) =
+                worksheet.get_cell((&col_idx, &constant::TABLE_DATA_ROW_LINK))
+            {
+                Some(cell_link_cell.get_value().to_string())
+            } else {
+                None
+            };
+            if let Some(cell_link_value) = cell_link {
+                if let Some(datas) = gables::get_enum_cells(&cell_link_value) {
+                    links.insert(col_idx, datas);
+                }
+            }
+        }
+    }
+
     for row_idx in 1..max_row {
         let mut row_data: HashMap<u16, CellData> = HashMap::new();
         let mut cell_type: EDataType = EDataType::STRING;
@@ -474,7 +494,28 @@ fn write_gable_data(worksheet: &Worksheet, gable_data: &mut GableData, max_row: 
                                 Err(_) => String::new(),
                             }
                         }
-                        EDataType::ENUM => value.to_string(),
+                        EDataType::ENUM => {
+                            let mut enum_datas: Option<&HashMap<u16, CellData>> = None;
+                            if let Some(datas) = links.get(&col_idx) {
+                                for (_, data_row) in datas.iter() {
+                                    if let Some(data) = data_row.get(&constant::TABLE_ENUM_COL_DESC)
+                                    {
+                                        if data.value == value {
+                                            enum_datas = Some(data_row);
+                                        }
+                                    }
+                                }
+                            };
+                            let mut cell_value = value.to_string();
+                            if let Some(enum_datas) = enum_datas {
+                                if let Some(enum_value) =
+                                    enum_datas.get(&constant::TABLE_ENUM_COL_VALUE)
+                                {
+                                    cell_value = enum_value.value.clone();
+                                }
+                            }
+                            cell_value
+                        }
                         _ => value.to_string(),
                     };
                     let cell_data: CellData =

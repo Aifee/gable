@@ -1,4 +1,5 @@
 use crate::common::{constant, excel_util, setting, utils};
+use crate::gui::datas::cell_data::CellData;
 use crate::gui::datas::{
     eitem_type::EItemType, esheet_type::ESheetType, gable_data::GableData, tree_data::TreeData,
     tree_item::TreeItem, watcher_data::WatcherData,
@@ -47,7 +48,7 @@ fn has_eidtor_file(file_path: String) -> (bool, Option<WatcherData>) {
 }
 
 /// 解析 .gable 文件名，返回 (excel_name, sheet_name) 或仅 excel_name
-pub(crate) fn parse_gable_filename(filename: &str) -> Option<(String, Option<String>)> {
+pub fn parse_gable_filename(filename: &str) -> Option<(String, Option<String>)> {
     if !filename.ends_with(constant::GABLE_FILE_TYPE) {
         return None;
     }
@@ -280,6 +281,40 @@ pub fn find_tree_item_by_path(path: &str, item_type: EItemType) -> Option<TreeIt
     } else {
         None
     }
+}
+
+fn get_enum_cells_item(
+    item: TreeItem,
+    link_name: &str,
+) -> Option<HashMap<u32, HashMap<u16, CellData>>> {
+    // 检查当前项是否匹配link_name且类型为ENUM
+    if let Some(ref item_link_name) = item.link_name {
+        if *item_link_name == link_name {
+            if let Some(ref tree_data) = item.data {
+                if tree_data.gable_type == ESheetType::ENUM {
+                    return Some(tree_data.content.cells.clone());
+                }
+            }
+        }
+    }
+
+    // 递归检查子项
+    for child in item.children {
+        if let Some(cells) = get_enum_cells_item(child, link_name.clone()) {
+            return Some(cells);
+        }
+    }
+
+    None
+}
+pub fn get_enum_cells(link_name: &str) -> Option<HashMap<u32, HashMap<u16, CellData>>> {
+    let tree_items_copy: Vec<TreeItem> = TREE_ITEMS.lock().unwrap().clone();
+    for root_item in tree_items_copy.iter() {
+        if let Some(cells) = get_enum_cells_item(root_item.clone(), link_name) {
+            return Some(cells);
+        }
+    }
+    None
 }
 
 /// 编辑gable文件
@@ -621,7 +656,6 @@ pub fn remove_item(fullpath: &str, item_type: &EItemType) -> bool {
     result
 }
 
-/// 请求从TREE_ITEMS树结构中移除条目
 /// 使用通道或其他机制在下一帧更新，避免锁冲突
 pub fn request_remove_item_from_tree(fullpath: String) {
     // 使用线程来延迟执行删除操作，避免当前上下文中的锁冲突

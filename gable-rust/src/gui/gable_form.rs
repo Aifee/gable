@@ -413,22 +413,89 @@ impl GableForm {
             row.col(|ui| {
                 ui.label(&row_index.to_string());
             });
-
             let row_data: Option<&BTreeMap<u16, CellData>> =
                 if row_index < constant::TABLE_KV_ROW_TOTAL {
                     sheet_content.heads.get(&row_index)
-                } else if row_index < total_rows {
+                } else if row_index <= total_rows {
                     sheet_content.cells.get(&row_index)
                 } else {
                     None
                 };
-
+            let mut cell_type: EDataType = EDataType::STRING;
+            let mut cell_link_value: Option<&String> = None;
             for col_index in 1..show_cols + 1 {
                 row.col(|ui| {
                     if let Some(row_data) = row_data {
                         if let Some(col_data) = row_data.get(&col_index) {
                             ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
-                            ui.add(Label::new(&col_data.value).truncate());
+
+                            if &col_index == &(constant::TABLE_KV_COL_TYPE as u16) {
+                                cell_type = utils::convert_data_type(&col_data.value);
+                            }
+                            if &col_index == &(constant::TABLE_KV_COL_LINK as u16) {
+                                cell_link_value = Some(&col_data.value);
+                            }
+                            if &col_index == &(constant::TABLE_KV_COL_VALUE as u16) {
+                                match cell_type {
+                                    EDataType::PERCENTAGE => {
+                                        ui.label(format!("{:.0}%", col_data.parse_float() * 100.0));
+                                    }
+                                    EDataType::PERMILLAGE => {
+                                        ui.label(format!(
+                                            "{:.0}‰",
+                                            col_data.parse_float() * 1000.0
+                                        ));
+                                    }
+                                    EDataType::PERMIAN => {
+                                        ui.label(format!(
+                                            "{:.0}‱",
+                                            col_data.parse_float() * 10000.0
+                                        ));
+                                    }
+                                    EDataType::TIME => {
+                                        ui.label(col_data.convert_time());
+                                    }
+                                    EDataType::DATE => {
+                                        ui.label(col_data.convert_date());
+                                    }
+                                    EDataType::ENUM => {
+                                        if let Some(cell_link_value) = cell_link_value {
+                                            if let Some(enum_cells) =
+                                                gables::get_enum_cells(cell_link_value)
+                                            {
+                                                for (_, enum_rows) in enum_cells.iter() {
+                                                    if let Some(enum_value_cell) = enum_rows
+                                                        .get(&constant::TABLE_ENUM_COL_VALUE)
+                                                    {
+                                                        if &enum_value_cell.value == &col_data.value
+                                                        {
+                                                            if let Some(enum_desc_cell) = enum_rows
+                                                                .get(
+                                                                (&constant::TABLE_ENUM_COL_DESC),
+                                                            ) {
+                                                                ui.add(
+                                                                    Label::new(
+                                                                        &enum_desc_cell.value,
+                                                                    )
+                                                                    .truncate(),
+                                                                );
+                                                            }
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            ui.add(Label::new(&col_data.value).truncate());
+                                        }
+                                    }
+                                    _ => {
+                                        ui.add(Label::new(&col_data.value).truncate());
+                                    }
+                                }
+                            } else {
+                                ui.add(Label::new(&col_data.value).truncate());
+                            }
                         } else {
                             ui.label("");
                         }

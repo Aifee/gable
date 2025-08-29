@@ -300,7 +300,7 @@ fn get_enum_cells_item(
 
     // 递归检查子项
     for child in item.children {
-        if let Some(cells) = get_enum_cells_item(child, link_name.clone()) {
+        if let Some(cells) = get_enum_cells_item(child, link_name) {
             return Some(cells);
         }
     }

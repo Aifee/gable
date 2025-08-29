@@ -1,16 +1,10 @@
-use crate::common::setting;
 use crate::gui::datas::gables;
-use eframe::egui::{
-    Align2, Color32, Context, MenuBar, TopBottomPanel, Vec2, ViewportCommand, Visuals, Window,
-};
-pub(crate) struct GableMenu {
-    show_about: bool, // 添加此字段用于控制关于窗口显示
-}
+use crate::{common::setting, gui::gable_popup};
+use eframe::egui::{Color32, Context, MenuBar, TopBottomPanel, ViewportCommand, Visuals};
+pub(crate) struct GableMenu {}
 impl GableMenu {
     pub fn new() -> Self {
-        Self {
-            show_about: false, // 初始化为false
-        }
+        Self {}
     }
 
     pub fn set_theme(&mut self, ctx: &Context, theme: &str) {
@@ -83,13 +77,15 @@ impl GableMenu {
                     }
                 });
                 ui.menu_button("编译", |ui| {
-                    if ui.button("编译设置").clicked() {}
+                    if ui.button("编译设置").clicked() {
+                        gable_popup::open_window(gable_popup::WINDOW_BUILD_SETTING);
+                    }
                     if ui.button("快速编译").clicked() {}
                 });
                 ui.menu_button("选择", |ui| if ui.button("导入Excel").clicked() {});
                 ui.menu_button("帮助", |ui| {
                     if ui.button("关于").clicked() {
-                        self.show_about = true; // 点击时设置为true
+                        gable_popup::open_window(gable_popup::WINDOW_ABOUT);
                     }
                     ui.menu_button("主题", |ui| {
                         if ui.button("Light").clicked() {
@@ -102,22 +98,5 @@ impl GableMenu {
                 });
             });
         });
-        if self.show_about {
-            Window::new("关于")
-                .open(&mut self.show_about) // 由 egui 控制 show_about 状态
-                .resizable(false)
-                .collapsible(false)
-                .anchor(Align2::CENTER_CENTER, Vec2::ZERO) // 居中显示
-                .show(ctx, |ui| {
-                    ui.vertical_centered(|ui| {
-                        ui.heading("Gable");
-                        ui.label("版本 1.0.0");
-                        ui.separator();
-                        ui.label("一个用于处理Excel文件的工具");
-                        ui.label("© liuaf 2025");
-                        ui.label("email:329737941@qq.com");
-                    });
-                });
-        }
     }
 }

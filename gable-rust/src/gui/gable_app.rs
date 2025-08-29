@@ -1,4 +1,5 @@
 use crate::common::{res, utils};
+use crate::gui::gable_popup::GablePopup;
 use crate::gui::{
     datas::eitem_type::EItemType, datas::gables, file_watcher::FileWatcher,
     gable_explorer::GableExplorer, gable_form::GableForm, gable_log::GableLog,
@@ -23,6 +24,8 @@ pub(crate) struct GableApp {
     gable_form: GableForm,
     /// 日志组件
     gable_log: GableLog,
+    /// 弹窗组件
+    gable_popup: GablePopup,
     /// 文件监控器
     #[allow(dead_code)]
     file_watcher: Option<FileWatcher>,
@@ -41,6 +44,7 @@ impl GableApp {
             gable_explorer: GableExplorer::new(),
             gable_form: GableForm::new(),
             gable_log: GableLog::new(),
+            gable_popup: GablePopup::new(),
             file_watcher: None,
         };
         app.gable_menu.set_theme(&cc.egui_ctx, "Dark");
@@ -174,7 +178,7 @@ impl App for GableApp {
         self.gable_explorer.ongui(ctx);
         self.gable_log.ongui(ctx);
         self.gable_form.ongui(ctx);
-
+        self.gable_popup.ongui(ctx);
         if let Some(double_clicked_path) = &self.gable_explorer.double_clicked_item {
             // 从TREE_ITEMS中查找对应的TreeItem
             if let Some(tree_item) =

@@ -82,22 +82,6 @@ pub fn write_excel(
                     continue;
                 }
             };
-            let range: String = utils::cell_range(
-                constant::TABLE_DATA_ROW_TYPE,
-                1,
-                constant::TABLE_DATA_ROW_TYPE,
-                gable_data.max_col,
-            );
-
-            let mut data_validation: DataValidation = DataValidation::default();
-            data_validation.set_formula1(format!("\"{}\"", constant::DATA_TYPE_KEYS.join(",")));
-            data_validation.set_type(DataValidationValues::List);
-            data_validation
-                .get_sequence_of_references_mut()
-                .set_sqref(range);
-            let mut data_validations = DataValidations::default();
-            data_validations.add_data_validation_list(data_validation);
-            worksheet.set_data_validations(data_validations);
 
             // 预先设置单元格格式，百分率，千分率，万分率，时间，枚举类型的单元格，如果按照数据填充的话有可能会设置不到
             // 但又不能全量遍历所有的单元格，故此只针对这几种类型单独设置单元格格式
@@ -157,6 +141,23 @@ pub fn write_excel(
 fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
     let max_row: u32 = gable_data.max_row + 1;
     let max_col: u16 = gable_data.max_col + 1;
+
+    // 数据类型下拉框
+    let range: String = utils::cell_range(
+        constant::TABLE_DATA_ROW_TYPE,
+        1,
+        constant::TABLE_DATA_ROW_TYPE,
+        gable_data.max_col,
+    );
+    let mut data_validation: DataValidation = DataValidation::default();
+    data_validation.set_formula1(format!("\"{}\"", constant::DATA_TYPE_KEYS.join(",")));
+    data_validation.set_type(DataValidationValues::List);
+    data_validation
+        .get_sequence_of_references_mut()
+        .set_sqref(range);
+    let mut data_validations = DataValidations::default();
+    data_validations.add_data_validation_list(data_validation);
+
     let mut enum_cells: BTreeMap<u16, BTreeMap<u32, BTreeMap<u16, CellData>>> = BTreeMap::new();
     // 数据类型数据
     for col_index in 1..max_col {
@@ -217,13 +218,10 @@ fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
                 enum_validation
                     .get_sequence_of_references_mut()
                     .set_sqref(range);
-                let mut data_validations: DataValidations = DataValidations::default();
                 data_validations.add_data_validation_list(enum_validation);
-                worksheet.set_data_validations(data_validations);
                 enum_cells.insert(col_index, cells);
             }
         }
-
         for row_index in constant::TABLE_DATA_ROW_TOTAL..max_row {
             let cell: &mut Cell = worksheet.get_cell_mut((&(col_index as u32), &row_index));
             match cell_type {
@@ -256,6 +254,10 @@ fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
             }
         }
     }
+
+    // 数据验证填充
+    worksheet.set_data_validations(data_validations);
+
     // 数据内容处理
     for (row_index, row_data) in &gable_data.cells {
         for (col_index, cell_data) in row_data {
@@ -308,42 +310,68 @@ fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
 fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
     let max_row: u32 = gable_data.max_row + 1;
 
+    // 数据类型下拉框
+    let range: String = utils::cell_range(
+        constant::TABLE_KV_ROW_TOTAL,
+        constant::TABLE_KV_COL_TYPE,
+        max_row,
+        constant::TABLE_KV_COL_TYPE as u16,
+    );
+    let mut data_validation: DataValidation = DataValidation::default();
+    data_validation.set_formula1(format!("\"{}\"", constant::DATA_TYPE_KEYS.join(",")));
+    data_validation.set_type(DataValidationValues::List);
+    data_validation
+        .get_sequence_of_references_mut()
+        .set_sqref(range);
+    let mut data_validations = DataValidations::default();
+    data_validations.add_data_validation_list(data_validation);
+
     // 数据类型处理
     for row_index in constant::TABLE_KV_ROW_TOTAL..max_row {
-        let cell_type_data: &mut Cell =
-            worksheet.get_cell_mut((&constant::TABLE_KV_COL_TYPE, &row_index));
-        let cell_type: EDataType = utils::convert_data_type(&cell_type_data.get_value());
-        let cell: &mut Cell = worksheet.get_cell_mut((&constant::TABLE_KV_COL_VALUE, &row_index));
-        match cell_type {
-            EDataType::PERCENTAGE => {
-                cell.get_style_mut()
-                    .get_number_format_mut()
-                    .set_format_code(constant::NUMBER_FORMAT_PERCENTAGE);
+        if let Some(cell_type_data) = gable_data
+            .cells
+            .get(&row_index)
+            .and_then(|row| row.get(&(constant::TABLE_KV_COL_TYPE as u16)))
+        {
+            let cell_type_value = &cell_type_data.value;
+            log::info!("value: {}", cell_type_value);
+            let cell_type: EDataType = utils::convert_data_type(&cell_type_value);
+            log::info!("type: {:?}", cell_type);
+            let cell: &mut Cell =
+                worksheet.get_cell_mut((&constant::TABLE_KV_COL_VALUE, &row_index));
+            match cell_type {
+                EDataType::PERCENTAGE => {
+                    cell.get_style_mut()
+                        .get_number_format_mut()
+                        .set_format_code(constant::NUMBER_FORMAT_PERCENTAGE);
+                }
+                EDataType::PERMILLAGE => {
+                    cell.get_style_mut()
+                        .get_number_format_mut()
+                        .set_format_code(constant::NUMBER_FORMAT_PERMILLAGE);
+                }
+                EDataType::PERMIAN => {
+                    cell.get_style_mut()
+                        .get_number_format_mut()
+                        .set_format_code(constant::NUMBER_FORMAT_PERMIAN);
+                }
+                EDataType::TIME => {
+                    cell.get_style_mut()
+                        .get_number_format_mut()
+                        .set_format_code(constant::NUMBER_FORMAT_TIME);
+                }
+                EDataType::DATE => {
+                    cell.get_style_mut()
+                        .get_number_format_mut()
+                        .set_format_code(constant::NUMBER_FORMAT_DATE);
+                }
+                EDataType::ENUM => {}
+                _ => {}
             }
-            EDataType::PERMILLAGE => {
-                cell.get_style_mut()
-                    .get_number_format_mut()
-                    .set_format_code(constant::NUMBER_FORMAT_PERMILLAGE);
-            }
-            EDataType::PERMIAN => {
-                cell.get_style_mut()
-                    .get_number_format_mut()
-                    .set_format_code(constant::NUMBER_FORMAT_PERMIAN);
-            }
-            EDataType::TIME => {
-                cell.get_style_mut()
-                    .get_number_format_mut()
-                    .set_format_code(constant::NUMBER_FORMAT_TIME);
-            }
-            EDataType::DATE => {
-                cell.get_style_mut()
-                    .get_number_format_mut()
-                    .set_format_code(constant::NUMBER_FORMAT_DATE);
-            }
-            EDataType::ENUM => {}
-            _ => {}
         }
     }
+    // 数据验证填充
+    worksheet.set_data_validations(data_validations);
     let mut cell_type_data_temp: Option<&CellData> = None;
     // 数据内容处理
     for (row_index, row_data) in &gable_data.cells {
@@ -627,42 +655,53 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
                 } else {
                     None
                 };
-                if !value.is_empty() {
-                    let cell_value: String = match cell_type {
-                        EDataType::PERMILLAGE => {
-                            let permillage_value: f64 = value.parse::<f64>().unwrap() / 1000.0;
-                            format!("{:.3}", permillage_value)
-                        }
-                        EDataType::PERMIAN => {
-                            let permian_value: f64 = value.parse::<f64>().unwrap() / 10000.0;
-                            format!("{:.4}", permian_value)
-                        }
-                        EDataType::TIME => match value.parse::<f64>() {
-                            Ok(decimal_time) => (decimal_time * 86400.0).round().to_string(),
-                            Err(_) => String::new(),
-                        },
-                        EDataType::DATE => {
-                            match value.parse::<f64>() {
-                                Ok(decimal_seconds) => {
-                                    // 将Excel/WPS的日期序列号转换为秒基准日期：1900年1月0日（Excel/WPS的起始点）
-                                    let days: i64 = decimal_seconds.floor() as i64;
-                                    let fraction = decimal_seconds - days as f64;
-                                    let total_seconds: i64 =
-                                        ((days - 1) * 86400) + (fraction * 86400.0).round() as i64;
-                                    total_seconds.to_string()
-                                }
-                                Err(_) => String::new(),
+                if col_idx == constant::TABLE_KV_COL_VALUE {
+                    if !value.is_empty() {
+                        let cell_value: String = match cell_type {
+                            EDataType::PERMILLAGE => {
+                                let permillage_value: f64 = value.parse::<f64>().unwrap() / 1000.0;
+                                format!("{:.3}", permillage_value)
                             }
+                            EDataType::PERMIAN => {
+                                let permian_value: f64 = value.parse::<f64>().unwrap() / 10000.0;
+                                format!("{:.4}", permian_value)
+                            }
+                            EDataType::TIME => match value.parse::<f64>() {
+                                Ok(decimal_time) => (decimal_time * 86400.0).round().to_string(),
+                                Err(_) => String::new(),
+                            },
+                            EDataType::DATE => {
+                                match value.parse::<f64>() {
+                                    Ok(decimal_seconds) => {
+                                        // 将Excel/WPS的日期序列号转换为秒基准日期：1900年1月0日（Excel/WPS的起始点）
+                                        let days: i64 = decimal_seconds.floor() as i64;
+                                        let fraction = decimal_seconds - days as f64;
+                                        let total_seconds: i64 = ((days - 1) * 86400)
+                                            + (fraction * 86400.0).round() as i64;
+                                        total_seconds.to_string()
+                                    }
+                                    Err(_) => String::new(),
+                                }
+                            }
+                            EDataType::ENUM => value.to_string(),
+                            _ => value.to_string(),
+                        };
+                        let cell_data: CellData =
+                            CellData::new(row_idx, col_idx as u16, cell_value, bc, fc);
+                        if cell_data.is_empty() {
+                            continue;
                         }
-                        EDataType::ENUM => value.to_string(),
-                        _ => value.to_string(),
-                    };
-                    let cell_data: CellData =
-                        CellData::new(row_idx, col_idx as u16, cell_value, bc, fc);
-                    if cell_data.is_empty() {
-                        continue;
+                        row_data.insert(col_idx as u16, cell_data);
                     }
-                    row_data.insert(col_idx as u16, cell_data);
+                } else {
+                    if !value.is_empty() {
+                        let cell_data: CellData =
+                            CellData::new(row_idx, col_idx as u16, value.to_string(), bc, fc);
+                        if cell_data.is_empty() {
+                            continue;
+                        }
+                        row_data.insert(col_idx as u16, cell_data);
+                    }
                 }
             }
         }

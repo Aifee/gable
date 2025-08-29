@@ -4,6 +4,7 @@ use crate::common::{constant, utils};
 use crate::gui::component;
 use crate::gui::datas::cell_data::CellData;
 use crate::gui::datas::edata_type::EDataType;
+use crate::gui::datas::gables;
 use crate::gui::datas::{esheet_type::ESheetType, gable_data::GableData, tree_item::TreeItem};
 use eframe::egui::Response;
 use eframe::egui::{
@@ -271,6 +272,7 @@ impl GableForm {
         let total_cols: u16 = sheet_content.max_col;
 
         let mut cell_types: HashMap<u16, EDataType> = HashMap::<u16, EDataType>::new();
+        let mut link_cells: HashMap<u16, BTreeMap<u32, BTreeMap<u16, CellData>>> = HashMap::new();
         // 先遍历列找出需要特殊处理的数据类型
         if total_rows >= constant::TABLE_DATA_ROW_TOTAL {
             for col_index in 1..total_cols + 1 {
@@ -280,6 +282,23 @@ impl GableForm {
                     let type_cell = row_type_data.get(&col_index);
                     if let Some(type_cell) = type_cell {
                         let cell_type: EDataType = utils::convert_data_type(&type_cell.value);
+                        // 枚举类型进行收集数据，供数据遍历时取值显示
+                        if cell_type == EDataType::ENUM {
+                            let row_link_data: Option<&BTreeMap<u16, CellData>> =
+                                sheet_content.heads.get(&constant::TABLE_DATA_ROW_LINK);
+                            if let Some(row_link_data) = row_link_data {
+                                let link_cell = row_link_data.get(&col_index);
+                                if let Some(link_cell) = link_cell {
+                                    if !link_cell.value.is_empty() {
+                                        if let Some(link_datas) =
+                                            gables::get_enum_cells(&link_cell.value)
+                                        {
+                                            link_cells.insert(col_index, link_datas);
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         cell_types.insert(col_index, cell_type);
                     }
                 }
@@ -333,6 +352,31 @@ impl GableForm {
                                         }
                                         EDataType::DATE => {
                                             ui.label(col_data.convert_date());
+                                        }
+                                        EDataType::ENUM => {
+                                            if let Some(link_datas) = link_cells.get(&col_index) {
+                                                for (_, link_data) in link_datas.iter() {
+                                                    if let Some(enum_value_cell) = link_data
+                                                        .get(&constant::TABLE_ENUM_COL_VALUE)
+                                                    {
+                                                        if enum_value_cell.value == col_data.value {
+                                                            if let Some(enum_desc_cell) = link_data
+                                                                .get(&constant::TABLE_ENUM_COL_DESC)
+                                                            {
+                                                                ui.add(
+                                                                    Label::new(
+                                                                        &enum_desc_cell.value,
+                                                                    )
+                                                                    .truncate(),
+                                                                );
+                                                            }
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                            } else {
+                                                ui.add(Label::new(&col_data.value).truncate());
+                                            }
                                         }
                                         _ => {
                                             ui.add(Label::new(&col_data.value).truncate());

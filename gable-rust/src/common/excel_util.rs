@@ -326,6 +326,7 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
     let mut data_validations = DataValidations::default();
     data_validations.add_data_validation_list(data_validation);
 
+    let mut enum_cells: BTreeMap<u32, BTreeMap<u32, BTreeMap<u16, CellData>>> = BTreeMap::new();
     // 数据类型处理
     for row_index in constant::TABLE_KV_ROW_TOTAL..max_row {
         if let Some(cell_type_data) = gable_data
@@ -334,9 +335,7 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
             .and_then(|row| row.get(&(constant::TABLE_KV_COL_TYPE as u16)))
         {
             let cell_type_value = &cell_type_data.value;
-            log::info!("value: {}", cell_type_value);
             let cell_type: EDataType = utils::convert_data_type(&cell_type_value);
-            log::info!("type: {:?}", cell_type);
             let cell: &mut Cell =
                 worksheet.get_cell_mut((&constant::TABLE_KV_COL_VALUE, &row_index));
             match cell_type {
@@ -365,7 +364,49 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
                         .get_number_format_mut()
                         .set_format_code(constant::NUMBER_FORMAT_DATE);
                 }
-                EDataType::ENUM => {}
+                EDataType::ENUM => {
+                    let cell_link_data: Option<&CellData> = gable_data
+                        .cells
+                        .get(&row_index)
+                        .and_then(|row| row.get(&(constant::TABLE_KV_COL_LINK as u16)));
+                    let cell_link_value: Option<&String> =
+                        if let Some(cell_link_data) = cell_link_data {
+                            Some(&cell_link_data.value)
+                        } else {
+                            None
+                        };
+                    let datas: Option<BTreeMap<u32, BTreeMap<u16, CellData>>> =
+                        if let Some(cell_link_value) = cell_link_value {
+                            gables::get_enum_cells(cell_link_value)
+                        } else {
+                            None
+                        };
+                    if let Some(cells) = datas {
+                        let mut formula_vec = Vec::new();
+                        for (_, r_d) in cells.iter() {
+                            if let Some(r_c) = r_d.get(&constant::TABLE_ENUM_COL_DESC) {
+                                if !r_c.value.is_empty() {
+                                    formula_vec.push(r_c.value.clone());
+                                }
+                            }
+                        }
+
+                        let range: String = utils::cell_range(
+                            row_index,
+                            constant::TABLE_KV_COL_VALUE,
+                            row_index,
+                            constant::TABLE_KV_COL_VALUE as u16,
+                        );
+                        let mut enum_validation = DataValidation::default();
+                        enum_validation.set_formula1(format!("\"{}\"", formula_vec.join(",")));
+                        enum_validation.set_type(DataValidationValues::List);
+                        enum_validation
+                            .get_sequence_of_references_mut()
+                            .set_sqref(range);
+                        data_validations.add_data_validation_list(enum_validation);
+                        enum_cells.insert(row_index, cells);
+                    }
+                }
                 _ => {}
             }
         }
@@ -395,6 +436,26 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
                         }
                         EDataType::TIME => cell.set_value_number(cell_data.parse_time()),
                         EDataType::DATE => cell.set_value_number(cell_data.parse_date()),
+                        EDataType::ENUM => {
+                            let mut cell_value = &cell_data.value;
+                            if let Some(enum_item_cells) = enum_cells.get(&row_index) {
+                                for (_, enum_row_cell) in enum_item_cells.iter() {
+                                    if let Some(enum_value_cell) =
+                                        enum_row_cell.get(&constant::TABLE_ENUM_COL_VALUE)
+                                    {
+                                        if enum_value_cell.value == cell_data.value {
+                                            if let Some(enum_desc_cell) =
+                                                enum_row_cell.get(&constant::TABLE_ENUM_COL_DESC)
+                                            {
+                                                cell_value = &enum_desc_cell.value;
+                                            }
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            cell.set_value(cell_value)
+                        }
                         _ => cell.set_value(&cell_data.value),
                     };
                 }
@@ -631,6 +692,7 @@ fn write_gable_data(worksheet: &Worksheet, gable_data: &mut GableData, max_row: 
     }
 }
 fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u32, max_col: u32) {
+    let mut link_cell_datas: Option<BTreeMap<u32, BTreeMap<u16, CellData>>> = None;
     // 读取数据并填充到GableData中
     for row_idx in 1..max_row {
         let mut row_data: BTreeMap<u16, CellData> = BTreeMap::new();
@@ -655,6 +717,13 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
                 } else {
                     None
                 };
+                if col_idx == constant::TABLE_KV_COL_LINK {
+                    if !value.is_empty() {
+                        link_cell_datas = gables::get_enum_cells(&value);
+                    } else {
+                        link_cell_datas = None;
+                    }
+                }
                 if col_idx == constant::TABLE_KV_COL_VALUE {
                     if !value.is_empty() {
                         let cell_value: String = match cell_type {
@@ -683,7 +752,29 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
                                     Err(_) => String::new(),
                                 }
                             }
-                            EDataType::ENUM => value.to_string(),
+                            EDataType::ENUM => {
+                                let mut enum_values: Option<&BTreeMap<u16, CellData>> = None;
+                                if let Some(datas) = &link_cell_datas {
+                                    for (_, enum_row) in datas.iter() {
+                                        if let Some(enum_cell) =
+                                            enum_row.get(&constant::TABLE_ENUM_COL_DESC)
+                                        {
+                                            if enum_cell.value == value {
+                                                enum_values = Some(enum_row);
+                                            }
+                                        }
+                                    }
+                                }
+                                let mut cell_value: String = value.to_string();
+                                if let Some(enum_datas) = enum_values {
+                                    if let Some(enum_value) =
+                                        enum_datas.get(&constant::TABLE_ENUM_COL_VALUE)
+                                    {
+                                        cell_value = enum_value.value.to_string();
+                                    }
+                                }
+                                cell_value
+                            }
                             _ => value.to_string(),
                         };
                         let cell_data: CellData =

@@ -40,7 +40,7 @@ impl GableExplorer {
 
     /// 绘制 treeview
     pub fn ongui(&mut self, ctx: &Context) {
-        SidePanel::left("my_gables_panel")
+        SidePanel::left("m_gables_panel")
             .min_width(150.0) // 设置最小宽度
             .max_width(800.0) // 设置最大宽度
             .resizable(true)

@@ -1,5 +1,5 @@
 // 开发语言类型类型
-//[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum EDevelopType {
     // C或C++语言
     c = 0,

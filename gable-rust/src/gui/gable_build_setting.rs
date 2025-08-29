@@ -1,13 +1,19 @@
+use crate::gui::datas::edevelop_type::EDevelopType;
 use eframe::egui::{
-    Align, CentralPanel, ComboBox, Context, Frame, Layout, SidePanel, Vec2, Window,
+    Align, Button, CentralPanel, ComboBox, Context, Frame, Layout, RichText, ScrollArea, Separator,
+    SidePanel, TopBottomPanel, Ui, Vec2, Window,
 };
 
 pub struct GableBuildSetting {
     pub visible: bool,
+    pub add_selected: EDevelopType,
 }
 impl GableBuildSetting {
     pub fn new() -> Self {
-        Self { visible: false }
+        Self {
+            visible: false,
+            add_selected: EDevelopType::c,
+        }
     }
 
     pub fn set_visible(&mut self, value: bool) {
@@ -15,94 +21,89 @@ impl GableBuildSetting {
     }
 
     pub fn ongui(&mut self, ctx: &Context) {
-        if !self.visible {
+        let Self {
+            visible,
+            add_selected,
+        } = self;
+
+        if !*visible {
             return;
         }
-        Window::new("构建设置")
-            .open(&mut self.visible)
+
+        let window = Window::new("构建设置")
             .resizable(true)
             .collapsible(false)
-            .fade_in(true)
-            .fade_out(true)
-            .min_width(450.0)
-            .min_height(600.0)
-            .show(ctx, |ui| {
-                SidePanel::left("m_buildsetting_panel")
-                    .min_width(50.0) // 设置最小宽度
-                    .default_width(150.0)
-                    .resizable(true)
-                    .show_inside(ui, |ui| {
-                        ui.vertical(|ui| {
-                            ui.heading("配置项");
-                            ui.separator();
-                            if ui.button("基本设置").clicked() {
-                                // 处理基本设置按钮点击
-                            }
-                            if ui.button("高级设置").clicked() {
-                                // 处理高级设置按钮点击
-                            }
-                            if ui.button("输出配置").clicked() {
-                                // 处理输出配置按钮点击
-                            }
-                        });
+            .default_width(960.0)
+            .default_height(600.0)
+            .vscroll(false)
+            .open(&mut self.visible);
+        window.show(ctx, |ui| {
+            SidePanel::left("left_panel")
+                .resizable(true)
+                .default_width(300.0)
+                .width_range(150.0..=700.0)
+                .show_inside(ui, |ui| {
+                    ui.heading("开发环境");
+                    ScrollArea::vertical().show(ui, |ui| {
+                        Self::lorem_ipsum(ui);
                     });
-                // 右侧面板（主要内容区域）
-                CentralPanel::default().show_inside(ui, |ui| {
-                    ui.vertical(|ui| {
-                        ui.heading("配置详情");
-                        ui.separator();
-                        ui.label("在这里显示选中配置项的详细内容");
-                        ui.add_space(10.0);
-
-                        // 示例内容
-                        ui.horizontal(|ui| {
-                            ui.label("配置名称:");
-                            ui.text_edit_singleline(&mut String::from("示例配置"));
+                    ComboBox::from_label("Take your pick")
+                        .selected_text(format!("{add_selected:?}"))
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(add_selected, EDevelopType::c, "C");
+                            ui.selectable_value(add_selected, EDevelopType::csharp, "Csharp");
+                            ui.selectable_value(add_selected, EDevelopType::cangjie, "Cangjie");
+                            ui.selectable_value(add_selected, EDevelopType::go, "Golang");
+                            ui.selectable_value(add_selected, EDevelopType::java, "Java");
+                            ui.selectable_value(
+                                add_selected,
+                                EDevelopType::javascript,
+                                "Javascript",
+                            );
+                            ui.selectable_value(add_selected, EDevelopType::lua, "Lua");
+                            ui.selectable_value(add_selected, EDevelopType::python, "Python");
+                            ui.selectable_value(
+                                add_selected,
+                                EDevelopType::typescript,
+                                "Typescript",
+                            );
                         });
+                });
 
-                        ui.add_space(5.0);
-
-                        ui.horizontal(|ui| {
-                            ui.label("输出路径:");
-                            ui.text_edit_singleline(&mut String::from("./output/"));
+            TopBottomPanel::bottom("bottom_panel")
+                .resizable(false)
+                .min_height(0.0)
+                .show_inside(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
+                            if ui.add_sized([165.0, 30.0], Button::new("构建")).clicked() {}
+                            if ui
+                                .add_sized([165.0, 30.0], Button::new("全部构建"))
+                                .clicked()
+                            {}
                         });
-
-                        ui.add_space(10.0);
-
-                        ui.horizontal(|ui| {
-                            ui.checkbox(&mut true, "启用优化");
-                            ui.add_space(10.0);
-                            ui.checkbox(&mut false, "生成调试信息");
-                        });
-
-                        ui.add_space(10.0);
-
-                        ui.horizontal(|ui| {
-                            ui.label("构建类型:");
-                            ComboBox::from_label("")
-                                .selected_text("Release")
-                                .show_ui(ui, |ui| {
-                                    ui.selectable_value(
-                                        &mut String::new(),
-                                        String::from("Debug"),
-                                        "Debug",
-                                    );
-                                    ui.selectable_value(
-                                        &mut String::new(),
-                                        String::from("Release"),
-                                        "Release",
-                                    );
-                                    ui.selectable_value(
-                                        &mut String::new(),
-                                        String::from("Profile"),
-                                        "Profile",
-                                    );
-                                });
-                        });
-
-                        ui.add_space(20.0);
                     });
                 });
+
+            CentralPanel::default().show_inside(ui, |ui| {
+                ui.vertical_centered(|ui| {
+                    ui.heading("Central Panel");
+                });
+                ScrollArea::vertical().show(ui, |ui| {
+                    Self::lorem_ipsum(ui);
+                });
             });
+        });
+    }
+
+    fn lorem_ipsum(ui: &mut Ui) {
+        ui.with_layout(
+            Layout::top_down(Align::LEFT).with_cross_justify(true),
+            |ui| {
+                ui.label(RichText::new("Lorem ipsum dolor sit amet").small().weak());
+                ui.add(Separator::default().grow(8.0));
+                ui.label(RichText::new("Lorem ipsum dolor sit amet").small().weak());
+            },
+        );
     }
 }

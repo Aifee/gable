@@ -37,7 +37,7 @@ pub fn load_texture(ctx: &Context, data: &[u8], name: &str) -> TextureHandle {
     let image_buffer: ImageBuffer<Rgba<u8>, Vec<u8>> = img.to_rgba8();
     let pixels: Vec<Color32> = image_buffer
         .pixels()
-        .map(|p| Color32::from_rgb(p[0], p[1], p[2]))
+        .map(|p| Color32::from_rgba_unmultiplied(p[0], p[1], p[2], p[3]))
         .collect();
     let color_image: ColorImage = ColorImage {
         size,

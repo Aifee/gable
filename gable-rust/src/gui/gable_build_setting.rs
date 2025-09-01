@@ -81,7 +81,7 @@ impl GableBuildSetting {
     fn ongui_left_panel(&mut self, ui: &mut Ui) {
         ui.heading("开发环境");
         let available_height = ui.available_height();
-        let combo_area_height = 50.0;
+        let combo_area_height = 40.0;
 
         ScrollArea::vertical()
             .auto_shrink(false)

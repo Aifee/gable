@@ -47,30 +47,53 @@ impl GableBuildSetting {
                 .default_width(300.0)
                 .width_range(300.0..=700.0)
                 .show_inside(ui, |ui| {
+                    ui.heading("开发环境");
+
+                    // 使用垂直布局将界面分为两部分
                     ui.vertical(|ui| {
-                        ui.heading("开发环境");
-                        ui.with_layout(Layout::top_down_justified(Align::Min), |ui| {
-                            ScrollArea::vertical().show(ui, |ui| {
+                        // 上半部分：ScrollArea 占据大部分空间
+                        let available_height = ui.available_height();
+                        let combo_area_height = 60.0; // ComboBox 区域的高度
+
+                        ScrollArea::vertical()
+                            .auto_shrink(false)
+                            .max_height(available_height - combo_area_height)
+                            .show(ui, |ui| {
                                 for v in dev_list.iter() {
                                     ui.label(v.to_string());
                                     ui.end_row();
                                 }
-                            });
-                        });
 
-                        ui.add_space(5.0);
+                                // 如果列表为空或内容较少，添加占位空间
+                                if dev_list.len() < 5 {
+                                    ui.add_space(ui.available_height() - 20.0);
+                                }
+                            });
+
+                        // 下半部分：固定在底部的 ComboBox
+                        ui.separator();
                         ui.horizontal(|ui| {
-                            ComboBox::from_id_salt("develop_type")
-                                .selected_text(format!("{add_selected:?}"))
-                                .show_ui(ui, |ui| {
-                                    for item in EDevelopType::iter() {
-                                        ui.selectable_value(add_selected, *item, item.to_string());
+                            ui.allocate_ui_with_layout(
+                                Vec2::new(ui.available_width(), combo_area_height - 10.0),
+                                Layout::left_to_right(Align::Center),
+                                |ui| {
+                                    ComboBox::from_id_salt("develop_type")
+                                        .selected_text(format!("{add_selected:?}"))
+                                        .show_ui(ui, |ui| {
+                                            for item in EDevelopType::iter() {
+                                                ui.selectable_value(
+                                                    add_selected,
+                                                    *item,
+                                                    item.to_string(),
+                                                );
+                                            }
+                                        });
+                                    if ui.add_sized([120.0, 26.0], Button::new("添加")).clicked()
+                                    {
+                                        dev_list.push(add_selected.clone());
                                     }
-                                });
-                            if ui.add_sized([120.0, 26.0], Button::new("添加")).clicked() {
-                                log::info!("添加:{add_selected:?}");
-                                dev_list.push(add_selected.clone());
-                            }
+                                },
+                            );
                         });
                     });
                 });
@@ -94,7 +117,7 @@ impl GableBuildSetting {
                 ui.vertical_centered(|ui| {
                     ui.heading("Central Panel");
                 });
-                ScrollArea::vertical().show(ui, |ui| {
+                ScrollArea::vertical().auto_shrink(false).show(ui, |ui| {
                     Self::lorem_ipsum(ui);
                 });
             });

@@ -1,11 +1,11 @@
+use crate::gui::datas::edevelop_type::EDevelopType;
 use eframe::egui::{Color32, ColorImage, Context, TextureHandle, TextureOptions, Vec2};
 use image::{DynamicImage, ImageBuffer, Rgba};
 
+pub const ICON_DEFUALT: &[u8] = include_bytes!(r"../../assets/icons/error.png");
 /// 字体资源
 pub const FONT_ASSETS: &[u8] = include_bytes!(r"../../assets/fonts/SourceHanSansSC-Normal.otf");
 pub const FONT_FALLBACK: &[u8] = include_bytes!(r"../../assets/fonts/fallback_font.ttf");
-
-// pub const ICON_DEFUALT: &[u8] = include_bytes!(r"../../assets/icons/error.png");
 
 // pub const ICON_SETTING: &[u8] = include_bytes!("../../assets/icons/setting.png");
 // pub const ICON_SEARCH: &[u8] = include_bytes!("../../assets/icons/search.png");
@@ -19,16 +19,16 @@ pub const FONT_FALLBACK: &[u8] = include_bytes!(r"../../assets/fonts/fallback_fo
 // pub const ICON_EXCEL: &[u8] = include_bytes!("../../assets/icons/excel.png");
 // pub const ICON_SHEET: &[u8] = include_bytes!("../../assets/icons/sheet.png");
 
-// pub const ICON_C: &[u8] = include_bytes!("../../assets/icons/c.png");
-// pub const ICON_CANGJIE: &[u8] = include_bytes!("../../assets/icons/cangjie.png");
-// pub const ICON_CSHARP: &[u8] = include_bytes!("../../assets/icons/csharp.png");
-// pub const ICON_GOLANG: &[u8] = include_bytes!("../../assets/icons/golang.png");
-// pub const ICON_JAVA: &[u8] = include_bytes!("../../assets/icons/java.png");
-// pub const ICON_JAVASCRIPT: &[u8] = include_bytes!("../../assets/icons/javascript.png");
-// pub const ICON_LUA: &[u8] = include_bytes!("../../assets/icons/lua.png");
-// pub const ICON_PYTHON: &[u8] = include_bytes!("../../assets/icons/python.png");
-// pub const ICON_TYPESCRIPT: &[u8] = include_bytes!("../../assets/icons/typescript.png");
-// pub const ICON_YAML: &[u8] = include_bytes!("../../assets/icons/yaml.png");
+pub const ICON_C: &[u8] = include_bytes!("../../assets/icons/c.png");
+pub const ICON_CANGJIE: &[u8] = include_bytes!("../../assets/icons/cangjie.png");
+pub const ICON_CSHARP: &[u8] = include_bytes!("../../assets/icons/csharp.png");
+pub const ICON_GOLANG: &[u8] = include_bytes!("../../assets/icons/golang.png");
+pub const ICON_JAVA: &[u8] = include_bytes!("../../assets/icons/java.png");
+pub const ICON_JAVASCRIPT: &[u8] = include_bytes!("../../assets/icons/javascript.png");
+pub const ICON_LUA: &[u8] = include_bytes!("../../assets/icons/lua.png");
+pub const ICON_PYTHON: &[u8] = include_bytes!("../../assets/icons/python.png");
+pub const ICON_TYPESCRIPT: &[u8] = include_bytes!("../../assets/icons/typescript.png");
+pub const ICON_YAML: &[u8] = include_bytes!("../../assets/icons/yaml.png");
 
 /// 加载图片
 pub fn load_texture(ctx: &Context, data: &[u8], name: &str) -> TextureHandle {
@@ -45,4 +45,20 @@ pub fn load_texture(ctx: &Context, data: &[u8], name: &str) -> TextureHandle {
         source_size: Vec2::new(size[0] as f32, size[1] as f32),
     };
     ctx.load_texture(name, color_image, TextureOptions::default())
+}
+/// 加载开发语言图标
+pub fn load_develop_icon(ctx: &Context, dev: &EDevelopType) -> TextureHandle {
+    let icon_texture = match dev {
+        EDevelopType::cpp => ICON_C,
+        EDevelopType::cangjie => ICON_CANGJIE,
+        EDevelopType::csharp => ICON_CSHARP,
+        EDevelopType::go => ICON_GOLANG,
+        EDevelopType::java => ICON_JAVA,
+        EDevelopType::javascript => ICON_JAVASCRIPT,
+        EDevelopType::lua => ICON_LUA,
+        EDevelopType::python => ICON_PYTHON,
+        EDevelopType::typescript => ICON_TYPESCRIPT,
+        _ => ICON_DEFUALT,
+    };
+    load_texture(ctx, icon_texture, dev.to_string())
 }

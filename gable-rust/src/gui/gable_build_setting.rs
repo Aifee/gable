@@ -1,7 +1,7 @@
-use crate::gui::datas::edevelop_type::EDevelopType;
+use crate::{common::res, gui::datas::edevelop_type::EDevelopType};
 use eframe::egui::{
-    Align, Button, CentralPanel, ComboBox, Context, Frame, Layout, RichText, ScrollArea, Separator,
-    SidePanel, TopBottomPanel, Ui, Vec2, Window,
+    Align, Button, CentralPanel, ComboBox, Context, Frame, Image, Layout, RichText, ScrollArea,
+    Separator, SidePanel, TopBottomPanel, Ui, Vec2, Window,
 };
 use serde::de::value;
 
@@ -56,7 +56,14 @@ impl GableBuildSetting {
                         .max_height(available_height - combo_area_height)
                         .show(ui, |ui| {
                             for v in dev_list.iter() {
-                                ui.label(v.to_string());
+                                ui.horizontal(|ui| {
+                                    let texture = res::load_develop_icon(ctx, v);
+                                    ui.add(
+                                        Image::new(&texture)
+                                            .fit_to_exact_size(Vec2::new(16.0, 16.0)),
+                                    );
+                                    ui.label(v.to_string());
+                                });
                                 ui.end_row();
                             }
                         });

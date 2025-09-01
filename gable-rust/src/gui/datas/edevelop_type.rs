@@ -28,7 +28,7 @@ impl EDevelopType {
         match self {
             EDevelopType::cpp => "C/C++",
             EDevelopType::csharp => "C#",
-            EDevelopType::cangjie => "Cangjie(仓颉)",
+            EDevelopType::cangjie => "Cangjie",
             EDevelopType::go => "Go",
             EDevelopType::java => "Java",
             EDevelopType::javascript => "JavaScript",
@@ -50,5 +50,18 @@ impl EDevelopType {
             EDevelopType::typescript,
         ];
         VARIANTS.iter()
+    }
+    pub fn to_keyword(&self) -> &'static str {
+        match self {
+            EDevelopType::cpp => "cpp",
+            EDevelopType::csharp => "csharp",
+            EDevelopType::cangjie => "cj",
+            EDevelopType::go => "go",
+            EDevelopType::java => "java",
+            EDevelopType::javascript => "js",
+            EDevelopType::lua => "lua",
+            EDevelopType::python => "py",
+            EDevelopType::typescript => "ts",
+        }
     }
 }

@@ -5,6 +5,8 @@ pub const DIR_TEMP: &str = "__Temps";
 pub const DIR_DATA: &str = "__Datas";
 pub const DIR_LOG: &str = "__Temps/__Logs";
 pub const IGNORED_DIRS: &[&str] = &[".vscode", ".git", "_log", DIR_TEMP, DIR_DATA];
+// 设置文件名
+pub const SETTING_PREFS: &str = "appPrefs.json";
 /// EXCEL文件扩展名
 pub const EXCEL_EXTENSION: &str = ".xlsx";
 /// 日期格时间格式

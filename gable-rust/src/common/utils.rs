@@ -81,6 +81,18 @@ pub fn get_temp_path() -> String {
     path
 }
 
+pub fn get_data_path() -> PathBuf {
+    let workspace: MutexGuard<'_, Option<String>> = setting::WORKSPACE.lock().unwrap();
+    let temp_dir = constant::DIR_DATA;
+    let path: PathBuf = PathBuf::from(workspace.as_ref().unwrap()).join(temp_dir);
+    if !path.exists() {
+        if let Err(e) = fs::create_dir_all(&path) {
+            log::error!("无法创建临时目录: {}", e);
+        }
+    }
+    path
+}
+
 /// 检查文件名是否合法
 pub fn is_valid_filename(name: &str) -> bool {
     // 检查是否为空

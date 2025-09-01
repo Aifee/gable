@@ -1,13 +1,17 @@
 use std::sync::MutexGuard;
 
 use crate::{
-    common::{res, setting, utils},
-    gui::datas::edevelop_type::EDevelopType,
+    common::{
+        res,
+        setting::{self, BuildSetting},
+        utils,
+    },
+    gui::datas::{edevelop_type::EDevelopType, etarget_type::ETargetType},
 };
 use eframe::egui::{
-    Align, Align2, Button, CentralPanel, Color32, ComboBox, Context, FontId, Frame, Image, Label,
-    Layout, Rect, Response, RichText, ScrollArea, Sense, Separator, SidePanel, TextureHandle,
-    TopBottomPanel, Ui, Vec2, Window,
+    Align, Align2, Button, CentralPanel, Color32, ComboBox, Context, FontId, Grid, Image, Layout,
+    Rect, Response, ScrollArea, Sense, SidePanel, TextEdit, TextureHandle, TopBottomPanel, Ui,
+    Vec2, Window,
 };
 
 pub struct GableBuildSetting {
@@ -60,7 +64,7 @@ impl GableBuildSetting {
 
             CentralPanel::default().show_inside(ui, |ui| {
                 ScrollArea::vertical().auto_shrink(false).show(ui, |ui| {
-                    Self::lorem_ipsum(ui);
+                    self.ongui_settings(ui);
                 });
             });
         });
@@ -69,11 +73,12 @@ impl GableBuildSetting {
 
     fn ongui_left_panel(&mut self, ui: &mut Ui) {
         ui.heading("开发环境");
-        let build_settings_clone = {
-            let build_settings = setting::BUILD_SETTINGS.lock().unwrap();
+        let build_settings_clone: Vec<setting::BuildSetting> = {
+            let build_settings: MutexGuard<'_, Vec<setting::BuildSetting>> =
+                setting::BUILD_SETTINGS.lock().unwrap();
             build_settings.clone()
         };
-        let build_settings = build_settings_clone.clone();
+        let build_settings: Vec<setting::BuildSetting> = build_settings_clone.clone();
 
         let available_height = ui.available_height();
         let combo_area_height = 40.0;
@@ -134,7 +139,9 @@ impl GableBuildSetting {
                     });
                 ui.add_space(5.0);
                 if ui.add_sized([120.0, 26.0], Button::new("添加")).clicked() {
-                    self.selected_index = setting::add_build_setting(self.add_selected);
+                    if let Some(index) = setting::add_build_setting(self.add_selected) {
+                        self.selected_index = index;
+                    }
                 }
             });
         });
@@ -151,14 +158,67 @@ impl GableBuildSetting {
             });
         });
     }
-    fn lorem_ipsum(ui: &mut Ui) {
-        ui.with_layout(
-            Layout::top_down(Align::LEFT).with_cross_justify(true),
-            |ui| {
-                ui.label(RichText::new("Lorem ipsum dolor sit amet").small().weak());
-                ui.add(Separator::default().grow(8.0));
-                ui.label(RichText::new("Lorem ipsum dolor sit amet").small().weak());
-            },
-        );
+    fn ongui_settings(&mut self, ui: &mut Ui) {
+        let mut build_settings: BuildSetting =
+            if let Some(build_settings) = setting::get_build_setting(self.selected_index) {
+                build_settings
+            } else {
+                return;
+            };
+        let before_settings = build_settings.clone();
+        Grid::new("my_grid")
+            .num_columns(2)
+            .spacing([40.0, 4.0])
+            .striped(true)
+            .show(ui, |ui| {
+                ui.label("develop:");
+                ui.label(build_settings.dev.to_string());
+                ui.end_row();
+
+                ui.label("alias:");
+                ui.add(
+                    TextEdit::singleline(&mut build_settings.display_name)
+                        .hint_text("Write something here"),
+                );
+                ui.end_row();
+
+                ui.label("keyword:");
+                ui.add(
+                    TextEdit::singleline(&mut build_settings.keyword)
+                        .hint_text("Write something here"),
+                );
+                ui.end_row();
+
+                ui.label("target_type:");
+                ComboBox::from_id_salt("build_settings.target_type")
+                    .selected_text(format!("{:?}", build_settings.target_type))
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(
+                            &mut build_settings.target_type,
+                            ETargetType::JSON,
+                            "Json",
+                        );
+                        ui.selectable_value(
+                            &mut build_settings.target_type,
+                            ETargetType::CSV,
+                            "CSV",
+                        );
+                        ui.selectable_value(
+                            &mut build_settings.target_type,
+                            ETargetType::PROTOBUFF,
+                            "Protobuff",
+                        );
+                    });
+                ui.end_row();
+
+                ui.label("target_path:");
+                ui.label(build_settings.target_path.to_string_lossy().to_string());
+                ui.end_row();
+            });
+        if build_settings != before_settings {
+            if let Err(e) = setting::update_build_setting(self.selected_index, build_settings) {
+                log::error!("Failed to update build setting: {}", e);
+            }
+        }
     }
 }

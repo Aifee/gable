@@ -51,9 +51,8 @@ impl GableBuildSetting {
 
                     // 使用垂直布局将界面分为两部分
                     ui.vertical(|ui| {
-                        // 上半部分：ScrollArea 占据大部分空间
                         let available_height = ui.available_height();
-                        let combo_area_height = 60.0; // ComboBox 区域的高度
+                        let combo_area_height = 60.0;
 
                         ScrollArea::vertical()
                             .auto_shrink(false)
@@ -63,14 +62,8 @@ impl GableBuildSetting {
                                     ui.label(v.to_string());
                                     ui.end_row();
                                 }
-
-                                // 如果列表为空或内容较少，添加占位空间
-                                if dev_list.len() < 5 {
-                                    ui.add_space(ui.available_height() - 20.0);
-                                }
                             });
 
-                        // 下半部分：固定在底部的 ComboBox
                         ui.separator();
                         ui.horizontal(|ui| {
                             ui.allocate_ui_with_layout(

@@ -55,15 +55,7 @@ impl GableBuildSetting {
                 .resizable(false)
                 .min_height(0.0)
                 .show_inside(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
-                            if ui.add_sized([165.0, 26.0], Button::new("构建")).clicked() {}
-                            if ui
-                                .add_sized([165.0, 26.0], Button::new("全部构建"))
-                                .clicked()
-                            {}
-                        });
-                    });
+                    self.ongui_bottom_panel(ui);
                 });
 
             CentralPanel::default().show_inside(ui, |ui| {
@@ -146,6 +138,17 @@ impl GableBuildSetting {
         });
     }
 
+    fn ongui_bottom_panel(&mut self, ui: &mut Ui) {
+        ui.horizontal(|ui| {
+            ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
+                if ui.add_sized([165.0, 26.0], Button::new("构建")).clicked() {}
+                if ui
+                    .add_sized([165.0, 26.0], Button::new("全部构建"))
+                    .clicked()
+                {}
+            });
+        });
+    }
     fn lorem_ipsum(ui: &mut Ui) {
         ui.with_layout(
             Layout::top_down(Align::LEFT).with_cross_justify(true),

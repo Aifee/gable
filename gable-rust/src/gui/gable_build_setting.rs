@@ -3,16 +3,19 @@ use eframe::egui::{
     Align, Button, CentralPanel, ComboBox, Context, Frame, Layout, RichText, ScrollArea, Separator,
     SidePanel, TopBottomPanel, Ui, Vec2, Window,
 };
+use serde::de::value;
 
 pub struct GableBuildSetting {
     pub visible: bool,
     pub add_selected: EDevelopType,
+    pub dev_list: Vec<EDevelopType>,
 }
 impl GableBuildSetting {
     pub fn new() -> Self {
         Self {
-            visible: false,
-            add_selected: EDevelopType::c,
+            visible: true,
+            add_selected: EDevelopType::cpp,
+            dev_list: Vec::new(),
         }
     }
 
@@ -24,6 +27,7 @@ impl GableBuildSetting {
         let Self {
             visible,
             add_selected,
+            dev_list,
         } = self;
 
         if !*visible {
@@ -41,33 +45,34 @@ impl GableBuildSetting {
             SidePanel::left("left_panel")
                 .resizable(true)
                 .default_width(300.0)
-                .width_range(150.0..=700.0)
+                .width_range(300.0..=700.0)
                 .show_inside(ui, |ui| {
-                    ui.heading("开发环境");
-                    ScrollArea::vertical().show(ui, |ui| {
-                        Self::lorem_ipsum(ui);
-                    });
-                    ComboBox::from_label("Take your pick")
-                        .selected_text(format!("{add_selected:?}"))
-                        .show_ui(ui, |ui| {
-                            ui.selectable_value(add_selected, EDevelopType::c, "C");
-                            ui.selectable_value(add_selected, EDevelopType::csharp, "Csharp");
-                            ui.selectable_value(add_selected, EDevelopType::cangjie, "Cangjie");
-                            ui.selectable_value(add_selected, EDevelopType::go, "Golang");
-                            ui.selectable_value(add_selected, EDevelopType::java, "Java");
-                            ui.selectable_value(
-                                add_selected,
-                                EDevelopType::javascript,
-                                "Javascript",
-                            );
-                            ui.selectable_value(add_selected, EDevelopType::lua, "Lua");
-                            ui.selectable_value(add_selected, EDevelopType::python, "Python");
-                            ui.selectable_value(
-                                add_selected,
-                                EDevelopType::typescript,
-                                "Typescript",
-                            );
+                    ui.vertical(|ui| {
+                        ui.heading("开发环境");
+                        ui.with_layout(Layout::top_down_justified(Align::Min), |ui| {
+                            ScrollArea::vertical().show(ui, |ui| {
+                                for v in dev_list.iter() {
+                                    ui.label(v.to_string());
+                                    ui.end_row();
+                                }
+                            });
                         });
+
+                        ui.add_space(5.0);
+                        ui.horizontal(|ui| {
+                            ComboBox::from_id_salt("develop_type")
+                                .selected_text(format!("{add_selected:?}"))
+                                .show_ui(ui, |ui| {
+                                    for item in EDevelopType::iter() {
+                                        ui.selectable_value(add_selected, *item, item.to_string());
+                                    }
+                                });
+                            if ui.add_sized([120.0, 26.0], Button::new("添加")).clicked() {
+                                log::info!("添加:{add_selected:?}");
+                                dev_list.push(add_selected.clone());
+                            }
+                        });
+                    });
                 });
 
             TopBottomPanel::bottom("bottom_panel")
@@ -76,9 +81,9 @@ impl GableBuildSetting {
                 .show_inside(ui, |ui| {
                     ui.horizontal(|ui| {
                         ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
-                            if ui.add_sized([165.0, 30.0], Button::new("构建")).clicked() {}
+                            if ui.add_sized([165.0, 26.0], Button::new("构建")).clicked() {}
                             if ui
-                                .add_sized([165.0, 30.0], Button::new("全部构建"))
+                                .add_sized([165.0, 26.0], Button::new("全部构建"))
                                 .clicked()
                             {}
                         });

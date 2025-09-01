@@ -1,8 +1,8 @@
 // 开发语言类型类型
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Copy)]
 pub enum EDevelopType {
     // C或C++语言
-    c = 0,
+    cpp = 0,
     // C//语言
     csharp = 1,
     // Cangjie语言
@@ -19,4 +19,34 @@ pub enum EDevelopType {
     python = 7,
     // typescript语言
     typescript = 8,
+}
+
+impl EDevelopType {
+    pub fn to_string(&self) -> &'static str {
+        match self {
+            EDevelopType::cpp => "C/C++",
+            EDevelopType::csharp => "C#",
+            EDevelopType::cangjie => "Cangjie(仓颉)",
+            EDevelopType::go => "Go",
+            EDevelopType::java => "Java",
+            EDevelopType::javascript => "JavaScript",
+            EDevelopType::lua => "Lua",
+            EDevelopType::python => "Python",
+            EDevelopType::typescript => "TypeScript",
+        }
+    }
+    pub fn iter() -> std::slice::Iter<'static, EDevelopType> {
+        static VARIANTS: &[EDevelopType] = &[
+            EDevelopType::cpp,
+            EDevelopType::csharp,
+            EDevelopType::cangjie,
+            EDevelopType::go,
+            EDevelopType::java,
+            EDevelopType::javascript,
+            EDevelopType::lua,
+            EDevelopType::python,
+            EDevelopType::typescript,
+        ];
+        VARIANTS.iter()
+    }
 }

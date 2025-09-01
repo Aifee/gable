@@ -48,45 +48,33 @@ impl GableBuildSetting {
                 .width_range(300.0..=700.0)
                 .show_inside(ui, |ui| {
                     ui.heading("开发环境");
+                    let available_height = ui.available_height();
+                    let combo_area_height = 50.0;
 
-                    // 使用垂直布局将界面分为两部分
-                    ui.vertical(|ui| {
-                        let available_height = ui.available_height();
-                        let combo_area_height = 60.0;
+                    ScrollArea::vertical()
+                        .auto_shrink(false)
+                        .max_height(available_height - combo_area_height)
+                        .show(ui, |ui| {
+                            for v in dev_list.iter() {
+                                ui.label(v.to_string());
+                                ui.end_row();
+                            }
+                        });
 
-                        ScrollArea::vertical()
-                            .auto_shrink(false)
-                            .max_height(available_height - combo_area_height)
-                            .show(ui, |ui| {
-                                for v in dev_list.iter() {
-                                    ui.label(v.to_string());
-                                    ui.end_row();
-                                }
-                            });
-
-                        ui.separator();
+                    ui.separator();
+                    ui.vertical_centered(|ui| {
                         ui.horizontal(|ui| {
-                            ui.allocate_ui_with_layout(
-                                Vec2::new(ui.available_width(), combo_area_height - 10.0),
-                                Layout::left_to_right(Align::Center),
-                                |ui| {
-                                    ComboBox::from_id_salt("develop_type")
-                                        .selected_text(format!("{add_selected:?}"))
-                                        .show_ui(ui, |ui| {
-                                            for item in EDevelopType::iter() {
-                                                ui.selectable_value(
-                                                    add_selected,
-                                                    *item,
-                                                    item.to_string(),
-                                                );
-                                            }
-                                        });
-                                    if ui.add_sized([120.0, 26.0], Button::new("添加")).clicked()
-                                    {
-                                        dev_list.push(add_selected.clone());
+                            ComboBox::from_id_salt("develop_type")
+                                .selected_text(format!("{add_selected:?}"))
+                                .show_ui(ui, |ui| {
+                                    for item in EDevelopType::iter() {
+                                        ui.selectable_value(add_selected, *item, item.to_string());
                                     }
-                                },
-                            );
+                                });
+                            ui.add_space(5.0);
+                            if ui.add_sized([120.0, 26.0], Button::new("添加")).clicked() {
+                                dev_list.push(add_selected.clone());
+                            }
                         });
                     });
                 });

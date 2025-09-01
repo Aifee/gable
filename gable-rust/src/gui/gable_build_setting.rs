@@ -1,7 +1,10 @@
-use crate::{common::res, gui::datas::edevelop_type::EDevelopType};
+use crate::{
+    common::{res, utils},
+    gui::datas::edevelop_type::EDevelopType,
+};
 use eframe::egui::{
-    Align, Button, CentralPanel, ComboBox, Context, Frame, Image, Layout, RichText, ScrollArea,
-    Separator, SidePanel, TopBottomPanel, Ui, Vec2, Window,
+    Align, Button, CentralPanel, Color32, ComboBox, Context, Frame, Image, Layout, RichText,
+    ScrollArea, Sense, Separator, SidePanel, TopBottomPanel, Ui, Vec2, Window,
 };
 use serde::de::value;
 
@@ -9,6 +12,7 @@ pub struct GableBuildSetting {
     pub visible: bool,
     pub add_selected: EDevelopType,
     pub dev_list: Vec<EDevelopType>,
+    pub selected_index: usize,
 }
 impl GableBuildSetting {
     pub fn new() -> Self {
@@ -16,6 +20,7 @@ impl GableBuildSetting {
             visible: true,
             add_selected: EDevelopType::cpp,
             dev_list: Vec::new(),
+            selected_index: 0,
         }
     }
 
@@ -28,6 +33,7 @@ impl GableBuildSetting {
             visible,
             add_selected,
             dev_list,
+            selected_index,
         } = self;
 
         if !*visible {
@@ -55,16 +61,42 @@ impl GableBuildSetting {
                         .auto_shrink(false)
                         .max_height(available_height - combo_area_height)
                         .show(ui, |ui| {
-                            for v in dev_list.iter() {
+                            let button_width = ui.available_width() - 30.0;
+                            for (index, v) in dev_list.iter().enumerate() {
+                                let texture = res::load_develop_icon(ctx, v);
+                                let image = Image::new(&texture)
+                                    .tint(Color32::WHITE)
+                                    .fit_to_exact_size(Vec2::new(24.0, 24.0));
+                                let button_size: Vec2 = Vec2::new(button_width, 40.0);
                                 ui.horizontal(|ui| {
-                                    let texture = res::load_develop_icon(ctx, v);
-                                    ui.add(
-                                        Image::new(&texture)
-                                            .fit_to_exact_size(Vec2::new(16.0, 16.0)),
-                                    );
-                                    ui.label(v.to_string());
+                                    let tab_button = Button::new("")
+                                        .fill(if *selected_index == index {
+                                            utils::get_selected_color(ctx)
+                                        } else {
+                                            Color32::TRANSPARENT
+                                        })
+                                        .min_size(Vec2::new(button_size.x - 20.0, button_size.y));
+
+                                    let response = ui.add_sized(button_size, tab_button);
+                                    if response.clicked() {
+                                        *selected_index = index;
+                                    }
+
+                                    // 手动在按钮内绘制图标和文本
+                                    let rect = response.rect;
+                                    ui.put(rect, |ui: &mut Ui| {
+                                        ui.horizontal(|ui| {
+                                            ui.add_space(8.0); // 左边距
+                                            ui.add(image);
+                                            ui.add_space(8.0); // 图标和文本之间的空间
+                                            ui.label(v.to_string());
+                                        });
+                                        ui.allocate_rect(
+                                            ui.available_rect_before_wrap(),
+                                            Sense::hover(),
+                                        )
+                                    });
                                 });
-                                ui.end_row();
                             }
                         });
 

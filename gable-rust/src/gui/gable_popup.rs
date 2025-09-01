@@ -20,13 +20,6 @@ pub fn open_window(id: u16) {
     popups.push(WindowParams { id, action: true });
 }
 
-// pub fn close_window(id: u16) {
-//     let mut popups: MutexGuard<'_, Vec<WindowParams>> = POPUPS.lock().unwrap();
-//     if let Some(index) = popups.iter().position(|x| x.id == id) {
-//         popups.remove(index);
-//     }
-// }
-
 pub struct GablePopup {
     pub gable_about: GableAbout,
     pub gable_build_setting: GableBuildSetting,

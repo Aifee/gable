@@ -1,5 +1,7 @@
+use std::sync::MutexGuard;
+
 use crate::{
-    common::{res, utils},
+    common::{res, setting, utils},
     gui::datas::edevelop_type::EDevelopType,
 };
 use eframe::egui::{
@@ -11,7 +13,6 @@ use eframe::egui::{
 pub struct GableBuildSetting {
     pub visible: bool,
     pub add_selected: EDevelopType,
-    pub dev_list: Vec<EDevelopType>,
     pub selected_index: usize,
 }
 impl GableBuildSetting {
@@ -19,7 +20,6 @@ impl GableBuildSetting {
         Self {
             visible: true,
             add_selected: EDevelopType::cpp,
-            dev_list: Vec::new(),
             selected_index: 0,
         }
     }
@@ -59,9 +59,6 @@ impl GableBuildSetting {
                 });
 
             CentralPanel::default().show_inside(ui, |ui| {
-                ui.vertical_centered(|ui| {
-                    ui.heading("Central Panel");
-                });
                 ScrollArea::vertical().auto_shrink(false).show(ui, |ui| {
                     Self::lorem_ipsum(ui);
                 });
@@ -72,15 +69,20 @@ impl GableBuildSetting {
 
     fn ongui_left_panel(&mut self, ui: &mut Ui) {
         ui.heading("开发环境");
+        let build_settings_clone = {
+            let build_settings = setting::BUILD_SETTINGS.lock().unwrap();
+            build_settings.clone()
+        };
+        let build_settings = build_settings_clone.clone();
+
         let available_height = ui.available_height();
         let combo_area_height = 40.0;
-
         ScrollArea::vertical()
             .auto_shrink(false)
             .max_height(available_height - combo_area_height)
             .show(ui, |ui| {
-                for (index, v) in self.dev_list.iter().enumerate() {
-                    let texture: TextureHandle = res::load_develop_icon(ui.ctx(), v);
+                for (index, v) in build_settings.iter().enumerate() {
+                    let texture: TextureHandle = res::load_develop_icon(ui.ctx(), &v.dev);
                     let image: Image<'_> = Image::new(&texture)
                         .tint(Color32::WHITE)
                         .fit_to_exact_size(Vec2::new(24.0, 24.0));
@@ -109,7 +111,7 @@ impl GableBuildSetting {
                                     ui.available_rect_before_wrap().left_top()
                                         + Vec2::new(0.0, 18.0),
                                     Align2::LEFT_CENTER,
-                                    v.to_string(),
+                                    &v.display_name,
                                     FontId::default(),
                                     ui.style().visuals.text_color(),
                                 );
@@ -132,7 +134,7 @@ impl GableBuildSetting {
                     });
                 ui.add_space(5.0);
                 if ui.add_sized([120.0, 26.0], Button::new("添加")).clicked() {
-                    self.dev_list.push(self.add_selected.clone());
+                    self.selected_index = setting::add_build_setting(self.add_selected);
                 }
             });
         });

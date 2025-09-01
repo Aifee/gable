@@ -1,5 +1,7 @@
+use serde::{Deserialize, Serialize};
+
 // 开发语言类型类型
-#[derive(Debug, Clone, PartialEq, Copy)]
+#[derive(Debug, Clone, PartialEq, Copy, Serialize, Deserialize)]
 pub enum EDevelopType {
     // C或C++语言
     cpp = 0,

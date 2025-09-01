@@ -15,6 +15,7 @@ pub mod datas {
     pub mod edevelop_type;
     pub mod eitem_type;
     pub mod esheet_type;
+    pub mod etarget_type;
     pub mod gable_data;
     pub mod gables;
     pub mod log;

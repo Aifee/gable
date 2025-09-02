@@ -1,5 +1,5 @@
 use crate::{
-    common::{constant, utils},
+    common::{constant, setting, utils},
     gui::datas::{
         cell_data::CellData, edata_type::EDataType, esheet_type::ESheetType, gable_data::GableData,
         gables,
@@ -41,8 +41,8 @@ pub fn write_excel(
     gable_files: Vec<String>,
 ) -> Result<String, Box<dyn Error>> {
     let file_name: &str = &format!("{}{}", &excel_name, &constant::EXCEL_EXTENSION);
-    let tem_path: String = utils::get_temp_path();
-    let excel_file_path_tem: String = PathBuf::from(&tem_path)
+    let tem_path: PathBuf = setting::get_temp_path();
+    let excel_file_path_tem: String = tem_path
         .join(&format!("~${}", &file_name))
         .to_string_lossy()
         .to_string();

@@ -1,4 +1,4 @@
-use crate::common::{res, utils};
+use crate::common::{res, setting, utils};
 use crate::gui::gable_popup::GablePopup;
 use crate::gui::{
     datas::eitem_type::EItemType, datas::gables, file_watcher::FileWatcher,
@@ -10,6 +10,7 @@ use eframe::egui::{
 };
 use eframe::emath::History;
 use eframe::{App, CreationContext, Frame};
+use std::path::PathBuf;
 use std::sync::Arc;
 
 pub(crate) struct GableApp {
@@ -48,6 +49,7 @@ impl GableApp {
             file_watcher: None,
         };
         app.gable_menu.set_theme(&cc.egui_ctx, "Dark");
+        setting::init();
         gables::refresh_gables();
         app.init_watcher();
         app
@@ -125,7 +127,7 @@ impl GableApp {
         // 初始化文件监控器
         match FileWatcher::new() {
             Ok(mut file_watcher) => {
-                let temp_path: String = utils::get_temp_path();
+                let temp_path: PathBuf = setting::get_temp_path();
                 if let Err(e) = file_watcher.watch_temp_directory(temp_path) {
                     log::error!("无法监控临时目录: {}", e);
                 } else {
@@ -161,7 +163,7 @@ impl GableApp {
     fn gui_title(&mut self, ctx: &Context) {
         let info: String = format!(
             "{}                         CPU usage: {:.2} ms/frame. FPS: {:.1}",
-            utils::get_title(),
+            setting::get_title(),
             1e3 * self.mean_frame_time(),
             self.fps(),
         );
@@ -180,7 +182,6 @@ impl App for GableApp {
         self.gable_form.ongui(ctx);
         self.gable_popup.ongui(ctx);
         if let Some(double_clicked_path) = &self.gable_explorer.double_clicked_item {
-            // 从TREE_ITEMS中查找对应的TreeItem
             if let Some(tree_item) =
                 gables::find_tree_item_by_path(double_clicked_path, EItemType::Excel)
             {

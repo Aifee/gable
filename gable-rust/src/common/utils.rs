@@ -54,47 +54,6 @@ pub fn get_selected_color(ctx: &Context) -> Color32 {
     }
 }
 
-/// 获取窗口标题
-pub fn get_title() -> String {
-    let workspace: MutexGuard<'_, Option<String>> = setting::WORKSPACE.lock().unwrap();
-    format!(
-        "Gable - {}",
-        workspace.as_ref().unwrap_or(&"Unknown".to_string())
-    )
-}
-
-/// 获取临时目录
-pub fn get_temp_path() -> String {
-    let workspace: MutexGuard<'_, Option<String>> = setting::WORKSPACE.lock().unwrap();
-    let temp_dir = constant::DIR_TEMP;
-    let path: String = PathBuf::from(workspace.as_ref().unwrap())
-        .join(temp_dir)
-        .to_string_lossy()
-        .to_string();
-    let path_temp = Path::new(&path);
-    if !path_temp.exists() {
-        if let Err(e) = fs::create_dir_all(path_temp) {
-            log::error!("无法创建临时目录: {}", e);
-        }
-    }
-
-    path
-}
-
-/// 获取数据目录
-pub fn get_data_path() -> PathBuf {
-    let exe_path: PathBuf = std::env::current_exe().expect("无法获取当前可执行文件路径");
-    let exe_dir: &Path = exe_path.parent().expect("无法获取可执行文件所在目录");
-    let temp_dir: &str = constant::DIR_DATA;
-    let path: PathBuf = exe_dir.join(temp_dir);
-    if !path.exists() {
-        if let Err(e) = fs::create_dir_all(&path) {
-            log::error!("无法创建临时目录: {}", e);
-        }
-    }
-    path
-}
-
 /// 绝对路径转换成exe相对路径
 pub fn get_env_relative_path(path: String) -> PathBuf {
     let absolute_path: &Path = Path::new(&path);

@@ -31,11 +31,10 @@ impl FileWatcher {
         })
     }
 
-    pub fn watch_temp_directory(&mut self, path: String) -> Result<()> {
-        log::info!("开始监控目录: {}", path);
+    pub fn watch_temp_directory(&mut self, path: PathBuf) -> Result<()> {
+        log::info!("开始监控目录: {}", &path.to_string_lossy().to_string());
         // 监控临时目录，非递归模式
-        self.watcher
-            .watch(Path::new(&path), RecursiveMode::NonRecursive)?;
+        self.watcher.watch(&path, RecursiveMode::NonRecursive)?;
 
         Ok(())
     }

@@ -1,5 +1,3 @@
-use std::sync::MutexGuard;
-
 use crate::{
     common::{
         res,
@@ -9,9 +7,9 @@ use crate::{
     gui::datas::{edevelop_type::EDevelopType, etarget_type::ETargetType},
 };
 use eframe::egui::{
-    self, Align, Align2, Button, CentralPanel, Color32, ComboBox, Context, FontId, Frame, Image,
-    Label, Layout, Rect, Response, ScrollArea, Sense, SidePanel, TextEdit, TextureHandle,
-    TopBottomPanel, Ui, Vec2, Window,
+    self, Align, Align2, Button, CentralPanel, Color32, ComboBox, Context, FontId, Image, Label,
+    Layout, Rect, Response, ScrollArea, Sense, SidePanel, TextEdit, TextureHandle, TopBottomPanel,
+    Ui, Vec2, Window,
 };
 
 pub struct GableBuildSetting {
@@ -22,7 +20,7 @@ pub struct GableBuildSetting {
 impl GableBuildSetting {
     pub fn new() -> Self {
         Self {
-            visible: true,
+            visible: false,
             add_selected: EDevelopType::cpp,
             selected_index: 0,
         }
@@ -73,13 +71,7 @@ impl GableBuildSetting {
 
     fn ongui_left_panel(&mut self, ui: &mut Ui) {
         ui.heading("开发环境");
-        let build_settings_clone: Vec<setting::BuildSetting> = {
-            let build_settings: MutexGuard<'_, Vec<setting::BuildSetting>> =
-                setting::BUILD_SETTINGS.lock().unwrap();
-            build_settings.clone()
-        };
-        let build_settings: Vec<setting::BuildSetting> = build_settings_clone.clone();
-
+        let build_settings: Vec<BuildSetting> = setting::clone_build_settings();
         let available_height = ui.available_height();
         let combo_area_height = 40.0;
         ScrollArea::vertical()

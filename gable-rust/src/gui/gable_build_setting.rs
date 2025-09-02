@@ -11,7 +11,6 @@ use eframe::egui::{
     Rect, Response, ScrollArea, Sense, SidePanel, TextEdit, TextureHandle, TopBottomPanel, Ui,
     Vec2, Window,
 };
-use umya_spreadsheet::drawing::charts::Index;
 
 pub struct GableBuildSetting {
     pub visible: bool,
@@ -225,21 +224,13 @@ impl GableBuildSetting {
                 ComboBox::from_id_salt("build_settings.target_type")
                     .selected_text(format!("{:?}", build_settings.target_type))
                     .show_ui(ui, |ui| {
-                        ui.selectable_value(
-                            &mut build_settings.target_type,
-                            ETargetType::JSON,
-                            "Json",
-                        );
-                        ui.selectable_value(
-                            &mut build_settings.target_type,
-                            ETargetType::CSV,
-                            "CSV",
-                        );
-                        ui.selectable_value(
-                            &mut build_settings.target_type,
-                            ETargetType::PROTOBUFF,
-                            "Protobuff",
-                        );
+                        for item in ETargetType::iter() {
+                            ui.selectable_value(
+                                &mut build_settings.target_type,
+                                *item,
+                                item.to_string(),
+                            );
+                        }
                     });
             });
         });
@@ -254,7 +245,14 @@ impl GableBuildSetting {
                             .truncate(),
                     );
                 });
-                if ui.add_sized(third_size, Button::new("Browse")).clicked() {}
+                if ui.add_sized(third_size, Button::new("Browse")).clicked() {
+                    if let Some(path) = rfd::FileDialog::new()
+                        .set_title("选择目标路径")
+                        .pick_folder()
+                    {
+                        build_settings.target_path = path;
+                    }
+                }
             });
         });
         if build_settings != before_settings {

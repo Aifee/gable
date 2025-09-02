@@ -1,3 +1,5 @@
+use std::slice::Iter;
+
 use serde::{Deserialize, Serialize};
 
 /// 构建目标类型
@@ -9,4 +11,19 @@ pub enum ETargetType {
     CSV = 1,
     /// protobuff
     PROTOBUFF = 2,
+}
+
+impl ETargetType {
+    pub fn iter() -> Iter<'static, ETargetType> {
+        static VARIANTS: &[ETargetType] =
+            &[ETargetType::JSON, ETargetType::CSV, ETargetType::PROTOBUFF];
+        VARIANTS.iter()
+    }
+    pub fn to_string(&self) -> &'static str {
+        match self {
+            ETargetType::JSON => "Json",
+            ETargetType::CSV => "CSV",
+            ETargetType::PROTOBUFF => "Protobuff",
+        }
+    }
 }

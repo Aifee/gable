@@ -5,6 +5,7 @@ use image::{DynamicImage, ImageBuffer, Rgba};
 pub const ICON_DEFUALT: &[u8] = include_bytes!(r"../../assets/icons/error.png");
 /// 字体资源
 pub const FONT_ASSETS: &[u8] = include_bytes!(r"../../assets/fonts/SourceHanSansSC-Normal.otf");
+/// fallback字体
 pub const FONT_FALLBACK: &[u8] = include_bytes!(r"../../assets/fonts/fallback_font.ttf");
 
 // pub const ICON_SETTING: &[u8] = include_bytes!("../../assets/icons/setting.png");

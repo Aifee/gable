@@ -34,15 +34,24 @@ lazy_static! {
 }
 
 /// 从JSON文件加载BuildSetting列表
-pub fn init() -> io::Result<()> {
+pub fn init() {
     let path: PathBuf = get_data_path().join(constant::SETTING_PREFS);
     if path.exists() {
-        let json: String = fs::read_to_string(path)?;
-        let content: AppSettings = serde_json::from_str(&json)?;
-        let mut settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();
-        *settings = content;
+        match fs::read_to_string(path) {
+            Ok(json) => match serde_json::from_str::<AppSettings>(&json) {
+                Ok(content) => {
+                    let mut settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();
+                    *settings = content;
+                }
+                Err(e) => {
+                    log::error!("Failed to parse settings from JSON: {}", e);
+                }
+            },
+            Err(e) => {
+                log::error!("Failed to read settings file: {}", e);
+            }
+        }
     }
-    Ok(())
 }
 
 /// 获取窗口标题
@@ -52,9 +61,10 @@ pub fn get_title() -> String {
 }
 
 // 提供一个安全的设置方法
-pub fn set_workspace(path: String) {
+pub fn set_workspace(path: String) -> io::Result<()> {
     let mut settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();
     settings.workspace = Some(path);
+    save_build_settings_to_file(&*settings)
 }
 
 pub fn get_workspace() -> PathBuf {

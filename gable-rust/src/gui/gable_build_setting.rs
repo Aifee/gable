@@ -7,9 +7,9 @@ use crate::{
     gui::datas::{edevelop_type::EDevelopType, etarget_type::ETargetType},
 };
 use eframe::egui::{
-    self, Align, Align2, Button, CentralPanel, Color32, ComboBox, Context, FontId, Image, Label,
-    Layout, Rect, Response, ScrollArea, Sense, SidePanel, TextEdit, TextureHandle, TopBottomPanel,
-    Ui, Vec2, Window,
+    Align, Align2, Button, CentralPanel, Color32, ComboBox, Context, FontId, Image, Label, Layout,
+    Rect, Response, ScrollArea, Sense, SidePanel, TextEdit, TextureHandle, TopBottomPanel, Ui,
+    Vec2, Window,
 };
 
 pub struct GableBuildSetting {

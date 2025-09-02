@@ -60,14 +60,16 @@ impl GableMenu {
                     if ui.button("新建文件夹").clicked() {}
                     ui.separator();
                     if ui.button("打开工程目录").clicked() {
-                        // 打开文件选择对话框
                         if let Some(path) = rfd::FileDialog::new()
                             .set_title("选择工程目录")
                             .pick_folder()
                         {
                             let path_str: String = path.to_string_lossy().to_string();
-                            setting::set_workspace(path_str);
-                            gables::refresh_gables();
+                            if let Err(e) = setting::set_workspace(path_str) {
+                                log::error!("设置工作空间失败: {}", e);
+                            } else {
+                                gables::refresh_gables();
+                            }
                         }
                     }
                     ui.separator();

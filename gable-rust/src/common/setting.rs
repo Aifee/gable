@@ -127,6 +127,24 @@ pub fn add_build_setting(dev_type: EDevelopType) -> Option<usize> {
     }
 }
 
+/// 删除BuildSetting
+pub fn remove_build_setting(index: usize) -> Option<usize> {
+    let mut settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();
+    settings.build_settings.remove(index);
+    if let Err(e) = save_build_settings_to_file(&*settings) {
+        log::error!("Failed to save build settings: {}", e);
+        None
+    } else {
+        if settings.build_settings.is_empty() {
+            None
+        } else if index >= settings.build_settings.len() {
+            Some(settings.build_settings.len() - 1)
+        } else {
+            Some(index)
+        }
+    }
+}
+
 pub fn get_build_setting(index: usize) -> Option<BuildSetting> {
     let settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();
     if index < settings.build_settings.len() {
@@ -147,21 +165,6 @@ pub fn update_build_setting(index: usize, setting: BuildSetting) -> io::Result<(
             io::ErrorKind::InvalidInput,
             "Index out of bounds",
         ))
-    }
-}
-
-/// 删除BuildSetting
-pub fn remove_build_setting(display_name: &str) -> io::Result<()> {
-    let mut settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();
-    if let Some(index) = settings
-        .build_settings
-        .iter()
-        .position(|s| s.display_name == display_name)
-    {
-        settings.build_settings.remove(index);
-        save_build_settings_to_file(&*settings)
-    } else {
-        Ok(())
     }
 }
 

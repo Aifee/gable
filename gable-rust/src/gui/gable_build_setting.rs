@@ -11,6 +11,7 @@ use eframe::egui::{
     Rect, Response, ScrollArea, Sense, SidePanel, TextEdit, TextureHandle, TopBottomPanel, Ui,
     Vec2, Window,
 };
+use umya_spreadsheet::drawing::charts::Index;
 
 pub struct GableBuildSetting {
     pub visible: bool,
@@ -82,7 +83,7 @@ impl GableBuildSetting {
                     let texture: TextureHandle = res::load_develop_icon(ui.ctx(), &v.dev);
                     let image: Image<'_> = Image::new(&texture)
                         .tint(Color32::WHITE)
-                        .fit_to_exact_size(Vec2::new(24.0, 24.0));
+                        .fit_to_exact_size(Vec2::new(36.0, 36.0));
                     let button_size: Vec2 = Vec2::new(ui.available_width(), 40.0);
                     ui.horizontal(|ui| {
                         let tab_button = Button::new("")
@@ -109,7 +110,7 @@ impl GableBuildSetting {
                                         + Vec2::new(0.0, 18.0),
                                     Align2::LEFT_CENTER,
                                     &v.display_name,
-                                    FontId::default(),
+                                    FontId::proportional(16.0),
                                     ui.style().visuals.text_color(),
                                 );
                             });
@@ -147,6 +148,14 @@ impl GableBuildSetting {
                     .add_sized([165.0, 26.0], Button::new("全部构建"))
                     .clicked()
                 {}
+                if ui.add_sized([165.0, 26.0], Button::new("删除")).clicked() {
+                    self.selected_index =
+                        if let Some(index) = setting::remove_build_setting(self.selected_index) {
+                            index
+                        } else {
+                            0
+                        }
+                }
             });
         });
     }

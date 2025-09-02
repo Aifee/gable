@@ -166,7 +166,7 @@ fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
             .get(&constant::TABLE_DATA_ROW_TYPE)
             .and_then(|row| row.get(&col_index));
         let cell_type: EDataType = if let Some(data) = cell_type_data {
-            utils::convert_data_type(&data.value)
+            EDataType::convert(&data.value)
         } else {
             EDataType::STRING
         };
@@ -264,7 +264,7 @@ fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
             let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));
             if let Some(row_data) = &gable_data.heads.get(&constant::TABLE_DATA_ROW_TYPE) {
                 if let Some(cell_type_data) = row_data.get(&col_index) {
-                    match utils::convert_data_type(&cell_type_data.value) {
+                    match EDataType::convert(&cell_type_data.value) {
                         EDataType::INT => cell.set_value_number(cell_data.parse_int()),
                         EDataType::BOOLEAN => cell.set_value_bool(cell_data.parse_bool()),
                         EDataType::FLOAT => cell.set_value_number(cell_data.parse_float()),
@@ -335,7 +335,7 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
             .and_then(|row| row.get(&(constant::TABLE_KV_COL_TYPE as u16)))
         {
             let cell_type_value = &cell_type_data.value;
-            let cell_type: EDataType = utils::convert_data_type(&cell_type_value);
+            let cell_type: EDataType = EDataType::convert(&cell_type_value);
             let cell: &mut Cell =
                 worksheet.get_cell_mut((&constant::TABLE_KV_COL_VALUE, &row_index));
             match cell_type {
@@ -423,7 +423,7 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
             }
             if *col_index == constant::TABLE_KV_COL_VALUE as u16 {
                 if let Some(cell_type_data) = cell_type_data_temp {
-                    match utils::convert_data_type(&cell_type_data.value) {
+                    match EDataType::convert(&cell_type_data.value) {
                         EDataType::INT => cell.set_value_number(cell_data.parse_int()),
                         EDataType::BOOLEAN => cell.set_value_bool(cell_data.parse_bool()),
                         EDataType::FLOAT => cell.set_value_number(cell_data.parse_float()),
@@ -605,7 +605,7 @@ fn write_gable_data(worksheet: &Worksheet, gable_data: &mut GableData, max_row: 
                 cell_type = if let Some(cell_type_data) =
                     worksheet.get_cell((&col_idx, &constant::TABLE_DATA_ROW_TYPE))
                 {
-                    utils::convert_data_type(&cell_type_data.get_value())
+                    EDataType::convert(&cell_type_data.get_value())
                 } else {
                     EDataType::STRING
                 };
@@ -700,7 +700,7 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
             if let Some(cell_type_data) =
                 worksheet.get_cell((&constant::TABLE_KV_COL_TYPE, &row_idx))
             {
-                utils::convert_data_type(&cell_type_data.get_value())
+                EDataType::convert(&cell_type_data.get_value())
             } else {
                 EDataType::STRING
             }

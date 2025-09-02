@@ -9,9 +9,9 @@ use crate::{
     gui::datas::{edevelop_type::EDevelopType, etarget_type::ETargetType},
 };
 use eframe::egui::{
-    Align, Align2, Button, CentralPanel, Color32, ComboBox, Context, FontId, Grid, Image, Layout,
-    Rect, Response, ScrollArea, Sense, SidePanel, TextEdit, TextureHandle, TopBottomPanel, Ui,
-    Vec2, Window,
+    Align, Align2, Button, CentralPanel, Color32, ComboBox, Context, FontId, Grid, Image, Label,
+    Layout, Rect, Response, ScrollArea, Sense, SidePanel, TextEdit, TextureHandle, TopBottomPanel,
+    Ui, Vec2, Window,
 };
 
 pub struct GableBuildSetting {
@@ -159,6 +159,7 @@ impl GableBuildSetting {
         });
     }
     fn ongui_settings(&mut self, ui: &mut Ui) {
+        let title_size: Vec2 = Vec2::new(150.0, 26.0);
         let mut build_settings: BuildSetting =
             if let Some(build_settings) = setting::get_build_setting(self.selected_index) {
                 build_settings
@@ -166,55 +167,45 @@ impl GableBuildSetting {
                 return;
             };
         let before_settings = build_settings.clone();
-        Grid::new("my_grid")
-            .num_columns(2)
-            .spacing([40.0, 4.0])
-            .striped(true)
-            .show(ui, |ui| {
-                ui.label("develop:");
-                ui.label(build_settings.dev.to_string());
-                ui.end_row();
-
-                ui.label("alias:");
-                ui.add(
-                    TextEdit::singleline(&mut build_settings.display_name)
-                        .hint_text("Write something here"),
-                );
-                ui.end_row();
-
-                ui.label("keyword:");
-                ui.add(
-                    TextEdit::singleline(&mut build_settings.keyword)
-                        .hint_text("Write something here"),
-                );
-                ui.end_row();
-
-                ui.label("target_type:");
-                ComboBox::from_id_salt("build_settings.target_type")
-                    .selected_text(format!("{:?}", build_settings.target_type))
-                    .show_ui(ui, |ui| {
-                        ui.selectable_value(
-                            &mut build_settings.target_type,
-                            ETargetType::JSON,
-                            "Json",
-                        );
-                        ui.selectable_value(
-                            &mut build_settings.target_type,
-                            ETargetType::CSV,
-                            "CSV",
-                        );
-                        ui.selectable_value(
-                            &mut build_settings.target_type,
-                            ETargetType::PROTOBUFF,
-                            "Protobuff",
-                        );
-                    });
-                ui.end_row();
-
-                ui.label("target_path:");
-                ui.label(build_settings.target_path.to_string_lossy().to_string());
-                ui.end_row();
-            });
+        // development
+        ui.horizontal(|ui| {
+            ui.add_sized(title_size, Label::new("develop:").truncate());
+            ui.label(build_settings.dev.to_string());
+        });
+        ui.separator();
+        // alias
+        ui.horizontal(|ui| {
+            ui.add_sized(title_size, Label::new("alias:").truncate());
+            ui.add(TextEdit::singleline(&mut build_settings.display_name));
+        });
+        ui.separator();
+        // keyword
+        ui.horizontal(|ui| {
+            ui.add_sized(title_size, Label::new("keyword:").truncate());
+            ui.add(TextEdit::singleline(&mut build_settings.keyword));
+        });
+        ui.separator();
+        // target_type
+        ui.horizontal(|ui| {
+            ui.add_sized(title_size, Label::new("target_type:").truncate());
+            ComboBox::from_id_salt("build_settings.target_type")
+                .selected_text(format!("{:?}", build_settings.target_type))
+                .show_ui(ui, |ui| {
+                    ui.selectable_value(&mut build_settings.target_type, ETargetType::JSON, "Json");
+                    ui.selectable_value(&mut build_settings.target_type, ETargetType::CSV, "CSV");
+                    ui.selectable_value(
+                        &mut build_settings.target_type,
+                        ETargetType::PROTOBUFF,
+                        "Protobuff",
+                    );
+                });
+        });
+        ui.separator();
+        // target_path
+        ui.horizontal(|ui| {
+            ui.add_sized(title_size, Label::new("target_path:").truncate());
+            ui.label(build_settings.target_path.to_string_lossy().to_string());
+        });
         if build_settings != before_settings {
             if let Err(e) = setting::update_build_setting(self.selected_index, build_settings) {
                 log::error!("Failed to update build setting: {}", e);

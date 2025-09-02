@@ -1,3 +1,5 @@
+use crate::common::constant;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum EDataType {
     /// 未知
@@ -42,4 +44,35 @@ pub enum EDataType {
     DATE = 19,
     /// 枚举，配合链接使用
     ENUM = 100,
+}
+
+impl EDataType {
+    pub fn convert(value: &str) -> EDataType {
+        if value.is_empty() {
+            return EDataType::STRING;
+        }
+        match value {
+            constant::DATA_TYPE_KEY_STRING => EDataType::STRING,
+            constant::DATA_TYPE_KEY_INT => EDataType::INT,
+            constant::DATA_TYPE_KEY_BOOLEAN => EDataType::BOOLEAN,
+            constant::DATA_TYPE_KEY_FLOAT => EDataType::FLOAT,
+            constant::DATA_TYPE_KEY_VECTOR2 => EDataType::VECTOR2,
+            constant::DATA_TYPE_KEY_VECTOR3 => EDataType::VECTOR3,
+            constant::DATA_TYPE_KEY_VECTOR4 => EDataType::VECTOR4,
+            constant::DATA_TYPE_KEY_STRING_ARR => EDataType::STRING_ARR,
+            constant::DATA_TYPE_KEY_INT_ARR => EDataType::INT_ARR,
+            constant::DATA_TYPE_KEY_BOOLEAN_ARR => EDataType::BOOLEAN_ARR,
+            constant::DATA_TYPE_KEY_FLOAT_ARR => EDataType::FLOAT_ARR,
+            constant::DATA_TYPE_KEY_VECTOR2_ARR => EDataType::VECTOR2_ARR,
+            constant::DATA_TYPE_KEY_VECTOR3_ARR => EDataType::VECTOR3_ARR,
+            constant::DATA_TYPE_KEY_VECTOR4_ARR => EDataType::VECTOR4_ARR,
+            constant::DATA_TYPE_KEY_PERCENTAGE => EDataType::PERCENTAGE,
+            constant::DATA_TYPE_KEY_PERMILLAGE => EDataType::PERMILLAGE,
+            constant::DATA_TYPE_KEY_PERMIAN => EDataType::PERMIAN,
+            constant::DATA_TYPE_KEY_TIME => EDataType::TIME,
+            constant::DATA_TYPE_KEY_DATE => EDataType::DATE,
+            constant::DATA_TYPE_KEY_ENUM => EDataType::ENUM,
+            _ => EDataType::Unknown,
+        }
+    }
 }

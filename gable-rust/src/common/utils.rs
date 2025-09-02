@@ -81,16 +81,31 @@ pub fn get_temp_path() -> String {
     path
 }
 
+/// 获取数据目录
 pub fn get_data_path() -> PathBuf {
-    let workspace: MutexGuard<'_, Option<String>> = setting::WORKSPACE.lock().unwrap();
-    let temp_dir = constant::DIR_DATA;
-    let path: PathBuf = PathBuf::from(workspace.as_ref().unwrap()).join(temp_dir);
+    let exe_path: PathBuf = std::env::current_exe().expect("无法获取当前可执行文件路径");
+    let exe_dir: &Path = exe_path.parent().expect("无法获取可执行文件所在目录");
+    let temp_dir: &str = constant::DIR_DATA;
+    let path: PathBuf = exe_dir.join(temp_dir);
     if !path.exists() {
         if let Err(e) = fs::create_dir_all(&path) {
             log::error!("无法创建临时目录: {}", e);
         }
     }
     path
+}
+
+/// 绝对路径转换成exe相对路径
+pub fn get_env_relative_path(path: String) -> PathBuf {
+    let absolute_path: &Path = Path::new(&path);
+    let exe_path: PathBuf = std::env::current_exe().expect("无法获取当前可执行文件路径");
+    let exe_dir: &Path = exe_path.parent().expect("无法获取可执行文件所在目录");
+
+    if let Ok(relative_path) = absolute_path.strip_prefix(exe_dir) {
+        relative_path.to_path_buf()
+    } else {
+        absolute_path.to_path_buf()
+    }
 }
 
 /// 检查文件名是否合法
@@ -184,34 +199,4 @@ pub fn open_in_explorer(path: &str) -> std::io::Result<()> {
     }
 
     Ok(())
-}
-
-// 获取数据类型
-pub fn convert_data_type(value: &str) -> EDataType {
-    if value.is_empty() {
-        return EDataType::STRING;
-    }
-    match value {
-        constant::DATA_TYPE_KEY_STRING => EDataType::STRING,
-        constant::DATA_TYPE_KEY_INT => EDataType::INT,
-        constant::DATA_TYPE_KEY_BOOLEAN => EDataType::BOOLEAN,
-        constant::DATA_TYPE_KEY_FLOAT => EDataType::FLOAT,
-        constant::DATA_TYPE_KEY_VECTOR2 => EDataType::VECTOR2,
-        constant::DATA_TYPE_KEY_VECTOR3 => EDataType::VECTOR3,
-        constant::DATA_TYPE_KEY_VECTOR4 => EDataType::VECTOR4,
-        constant::DATA_TYPE_KEY_STRING_ARR => EDataType::STRING_ARR,
-        constant::DATA_TYPE_KEY_INT_ARR => EDataType::INT_ARR,
-        constant::DATA_TYPE_KEY_BOOLEAN_ARR => EDataType::BOOLEAN_ARR,
-        constant::DATA_TYPE_KEY_FLOAT_ARR => EDataType::FLOAT_ARR,
-        constant::DATA_TYPE_KEY_VECTOR2_ARR => EDataType::VECTOR2_ARR,
-        constant::DATA_TYPE_KEY_VECTOR3_ARR => EDataType::VECTOR3_ARR,
-        constant::DATA_TYPE_KEY_VECTOR4_ARR => EDataType::VECTOR4_ARR,
-        constant::DATA_TYPE_KEY_PERCENTAGE => EDataType::PERCENTAGE,
-        constant::DATA_TYPE_KEY_PERMILLAGE => EDataType::PERMILLAGE,
-        constant::DATA_TYPE_KEY_PERMIAN => EDataType::PERMIAN,
-        constant::DATA_TYPE_KEY_TIME => EDataType::TIME,
-        constant::DATA_TYPE_KEY_DATE => EDataType::DATE,
-        constant::DATA_TYPE_KEY_ENUM => EDataType::ENUM,
-        _ => EDataType::Unknown,
-    }
 }

@@ -281,7 +281,7 @@ impl GableForm {
                 if let Some(row_type_data) = row_type_data {
                     let type_cell = row_type_data.get(&col_index);
                     if let Some(type_cell) = type_cell {
-                        let cell_type: EDataType = utils::convert_data_type(&type_cell.value);
+                        let cell_type: EDataType = EDataType::convert(&type_cell.value);
                         // 枚举类型进行收集数据，供数据遍历时取值显示
                         if cell_type == EDataType::ENUM {
                             let row_link_data: Option<&BTreeMap<u16, CellData>> =
@@ -430,7 +430,7 @@ impl GableForm {
                             ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
 
                             if &col_index == &(constant::TABLE_KV_COL_TYPE as u16) {
-                                cell_type = utils::convert_data_type(&col_data.value);
+                                cell_type = EDataType::convert(&col_data.value);
                             }
                             if &col_index == &(constant::TABLE_KV_COL_LINK as u16) {
                                 cell_link_value = Some(&col_data.value);

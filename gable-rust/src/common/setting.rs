@@ -49,7 +49,7 @@ pub fn add_build_setting(dev_type: EDevelopType) -> Option<usize> {
         display_name: dev_type.to_string().to_string(),
         keyword: dev_type.to_keyword().to_string(),
         target_type: ETargetType::JSON,
-        target_path: get_workspace(),
+        target_path: utils::get_env_relative_path(get_workspace().to_string_lossy().to_string()),
     };
     let mut build_settings: MutexGuard<'_, Vec<BuildSetting>> = BUILD_SETTINGS.lock().unwrap();
     build_settings.push(build_setting);

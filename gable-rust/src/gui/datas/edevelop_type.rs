@@ -54,7 +54,7 @@ impl EDevelopType {
     pub fn to_keyword(&self) -> &'static str {
         match self {
             EDevelopType::cpp => "cpp",
-            EDevelopType::csharp => "csharp",
+            EDevelopType::csharp => "cs",
             EDevelopType::cangjie => "cj",
             EDevelopType::go => "go",
             EDevelopType::java => "java",

@@ -1,5 +1,3 @@
-use std::collections::{BTreeMap, HashMap};
-
 use crate::common::{constant, utils};
 use crate::gui::component;
 use crate::gui::datas::cell_data::CellData;
@@ -12,6 +10,7 @@ use eframe::egui::{
     scroll_area::ScrollBarVisibility, scroll_area::ScrollSource,
 };
 use egui_extras::{Column, TableBody, TableBuilder};
+use std::collections::{BTreeMap, HashMap};
 
 #[derive(Debug, Clone)]
 pub struct OpenedExcel {

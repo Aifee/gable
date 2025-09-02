@@ -1,9 +1,10 @@
-use crate::common::{res, setting, utils};
+use crate::common::{res, setting};
+use crate::gui::form::gable_form::GableForm;
 use crate::gui::gable_popup::GablePopup;
 use crate::gui::{
     datas::eitem_type::EItemType, datas::gables, file_watcher::FileWatcher,
-    gable_explorer::GableExplorer, gable_form::GableForm, gable_log::GableLog,
-    gable_menu::GableMenu, gable_navigation::GableNavigation,
+    gable_explorer::GableExplorer, gable_log::GableLog, gable_menu::GableMenu,
+    gable_navigation::GableNavigation,
 };
 use eframe::egui::{
     Context, FontData, FontDefinitions, FontFamily, FontId, Style, TextStyle, ViewportCommand,

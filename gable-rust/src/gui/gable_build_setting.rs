@@ -160,6 +160,20 @@ impl GableBuildSetting {
     }
     fn ongui_settings(&mut self, ui: &mut Ui) {
         let title_size: Vec2 = Vec2::new(150.0, 26.0);
+        let third_size: Vec2 = Vec2::new(120.0, 26.0);
+        let available_width: f32 = ui.available_width();
+        let content_width: f32 = if available_width - title_size.x > 10.0 {
+            available_width - title_size.x
+        } else {
+            10.0
+        };
+        let second_width: f32 = if content_width - third_size.x > 10.0 {
+            content_width - third_size.x
+        } else {
+            10.0
+        };
+        let content_size: Vec2 = Vec2::new(content_width, 26.0);
+        let second_size = Vec2::new(second_width, 26.0);
         let mut build_settings: BuildSetting =
             if let Some(build_settings) = setting::get_build_setting(self.selected_index) {
                 build_settings
@@ -170,19 +184,27 @@ impl GableBuildSetting {
         // development
         ui.horizontal(|ui| {
             ui.add_sized(title_size, Label::new("develop:").truncate());
-            ui.label(build_settings.dev.to_string());
+            ui.allocate_ui_with_layout(content_size, Layout::left_to_right(Align::Min), |ui| {
+                ui.label(build_settings.dev.to_string());
+            });
         });
         ui.separator();
         // alias
         ui.horizontal(|ui| {
             ui.add_sized(title_size, Label::new("alias:").truncate());
-            ui.add(TextEdit::singleline(&mut build_settings.display_name));
+            ui.add_sized(
+                content_size,
+                TextEdit::singleline(&mut build_settings.display_name),
+            );
         });
         ui.separator();
         // keyword
         ui.horizontal(|ui| {
             ui.add_sized(title_size, Label::new("keyword:").truncate());
-            ui.add(TextEdit::singleline(&mut build_settings.keyword));
+            ui.add_sized(
+                content_size,
+                TextEdit::singleline(&mut build_settings.keyword),
+            );
         });
         ui.separator();
         // target_type
@@ -204,7 +226,11 @@ impl GableBuildSetting {
         // target_path
         ui.horizontal(|ui| {
             ui.add_sized(title_size, Label::new("target_path:").truncate());
-            ui.label(build_settings.target_path.to_string_lossy().to_string());
+            ui.add_sized(
+                second_size,
+                Label::new(build_settings.target_path.to_string_lossy().to_string()),
+            );
+            if ui.add_sized(third_size, Button::new("Browse")).clicked() {}
         });
         if build_settings != before_settings {
             if let Err(e) = setting::update_build_setting(self.selected_index, build_settings) {

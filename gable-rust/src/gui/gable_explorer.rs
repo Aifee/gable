@@ -12,7 +12,6 @@ use std::{
     io::{Error, ErrorKind},
     mem,
     path::{Path, PathBuf},
-    sync::MutexGuard,
     thread,
     time::{self, Duration},
 };
@@ -49,13 +48,8 @@ impl GableExplorer {
                 ScrollArea::vertical()
                     .auto_shrink([false; 2])
                     .show(ui, |ui| {
-                        let tree_items_clone: Vec<TreeItem> = {
-                            let tree_items: MutexGuard<'_, Vec<TreeItem>> =
-                                gables::TREE_ITEMS.lock().unwrap();
-                            tree_items.clone()
-                        };
-                        let mut updated_tree_items: Vec<TreeItem> = tree_items_clone.clone();
-                        for item in updated_tree_items.iter_mut() {
+                        let tree_items = gables::TREE_ITEMS.lock().unwrap();
+                        for item in tree_items.iter() {
                             Self::gui_tree_item(
                                 ui,
                                 item,
@@ -95,7 +89,7 @@ impl GableExplorer {
     /// 带右键菜单的树形结构绘制
     fn gui_tree_item(
         ui: &mut Ui,
-        item: &mut TreeItem,
+        item: &TreeItem,
         selected_id: &mut Option<String>,
         renaming_item: &mut Option<String>,
         renaming_text: &mut String,
@@ -118,13 +112,32 @@ impl GableExplorer {
 
             // 处理回车确认重命名
             if response.lost_focus() && ui.input(|i: &InputState| i.key_pressed(Key::Enter)) {
-                Self::finish_renaming(item, mem::take(renaming_text), renaming_item, renaming_text);
+                // 注意：这里需要创建一个可变版本的item用于重命名
+                // 但由于我们使用的是引用，这里只是传递信息给重命名函数
+                // 实际的重命名逻辑不会修改当前引用的item
+                if !renaming_text.is_empty() && *renaming_text != item.display_name {
+                    // 这里我们不直接修改item，而是触发重命名操作
+                    let new_name = mem::take(renaming_text);
+                    *renaming_item = None;
+                    // 执行重命名逻辑
+                    Self::execute_rename(item, new_name);
+                } else {
+                    *renaming_item = None;
+                    renaming_text.clear();
+                }
             }
             // 新增：处理失去焦点时完成重命名（不是通过ESC键）
             else if response.lost_focus()
                 && !ui.input(|i: &InputState| i.key_pressed(Key::Escape))
             {
-                Self::finish_renaming(item, mem::take(renaming_text), renaming_item, renaming_text);
+                if !renaming_text.is_empty() && *renaming_text != item.display_name {
+                    let new_name = mem::take(renaming_text);
+                    *renaming_item = None;
+                    Self::execute_rename(item, new_name);
+                } else {
+                    *renaming_item = None;
+                    renaming_text.clear();
+                }
             }
             // 处理通过ESC键取消重命名
             else if response.lost_focus() && ui.input(|i: &InputState| i.key_pressed(Key::Escape))
@@ -160,7 +173,7 @@ impl GableExplorer {
                         ))
                         .show(ui, |ui| {
                             // 显示子项（如果有的话）
-                            for child in &mut item.children {
+                            for child in &item.children {
                                 Self::gui_tree_item(
                                     ui,
                                     child,
@@ -196,22 +209,17 @@ impl GableExplorer {
 
             // 为header添加右键菜单
             header_response.context_menu(|ui| {
-                Self::show_context_menu(ui, item, renaming_item, renaming_text);
+                // 为上下文菜单创建一个可变的副本
+                let mut item_clone = item.clone();
+                Self::show_context_menu(ui, &mut item_clone, renaming_item, renaming_text);
             });
         }
     }
 
-    /// 完成重命名操作
-    fn finish_renaming(
-        item: &TreeItem,
-        new_name: String,
-        renaming_item: &mut Option<String>,
-        renaming_text: &mut String,
-    ) {
+    /// 执行重命名操作
+    fn execute_rename(item: &TreeItem, new_name: String) {
         if new_name.is_empty() || new_name == item.display_name {
             // 如果名称为空或未更改，则取消重命名
-            *renaming_item = None;
-            renaming_text.clear();
             return;
         }
 
@@ -232,10 +240,6 @@ impl GableExplorer {
             EItemType::Sheet => Self::rename_sheet_item(item, &new_name),
             EItemType::Folder => Self::rename_folder_item(item, &new_name),
         };
-
-        // 清理重命名状态
-        *renaming_item = None;
-        renaming_text.clear();
 
         match result {
             Err(e) => {

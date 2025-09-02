@@ -9,9 +9,9 @@ use crate::{
     gui::datas::{edevelop_type::EDevelopType, etarget_type::ETargetType},
 };
 use eframe::egui::{
-    Align, Align2, Button, CentralPanel, Color32, ComboBox, Context, FontId, Grid, Image, Label,
-    Layout, Rect, Response, ScrollArea, Sense, SidePanel, TextEdit, TextureHandle, TopBottomPanel,
-    Ui, Vec2, Window,
+    self, Align, Align2, Button, CentralPanel, Color32, ComboBox, Context, FontId, Frame, Image,
+    Label, Layout, Rect, Response, ScrollArea, Sense, SidePanel, TextEdit, TextureHandle,
+    TopBottomPanel, Ui, Vec2, Window,
 };
 
 pub struct GableBuildSetting {
@@ -159,9 +159,11 @@ impl GableBuildSetting {
         });
     }
     fn ongui_settings(&mut self, ui: &mut Ui) {
-        let title_size: Vec2 = Vec2::new(150.0, 26.0);
-        let third_size: Vec2 = Vec2::new(120.0, 26.0);
-        let available_width: f32 = ui.available_width();
+        let available_height: f32 = 22.0;
+        let available_width: f32 = ui.available_width() - 15.0;
+        let item_size: Vec2 = Vec2::new(available_width, available_height);
+        let title_size: Vec2 = Vec2::new(150.0, available_height);
+        let third_size: Vec2 = Vec2::new(120.0, available_height);
         let content_width: f32 = if available_width - title_size.x > 10.0 {
             available_width - title_size.x
         } else {
@@ -172,8 +174,8 @@ impl GableBuildSetting {
         } else {
             10.0
         };
-        let content_size: Vec2 = Vec2::new(content_width, 26.0);
-        let second_size = Vec2::new(second_width, 26.0);
+        let content_size: Vec2 = Vec2::new(content_width, available_height);
+        let second_size: Vec2 = Vec2::new(second_width, available_height);
         let mut build_settings: BuildSetting =
             if let Some(build_settings) = setting::get_build_setting(self.selected_index) {
                 build_settings
@@ -183,54 +185,74 @@ impl GableBuildSetting {
         let before_settings = build_settings.clone();
         // development
         ui.horizontal(|ui| {
-            ui.add_sized(title_size, Label::new("develop:").truncate());
-            ui.allocate_ui_with_layout(content_size, Layout::left_to_right(Align::Min), |ui| {
-                ui.label(build_settings.dev.to_string());
+            ui.group(|ui| {
+                ui.set_min_size(item_size);
+                ui.add_sized(title_size, Label::new("develop:").truncate());
+                ui.allocate_ui_with_layout(content_size, Layout::left_to_right(Align::Min), |ui| {
+                    ui.label(build_settings.dev.to_string());
+                });
             });
         });
-        ui.separator();
         // alias
         ui.horizontal(|ui| {
-            ui.add_sized(title_size, Label::new("alias:").truncate());
-            ui.add_sized(
-                content_size,
-                TextEdit::singleline(&mut build_settings.display_name),
-            );
+            ui.group(|ui| {
+                ui.set_min_size(item_size);
+                ui.add_sized(title_size, Label::new("alias:").truncate());
+                ui.add_sized(
+                    content_size,
+                    TextEdit::singleline(&mut build_settings.display_name),
+                );
+            });
         });
-        ui.separator();
         // keyword
         ui.horizontal(|ui| {
-            ui.add_sized(title_size, Label::new("keyword:").truncate());
-            ui.add_sized(
-                content_size,
-                TextEdit::singleline(&mut build_settings.keyword),
-            );
+            ui.group(|ui| {
+                ui.set_min_size(item_size);
+                ui.add_sized(title_size, Label::new("keyword:").truncate());
+                ui.add_sized(
+                    content_size,
+                    TextEdit::singleline(&mut build_settings.keyword),
+                );
+            });
         });
-        ui.separator();
         // target_type
         ui.horizontal(|ui| {
-            ui.add_sized(title_size, Label::new("target_type:").truncate());
-            ComboBox::from_id_salt("build_settings.target_type")
-                .selected_text(format!("{:?}", build_settings.target_type))
-                .show_ui(ui, |ui| {
-                    ui.selectable_value(&mut build_settings.target_type, ETargetType::JSON, "Json");
-                    ui.selectable_value(&mut build_settings.target_type, ETargetType::CSV, "CSV");
-                    ui.selectable_value(
-                        &mut build_settings.target_type,
-                        ETargetType::PROTOBUFF,
-                        "Protobuff",
-                    );
-                });
+            ui.group(|ui| {
+                ui.set_min_size(item_size);
+
+                ui.add_sized(title_size, Label::new("target_type:").truncate());
+                ComboBox::from_id_salt("build_settings.target_type")
+                    .selected_text(format!("{:?}", build_settings.target_type))
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(
+                            &mut build_settings.target_type,
+                            ETargetType::JSON,
+                            "Json",
+                        );
+                        ui.selectable_value(
+                            &mut build_settings.target_type,
+                            ETargetType::CSV,
+                            "CSV",
+                        );
+                        ui.selectable_value(
+                            &mut build_settings.target_type,
+                            ETargetType::PROTOBUFF,
+                            "Protobuff",
+                        );
+                    });
+            });
         });
-        ui.separator();
         // target_path
         ui.horizontal(|ui| {
-            ui.add_sized(title_size, Label::new("target_path:").truncate());
-            ui.add_sized(
-                second_size,
-                Label::new(build_settings.target_path.to_string_lossy().to_string()),
-            );
-            if ui.add_sized(third_size, Button::new("Browse")).clicked() {}
+            ui.group(|ui| {
+                ui.set_min_size(item_size);
+                ui.add_sized(title_size, Label::new("target_path:").truncate());
+                ui.add_sized(
+                    second_size,
+                    Label::new(build_settings.target_path.to_string_lossy().to_string()),
+                );
+                if ui.add_sized(third_size, Button::new("Browse")).clicked() {}
+            });
         });
         if build_settings != before_settings {
             if let Err(e) = setting::update_build_setting(self.selected_index, build_settings) {

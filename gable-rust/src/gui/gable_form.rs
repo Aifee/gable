@@ -470,9 +470,8 @@ impl GableForm {
                                                         if &enum_value_cell.value == &col_data.value
                                                         {
                                                             if let Some(enum_desc_cell) = enum_rows
-                                                                .get(
-                                                                (&constant::TABLE_ENUM_COL_DESC),
-                                                            ) {
+                                                                .get(&constant::TABLE_ENUM_COL_DESC)
+                                                            {
                                                                 ui.add(
                                                                     Label::new(
                                                                         &enum_desc_cell.value,

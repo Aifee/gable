@@ -165,7 +165,7 @@ impl GableBuildSetting {
         let title_size: Vec2 = Vec2::new(150.0, available_height);
         let third_size: Vec2 = Vec2::new(120.0, available_height);
         let content_width: f32 = if available_width - title_size.x > 10.0 {
-            available_width - title_size.x
+            available_width - title_size.x - 8.0
         } else {
             10.0
         };
@@ -247,10 +247,12 @@ impl GableBuildSetting {
             ui.group(|ui| {
                 ui.set_min_size(item_size);
                 ui.add_sized(title_size, Label::new("target_path:").truncate());
-                ui.add_sized(
-                    second_size,
-                    Label::new(build_settings.target_path.to_string_lossy().to_string()),
-                );
+                ui.allocate_ui_with_layout(second_size, Layout::left_to_right(Align::Min), |ui| {
+                    ui.add(
+                        Label::new(build_settings.target_path.to_string_lossy().to_string())
+                            .truncate(),
+                    );
+                });
                 if ui.add_sized(third_size, Button::new("Browse")).clicked() {}
             });
         });

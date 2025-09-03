@@ -58,7 +58,7 @@ impl OpenedGableData {
                     let type_cell = row_type_data.get(&col_index);
                     if let Some(type_cell) = type_cell {
                         let cell_type: EDataType = EDataType::convert(&type_cell.value);
-                        if cell_type == EDataType::ENUM {
+                        if cell_type == EDataType::Enum {
                             let row_link_data: Option<&BTreeMap<u16, CellData>> =
                                 data.heads.get(&constant::TABLE_DATA_ROW_LINK);
                             if let Some(row_link_data) = row_link_data {
@@ -80,7 +80,7 @@ impl OpenedGableData {
         for (row, cols) in data.heads.iter() {
             let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
             for (col, cell) in cols.iter() {
-                let value: String = Self::pairs_value(&EDataType::STRING, cell, &link_cells);
+                let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells);
                 cols_items.insert(*col, value);
             }
             items.insert(*row, cols_items);
@@ -103,20 +103,20 @@ impl OpenedGableData {
         for (row, cols) in data.heads.iter() {
             let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
             for (col, cell) in cols.iter() {
-                let value: String = Self::pairs_value(&EDataType::STRING, cell, &link_cells);
+                let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells);
                 cols_items.insert(*col, value);
             }
             items.insert(*row, cols_items);
         }
         for (row, cols) in data.cells.iter() {
             let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
-            let mut cell_type: EDataType = EDataType::STRING;
+            let mut cell_type: EDataType = EDataType::String;
             link_cells.clear();
             for (col, cell) in cols.iter() {
                 if col == &(constant::TABLE_KV_COL_TYPE as u16) {
                     cell_type = EDataType::convert(&cell.value);
                 }
-                if col == &(constant::TABLE_KV_COL_LINK as u16) && cell_type == EDataType::ENUM {
+                if col == &(constant::TABLE_KV_COL_LINK as u16) && cell_type == EDataType::Enum {
                     let cell_link_value: Option<&String> = Some(&cell.value);
                     if let Some(link_value) = cell_link_value {
                         link_cells.insert(*col, link_value);
@@ -126,7 +126,7 @@ impl OpenedGableData {
                     let value: String = Self::pairs_value(&cell_type, cell, &link_cells);
                     cols_items.insert(*col, value);
                 } else {
-                    let value: String = Self::pairs_value(&EDataType::STRING, cell, &link_cells);
+                    let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells);
                     cols_items.insert(*col, value);
                 }
             }
@@ -140,7 +140,7 @@ impl OpenedGableData {
         for (row, cols) in data.heads.iter() {
             let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
             for (col, cell) in cols.iter() {
-                let value: String = Self::pairs_value(&EDataType::STRING, cell, &link_cells);
+                let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells);
                 cols_items.insert(*col, value);
             }
             items.insert(*row, cols_items);
@@ -148,7 +148,7 @@ impl OpenedGableData {
         for (row, cols) in data.cells.iter() {
             let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
             for (col, cell) in cols.iter() {
-                let value: String = Self::pairs_value(&EDataType::STRING, cell, &link_cells);
+                let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells);
                 cols_items.insert(*col, value);
             }
             items.insert(*row, cols_items);
@@ -162,18 +162,18 @@ impl OpenedGableData {
         link_cells: &HashMap<u16, &String>,
     ) -> String {
         match data_type {
-            EDataType::PERCENTAGE => {
+            EDataType::Percentage => {
                 format!("{:.0}%", cell.parse_float() * 100.0)
             }
-            EDataType::PERMILLAGE => {
+            EDataType::Permillage => {
                 format!("{:.0}‰", cell.parse_float() * 1000.0)
             }
-            EDataType::PERMIAN => {
+            EDataType::Permian => {
                 format!("{:.0}‱", cell.parse_float() * 10000.0)
             }
-            EDataType::TIME => cell.convert_time(),
-            EDataType::DATE => cell.convert_date(),
-            EDataType::ENUM => {
+            EDataType::Time => cell.convert_time(),
+            EDataType::Date => cell.convert_date(),
+            EDataType::Enum => {
                 if let Some(link_name) = link_cells.get(&cell.column) {
                     gables::get_enum_cells(link_name, |cell_data| {
                         for (_, link_data) in cell_data.cells.iter() {

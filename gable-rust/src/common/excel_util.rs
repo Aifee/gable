@@ -168,20 +168,20 @@ fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
         let cell_type: EDataType = if let Some(data) = cell_type_data {
             EDataType::convert(&data.value)
         } else {
-            EDataType::STRING
+            EDataType::String
         };
-        if cell_type != EDataType::PERCENTAGE
-            && cell_type != EDataType::PERMILLAGE
-            && cell_type != EDataType::PERMIAN
-            && cell_type != EDataType::TIME
-            && cell_type != EDataType::DATE
-            && cell_type != EDataType::ENUM
+        if cell_type != EDataType::Percentage
+            && cell_type != EDataType::Permillage
+            && cell_type != EDataType::Permian
+            && cell_type != EDataType::Time
+            && cell_type != EDataType::Date
+            && cell_type != EDataType::Enum
         {
             continue;
         }
 
         // 枚举单独设置
-        if cell_type == EDataType::ENUM {
+        if cell_type == EDataType::Enum {
             let cell_link_data: Option<&CellData> = gable_data
                 .heads
                 .get(&constant::TABLE_DATA_ROW_LINK)
@@ -216,27 +216,27 @@ fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
         for row_index in constant::TABLE_DATA_ROW_TOTAL..max_row {
             let cell: &mut Cell = worksheet.get_cell_mut((&(col_index as u32), &row_index));
             match cell_type {
-                EDataType::PERCENTAGE => {
+                EDataType::Percentage => {
                     cell.get_style_mut()
                         .get_number_format_mut()
                         .set_format_code(constant::NUMBER_FORMAT_PERCENTAGE);
                 }
-                EDataType::PERMILLAGE => {
+                EDataType::Permillage => {
                     cell.get_style_mut()
                         .get_number_format_mut()
                         .set_format_code(constant::NUMBER_FORMAT_PERMILLAGE);
                 }
-                EDataType::PERMIAN => {
+                EDataType::Permian => {
                     cell.get_style_mut()
                         .get_number_format_mut()
                         .set_format_code(constant::NUMBER_FORMAT_PERMIAN);
                 }
-                EDataType::TIME => {
+                EDataType::Time => {
                     cell.get_style_mut()
                         .get_number_format_mut()
                         .set_format_code(constant::NUMBER_FORMAT_TIME);
                 }
-                EDataType::DATE => {
+                EDataType::Date => {
                     cell.get_style_mut()
                         .get_number_format_mut()
                         .set_format_code(constant::NUMBER_FORMAT_DATE);
@@ -256,19 +256,19 @@ fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
             if let Some(row_data) = &gable_data.heads.get(&constant::TABLE_DATA_ROW_TYPE) {
                 if let Some(cell_type_data) = row_data.get(&col_index) {
                     match EDataType::convert(&cell_type_data.value) {
-                        EDataType::INT => cell.set_value_number(cell_data.parse_int()),
-                        EDataType::BOOLEAN => cell.set_value_bool(cell_data.parse_bool()),
-                        EDataType::FLOAT => cell.set_value_number(cell_data.parse_float()),
-                        EDataType::PERCENTAGE => cell.set_value_number(cell_data.parse_float()),
-                        EDataType::PERMILLAGE => {
+                        EDataType::Int => cell.set_value_number(cell_data.parse_int()),
+                        EDataType::Boolean => cell.set_value_bool(cell_data.parse_bool()),
+                        EDataType::Float => cell.set_value_number(cell_data.parse_float()),
+                        EDataType::Percentage => cell.set_value_number(cell_data.parse_float()),
+                        EDataType::Permillage => {
                             cell.set_value_number(cell_data.parse_float() * 1000.0)
                         }
-                        EDataType::PERMIAN => {
+                        EDataType::Permian => {
                             cell.set_value_number(cell_data.parse_float() * 10000.0)
                         }
-                        EDataType::TIME => cell.set_value_number(cell_data.parse_time()),
-                        EDataType::DATE => cell.set_value_number(cell_data.parse_date()),
-                        EDataType::ENUM => {
+                        EDataType::Time => cell.set_value_number(cell_data.parse_time()),
+                        EDataType::Date => cell.set_value_number(cell_data.parse_date()),
+                        EDataType::Enum => {
                             let mut cell_value = cell_data.value.clone();
                             if let Some(enum_item_key) = enum_cells.get(&col_index) {
                                 gables::get_enum_cells(enum_item_key, |enum_item_cells| {
@@ -332,32 +332,32 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
             let cell: &mut Cell =
                 worksheet.get_cell_mut((&constant::TABLE_KV_COL_VALUE, &row_index));
             match cell_type {
-                EDataType::PERCENTAGE => {
+                EDataType::Percentage => {
                     cell.get_style_mut()
                         .get_number_format_mut()
                         .set_format_code(constant::NUMBER_FORMAT_PERCENTAGE);
                 }
-                EDataType::PERMILLAGE => {
+                EDataType::Permillage => {
                     cell.get_style_mut()
                         .get_number_format_mut()
                         .set_format_code(constant::NUMBER_FORMAT_PERMILLAGE);
                 }
-                EDataType::PERMIAN => {
+                EDataType::Permian => {
                     cell.get_style_mut()
                         .get_number_format_mut()
                         .set_format_code(constant::NUMBER_FORMAT_PERMIAN);
                 }
-                EDataType::TIME => {
+                EDataType::Time => {
                     cell.get_style_mut()
                         .get_number_format_mut()
                         .set_format_code(constant::NUMBER_FORMAT_TIME);
                 }
-                EDataType::DATE => {
+                EDataType::Date => {
                     cell.get_style_mut()
                         .get_number_format_mut()
                         .set_format_code(constant::NUMBER_FORMAT_DATE);
                 }
-                EDataType::ENUM => {
+                EDataType::Enum => {
                     let cell_link_data: Option<&CellData> = gable_data
                         .cells
                         .get(&row_index)
@@ -407,19 +407,19 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
             if *col_index == constant::TABLE_KV_COL_VALUE as u16 {
                 if let Some(cell_type_data) = cell_type_data_temp {
                     match EDataType::convert(&cell_type_data.value) {
-                        EDataType::INT => cell.set_value_number(cell_data.parse_int()),
-                        EDataType::BOOLEAN => cell.set_value_bool(cell_data.parse_bool()),
-                        EDataType::FLOAT => cell.set_value_number(cell_data.parse_float()),
-                        EDataType::PERCENTAGE => cell.set_value_number(cell_data.parse_float()),
-                        EDataType::PERMILLAGE => {
+                        EDataType::Int => cell.set_value_number(cell_data.parse_int()),
+                        EDataType::Boolean => cell.set_value_bool(cell_data.parse_bool()),
+                        EDataType::Float => cell.set_value_number(cell_data.parse_float()),
+                        EDataType::Percentage => cell.set_value_number(cell_data.parse_float()),
+                        EDataType::Permillage => {
                             cell.set_value_number(cell_data.parse_float() * 1000.0)
                         }
-                        EDataType::PERMIAN => {
+                        EDataType::Permian => {
                             cell.set_value_number(cell_data.parse_float() * 10000.0)
                         }
-                        EDataType::TIME => cell.set_value_number(cell_data.parse_time()),
-                        EDataType::DATE => cell.set_value_number(cell_data.parse_date()),
-                        EDataType::ENUM => {
+                        EDataType::Time => cell.set_value_number(cell_data.parse_time()),
+                        EDataType::Date => cell.set_value_number(cell_data.parse_date()),
+                        EDataType::Enum => {
                             let mut cell_value: String = cell_data.value.clone();
                             if let Some(link_name) = enum_cell_links.get(row_index) {
                                 gables::get_enum_cells(link_name, |link_cell| {
@@ -577,7 +577,7 @@ fn write_gable_data(worksheet: &Worksheet, gable_data: &mut GableData, max_row: 
 
     for row_idx in 1..max_row {
         let mut row_data: BTreeMap<u16, CellData> = BTreeMap::new();
-        let mut cell_type: EDataType = EDataType::STRING;
+        let mut cell_type: EDataType = EDataType::String;
         for col_idx in 0..max_col {
             if row_idx >= constant::TABLE_DATA_ROW_TOTAL {
                 cell_type = if let Some(cell_type_data) =
@@ -585,7 +585,7 @@ fn write_gable_data(worksheet: &Worksheet, gable_data: &mut GableData, max_row: 
                 {
                     EDataType::convert(&cell_type_data.get_value())
                 } else {
-                    EDataType::STRING
+                    EDataType::String
                 };
             }
             if let Some(cell) = worksheet.get_cell((&col_idx, &row_idx)) {
@@ -599,22 +599,22 @@ fn write_gable_data(worksheet: &Worksheet, gable_data: &mut GableData, max_row: 
                 };
                 if !value.is_empty() {
                     let cell_value: String = match cell_type {
-                        EDataType::PERMILLAGE => {
+                        EDataType::Permillage => {
                             let permillage_value: f64 = value.parse::<f64>().unwrap() / 1000.0;
                             format!("{:.3}", permillage_value)
                         }
-                        EDataType::PERMIAN => {
+                        EDataType::Permian => {
                             let permian_value: f64 = value.parse::<f64>().unwrap() / 10000.0;
                             format!("{:.4}", permian_value)
                         }
-                        EDataType::TIME => match value.parse::<f64>() {
+                        EDataType::Time => match value.parse::<f64>() {
                             Ok(decimal_time) => {
                                 let total_seconds = (decimal_time * 86400.0).round() as u32;
                                 total_seconds.to_string()
                             }
                             Err(_) => String::new(),
                         },
-                        EDataType::DATE => {
+                        EDataType::Date => {
                             match value.parse::<f64>() {
                                 Ok(decimal_seconds) => {
                                     // 将Excel/WPS的日期序列号转换为秒基准日期：1900年1月0日（Excel/WPS的起始点）
@@ -627,7 +627,7 @@ fn write_gable_data(worksheet: &Worksheet, gable_data: &mut GableData, max_row: 
                                 Err(_) => String::new(),
                             }
                         }
-                        EDataType::ENUM => {
+                        EDataType::Enum => {
                             let mut cell_value: String = value.to_string();
                             if let Some(link_name) = links.get(&col_idx) {
                                 gables::get_enum_cells(link_name, |link_cell| {
@@ -675,10 +675,10 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
             {
                 EDataType::convert(&cell_type_data.get_value())
             } else {
-                EDataType::STRING
+                EDataType::String
             }
         } else {
-            EDataType::STRING
+            EDataType::String
         };
         let mut link_name: Option<String> = None;
         for col_idx in 0..max_col {
@@ -699,19 +699,19 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
                 if col_idx == constant::TABLE_KV_COL_VALUE {
                     if !value.is_empty() {
                         let cell_value: String = match cell_type {
-                            EDataType::PERMILLAGE => {
+                            EDataType::Permillage => {
                                 let permillage_value: f64 = value.parse::<f64>().unwrap() / 1000.0;
                                 format!("{:.3}", permillage_value)
                             }
-                            EDataType::PERMIAN => {
+                            EDataType::Permian => {
                                 let permian_value: f64 = value.parse::<f64>().unwrap() / 10000.0;
                                 format!("{:.4}", permian_value)
                             }
-                            EDataType::TIME => match value.parse::<f64>() {
+                            EDataType::Time => match value.parse::<f64>() {
                                 Ok(decimal_time) => (decimal_time * 86400.0).round().to_string(),
                                 Err(_) => String::new(),
                             },
-                            EDataType::DATE => {
+                            EDataType::Date => {
                                 match value.parse::<f64>() {
                                     Ok(decimal_seconds) => {
                                         // 将Excel/WPS的日期序列号转换为秒基准日期：1900年1月0日（Excel/WPS的起始点）
@@ -724,7 +724,7 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
                                     Err(_) => String::new(),
                                 }
                             }
-                            EDataType::ENUM => {
+                            EDataType::Enum => {
                                 let mut cell_value: String = value.to_string();
                                 if let Some(link_name) = &link_name {
                                     gables::get_enum_cells(link_name, |link_cell| {

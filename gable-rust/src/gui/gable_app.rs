@@ -210,9 +210,6 @@ impl GableApp {
                         }
                     }
                 }
-                _ => {
-                    log::warn!("未知的命令: {:?}", command.com_type);
-                }
             }
         }
     }

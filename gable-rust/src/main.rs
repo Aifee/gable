@@ -2,7 +2,6 @@
 
 mod common;
 mod gui;
-mod test;
 use eframe::egui;
 use gui::gable_app::GableApp;
 

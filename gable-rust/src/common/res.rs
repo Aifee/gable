@@ -2,7 +2,7 @@ use crate::gui::datas::edevelop_type::EDevelopType;
 use eframe::egui::{Color32, ColorImage, Context, TextureHandle, TextureOptions, Vec2};
 use image::{DynamicImage, ImageBuffer, Rgba};
 
-pub const ICON_DEFUALT: &[u8] = include_bytes!(r"../../assets/icons/error.png");
+// pub const ICON_DEFUALT: &[u8] = include_bytes!(r"../../assets/icons/error.png");
 /// 字体资源
 pub const FONT_ASSETS: &[u8] = include_bytes!(r"../../assets/fonts/SourceHanSansSC-Normal.otf");
 /// fallback字体
@@ -29,7 +29,7 @@ pub const ICON_JAVASCRIPT: &[u8] = include_bytes!("../../assets/icons/javascript
 pub const ICON_LUA: &[u8] = include_bytes!("../../assets/icons/lua.png");
 pub const ICON_PYTHON: &[u8] = include_bytes!("../../assets/icons/python.png");
 pub const ICON_TYPESCRIPT: &[u8] = include_bytes!("../../assets/icons/typescript.png");
-pub const ICON_YAML: &[u8] = include_bytes!("../../assets/icons/yaml.png");
+// pub const ICON_YAML: &[u8] = include_bytes!("../../assets/icons/yaml.png");
 
 /// 加载图片
 pub fn load_texture(ctx: &Context, data: &[u8], name: &str) -> TextureHandle {
@@ -59,7 +59,6 @@ pub fn load_develop_icon(ctx: &Context, dev: &EDevelopType) -> TextureHandle {
         EDevelopType::Lua => ICON_LUA,
         EDevelopType::Python => ICON_PYTHON,
         EDevelopType::TypeScript => ICON_TYPESCRIPT,
-        _ => ICON_DEFUALT,
     };
     load_texture(ctx, icon_texture, dev.to_string())
 }

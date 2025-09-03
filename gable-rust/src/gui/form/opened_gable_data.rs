@@ -48,7 +48,7 @@ impl OpenedGableData {
         let total_rows: u32 = data.max_row;
         let total_cols: u16 = data.max_col;
         let mut cell_types: HashMap<u16, EDataType> = HashMap::<u16, EDataType>::new();
-        let mut link_cells: HashMap<u16, BTreeMap<u32, BTreeMap<u16, CellData>>> = HashMap::new();
+        let mut link_cells: HashMap<u16, &String> = HashMap::new();
         // 通过预先获取的行数据查找列数据
         if total_rows >= constant::TABLE_DATA_ROW_TOTAL {
             for col_index in 1..total_cols + 1 {
@@ -65,11 +65,7 @@ impl OpenedGableData {
                                 let link_cell = row_link_data.get(&col_index);
                                 if let Some(link_cell) = link_cell {
                                     if !link_cell.value.is_empty() {
-                                        if let Some(link_datas) =
-                                            gables::get_enum_cells(&link_cell.value)
-                                        {
-                                            link_cells.insert(col_index, link_datas);
-                                        }
+                                        link_cells.insert(col_index, &link_cell.value);
                                     }
                                 }
                             }
@@ -102,7 +98,7 @@ impl OpenedGableData {
         items
     }
     fn pairs_items_kv(data: &GableData) -> BTreeMap<u32, BTreeMap<u16, String>> {
-        let mut link_cells: HashMap<u16, BTreeMap<u32, BTreeMap<u16, CellData>>> = HashMap::new();
+        let mut link_cells: HashMap<u16, &String> = HashMap::new();
         let mut items: BTreeMap<u32, BTreeMap<u16, String>> = BTreeMap::new();
         for (row, cols) in data.heads.iter() {
             let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
@@ -114,22 +110,25 @@ impl OpenedGableData {
         }
         for (row, cols) in data.cells.iter() {
             let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
+            let mut cell_type: EDataType = EDataType::STRING;
+            link_cells.clear();
             for (col, cell) in cols.iter() {
-                let mut cell_type: EDataType = EDataType::STRING;
-                link_cells.clear();
                 if col == &(constant::TABLE_KV_COL_TYPE as u16) {
                     cell_type = EDataType::convert(&cell.value);
                 }
                 if col == &(constant::TABLE_KV_COL_LINK as u16) && cell_type == EDataType::ENUM {
                     let cell_link_value: Option<&String> = Some(&cell.value);
                     if let Some(link_value) = cell_link_value {
-                        if let Some(link_datas) = gables::get_enum_cells(link_value) {
-                            link_cells.insert(*col, link_datas);
-                        }
+                        link_cells.insert(*col, link_value);
                     }
                 }
-                let value: String = Self::pairs_value(&cell_type, cell, &link_cells);
-                cols_items.insert(*col, value);
+                if col == &(constant::TABLE_KV_COL_VALUE as u16) {
+                    let value: String = Self::pairs_value(&cell_type, cell, &link_cells);
+                    cols_items.insert(*col, value);
+                } else {
+                    let value: String = Self::pairs_value(&EDataType::STRING, cell, &link_cells);
+                    cols_items.insert(*col, value);
+                }
             }
             items.insert(*row, cols_items);
         }
@@ -137,7 +136,7 @@ impl OpenedGableData {
     }
     fn pairs_items_enum(data: &GableData) -> BTreeMap<u32, BTreeMap<u16, String>> {
         let mut items: BTreeMap<u32, BTreeMap<u16, String>> = BTreeMap::new();
-        let link_cells: HashMap<u16, BTreeMap<u32, BTreeMap<u16, CellData>>> = HashMap::new();
+        let link_cells: HashMap<u16, &String> = HashMap::new();
         for (row, cols) in data.heads.iter() {
             let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
             for (col, cell) in cols.iter() {
@@ -160,7 +159,7 @@ impl OpenedGableData {
     fn pairs_value(
         data_type: &EDataType,
         cell: &CellData,
-        link_cells: &HashMap<u16, BTreeMap<u32, BTreeMap<u16, CellData>>>,
+        link_cells: &HashMap<u16, &String>,
     ) -> String {
         match data_type {
             EDataType::PERCENTAGE => {
@@ -175,20 +174,23 @@ impl OpenedGableData {
             EDataType::TIME => cell.convert_time(),
             EDataType::DATE => cell.convert_date(),
             EDataType::ENUM => {
-                if let Some(link_datas) = link_cells.get(&cell.column) {
-                    for (_, link_data) in link_datas.iter() {
-                        if let Some(enum_value_cell) =
-                            link_data.get(&constant::TABLE_ENUM_COL_VALUE)
-                        {
-                            if enum_value_cell.value == cell.value {
-                                if let Some(enum_desc_cell) =
-                                    link_data.get(&constant::TABLE_ENUM_COL_DESC)
-                                {
-                                    return enum_desc_cell.value.clone();
+                if let Some(link_name) = link_cells.get(&cell.column) {
+                    gables::get_enum_cells(link_name, |cell_data| {
+                        for (_, link_data) in cell_data.cells.iter() {
+                            if let Some(enum_value_cell) =
+                                link_data.get(&constant::TABLE_ENUM_COL_VALUE)
+                            {
+                                if enum_value_cell.value == cell.value {
+                                    if let Some(enum_desc_cell) =
+                                        link_data.get(&constant::TABLE_ENUM_COL_DESC)
+                                    {
+                                        return enum_desc_cell.value.clone();
+                                    }
                                 }
                             }
                         }
-                    }
+                        String::new()
+                    });
                     String::new()
                 } else {
                     cell.value.clone()

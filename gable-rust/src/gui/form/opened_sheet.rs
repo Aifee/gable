@@ -6,7 +6,6 @@ use crate::gui::{
 #[derive(Debug, Clone)]
 pub struct OpenedSheet {
     pub display_name: String,
-    // pub gable_type: ESheetType,
     pub data: OpenedGableData,
 }
 
@@ -14,7 +13,6 @@ impl OpenedSheet {
     pub fn new(item: &TreeItem) -> Self {
         Self {
             display_name: item.display_name.clone(),
-            // gable_type: item.data.as_ref().unwrap().gable_type.clone(),
             data: Self::pairs_data(item.data.as_ref().unwrap()),
         }
     }

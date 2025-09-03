@@ -165,19 +165,19 @@ impl CellData {
         if self.value.is_empty() {
             return 0;
         }
-        return self.value.parse::<i32>().unwrap();
+        return self.value.parse::<i32>().unwrap_or(0);
     }
     pub fn parse_bool(&self) -> bool {
         if self.value.is_empty() {
             return false;
         }
-        return self.value.parse::<bool>().unwrap();
+        return self.value.parse::<bool>().unwrap_or(false);
     }
     pub fn parse_float(&self) -> f64 {
         if self.value.is_empty() {
             return 0.0;
         }
-        return self.value.parse::<f64>().unwrap();
+        return self.value.parse::<f64>().unwrap_or(0.0);
     }
     /**
      * 将单元格中的值解析为时间格式：
@@ -192,7 +192,7 @@ impl CellData {
         if self.value.is_empty() {
             return 0.0;
         }
-        let seconds: f64 = self.value.parse::<f64>().unwrap();
+        let seconds: f64 = self.value.parse::<f64>().unwrap_or(0.0);
         let fraction: f64 = seconds / 86400.0;
         return fraction;
     }
@@ -200,7 +200,7 @@ impl CellData {
         if self.value.is_empty() {
             return String::new();
         }
-        let seconds: f64 = self.value.parse::<f64>().unwrap();
+        let seconds: f64 = self.value.parse::<f64>().unwrap_or(0.0);
         let total_seconds = seconds as u32;
         let hours = total_seconds / 3600;
         let minutes = (total_seconds % 3600) / 60;
@@ -222,7 +222,7 @@ impl CellData {
             return 0.0;
         }
         // 尝试解析存储的值为秒数
-        let seconds: u64 = self.value.parse::<u64>().unwrap();
+        let seconds: u64 = self.value.parse::<u64>().unwrap_or(0);
         let days: u64 = seconds / 86400;
         let fraction: f64 = (seconds % 86400) as f64;
         let cell_value: f64 = ((days + 1) as f64) + fraction / 86400.0;
@@ -233,7 +233,7 @@ impl CellData {
         if self.value.is_empty() {
             return String::new();
         }
-        let seconds: u64 = self.value.parse::<u64>().unwrap();
+        let seconds: u64 = self.value.parse::<u64>().unwrap_or(0);
         // 根据Excel日期系统处理日期转换
         // Excel基准日期是1900-01-01，但存在一个特殊问题：
         // 1. Excel认为1900年是闰年（实际上不是）

@@ -1,5 +1,4 @@
 use crate::common::{constant, excel_util, setting, utils};
-use crate::gui::datas::cell_data::CellData;
 use crate::gui::datas::{
     eitem_type::EItemType, esheet_type::ESheetType, gable_data::GableData, tree_data::TreeData,
     tree_item::TreeItem, watcher_data::WatcherData,
@@ -7,8 +6,8 @@ use crate::gui::datas::{
 use lazy_static::lazy_static;
 use rayon::prelude::*;
 use std::{
-    cmp::Ordering, collections::BTreeMap, collections::HashMap, fs, io::Error, path::Path,
-    path::PathBuf, sync::Arc, sync::Mutex, sync::MutexGuard,
+    cmp::Ordering, collections::HashMap, fs, io::Error, path::Path, path::PathBuf, sync::Arc,
+    sync::Mutex, sync::MutexGuard,
 };
 
 lazy_static! {
@@ -283,35 +282,36 @@ pub fn find_tree_item_by_path(path: &str, item_type: EItemType) -> Option<TreeIt
     }
 }
 
-fn get_enum_cells_item(
-    item: &TreeItem,
-    link_name: &str,
-) -> Option<BTreeMap<u32, BTreeMap<u16, CellData>>> {
-    // 检查当前项是否匹配link_name且类型为ENUM
-    if let Some(ref item_link_name) = item.link_name {
-        if *item_link_name == link_name {
-            if let Some(ref tree_data) = item.data {
-                if tree_data.gable_type == ESheetType::ENUM {
-                    return Some(tree_data.content.cells.clone());
+pub fn get_enum_cells<F, R>(link_name: &str, f: F) -> Option<R>
+where
+    F: FnOnce(&GableData) -> R,
+{
+    fn get_enum_cells_item<'a>(item: &'a TreeItem, link_name: &str) -> Option<&'a GableData> {
+        // 检查当前项是否匹配link_name且类型为ENUM
+        if let Some(ref item_link_name) = item.link_name {
+            if *item_link_name == link_name {
+                if let Some(ref tree_data) = item.data {
+                    if tree_data.gable_type == ESheetType::ENUM {
+                        return Some(&tree_data.content);
+                    }
                 }
             }
         }
-    }
 
-    // 递归检查子项
-    for child in &item.children {
-        if let Some(cells) = get_enum_cells_item(child, link_name) {
-            return Some(cells);
+        // 递归检查子项
+        for child in &item.children {
+            if let Some(cells) = get_enum_cells_item(child, link_name) {
+                return Some(cells);
+            }
         }
+
+        None
     }
 
-    None
-}
-pub fn get_enum_cells(link_name: &str) -> Option<BTreeMap<u32, BTreeMap<u16, CellData>>> {
-    let tree_items_copy: Vec<TreeItem> = TREE_ITEMS.lock().unwrap().clone();
-    for root_item in tree_items_copy.iter() {
+    let tree_items = TREE_ITEMS.lock().unwrap();
+    for root_item in tree_items.iter() {
         if let Some(cells) = get_enum_cells_item(root_item, link_name) {
-            return Some(cells);
+            return Some(f(cells));
         }
     }
     None

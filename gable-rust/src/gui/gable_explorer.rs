@@ -48,7 +48,8 @@ impl GableExplorer {
                 ScrollArea::vertical()
                     .auto_shrink([false; 2])
                     .show(ui, |ui| {
-                        let tree_items = gables::TREE_ITEMS.lock().unwrap();
+                        let tree_items_clone = gables::TREE_ITEMS.lock().unwrap().clone();
+                        let tree_items = tree_items_clone.clone();
                         for item in tree_items.iter() {
                             Self::gui_tree_item(
                                 ui,

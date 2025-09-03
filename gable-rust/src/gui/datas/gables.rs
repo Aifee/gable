@@ -1,12 +1,10 @@
 use crate::common::{constant, excel_util, setting, utils};
-use crate::gui::datas::action_command::{ActionCommand, ECommandType};
 use crate::gui::datas::{
     eitem_type::EItemType, esheet_type::ESheetType, gable_data::GableData, tree_data::TreeData,
     tree_item::TreeItem, watcher_data::WatcherData,
 };
 use lazy_static::lazy_static;
 use rayon::prelude::*;
-use std::collections::VecDeque;
 use std::{
     cmp::Ordering, collections::HashMap, fs, io::Error, path::Path, path::PathBuf, sync::Arc,
     sync::Mutex, sync::MutexGuard,
@@ -227,82 +225,70 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     items
 }
 
-// 定义内部函数来递归查找指定路径的项
-fn get_item_by_path(items: &[TreeItem], path: &str) -> Option<TreeItem> {
-    for item in items.iter() {
-        if item.fullpath == path {
-            return Some(item.clone());
-        }
-
-        if let Some(result) = get_item_by_path(&item.children, path) {
-            return Some(result);
-        }
-    }
-    None
-}
-
-fn find_parent_for_item(item: TreeItem, item_type: EItemType) -> Option<TreeItem> {
-    if item.item_type == item_type {
-        return Some(item);
-    }
-    let parent_path: String = item.parent?;
-    match TREE_ITEMS.try_lock() {
-        Ok(tree_items) => {
-            let tree_items_copy: Vec<TreeItem> = tree_items.clone();
-            // 释放锁
-            drop(tree_items);
-
-            for root_item in tree_items_copy.iter() {
-                if let Some(parent_item) = get_item_by_path(&[root_item.clone()], &parent_path) {
-                    return find_parent_for_item(parent_item, item_type);
-                }
-            }
-            None
-        }
-        Err(_) => {
-            // 获取锁失败，说明锁已被占用，返回None避免死锁
-            log::warn!("无法获取TREE_ITEMS锁，跳过查找父项");
-            None
-        }
-    }
-}
-
-/// 根据路径直接获取TreeItem，保证返回的是item_type类型
-pub fn find_tree_item_by_path(path: &str, item_type: EItemType) -> Option<TreeItem> {
-    let tree_items_copy: Vec<TreeItem> = TREE_ITEMS.lock().unwrap().clone();
-    let mut found_item: Option<TreeItem> = None;
-    for root_item in tree_items_copy.iter() {
-        if let Some(item) = get_item_by_path(&[root_item.clone()], path) {
-            found_item = Some(item);
-            break;
-        }
-    }
-    if let Some(item) = found_item {
-        find_parent_for_item(item, item_type)
-    } else {
-        None
-    }
-}
-
-pub fn get_item_clone(path: &str) -> Option<TreeItem> {
-    let tree_items = TREE_ITEMS.lock().unwrap();
-
-    fn find_item_by_path<'a>(items: &'a [TreeItem], path: &str) -> Option<&'a TreeItem> {
+// 根据路径查找树节点，当节点和item_type不匹配时，往父节点查找
+pub fn find_item_clone(path: &str, item_type: EItemType) -> Option<TreeItem> {
+    fn find_item_by_path_recursive<'a>(items: &'a [TreeItem], path: &str) -> Option<&'a TreeItem> {
         for item in items {
             if item.fullpath == path {
                 return Some(item);
             }
 
-            if let Some(found) = find_item_by_path(&item.children, path) {
+            if let Some(found) = find_item_by_path_recursive(&item.children, path) {
                 return Some(found);
             }
         }
         None
     }
 
-    find_item_by_path(&tree_items, path).cloned()
+    fn find_parent_item(path: &str, target_type: EItemType) -> Option<TreeItem> {
+        // 先找到当前项
+        let tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
+        let item: &TreeItem = find_item_by_path_recursive(&tree_items, path)?;
+        if item.item_type == target_type {
+            return Some(item.clone());
+        }
+
+        // 如果类型不匹配，需要查找父节点
+        let parent_path: String = item.parent.as_ref()?.clone();
+        drop(tree_items); // 释放锁
+
+        // 递归查找父节点
+        find_parent_item(&parent_path, target_type)
+    }
+
+    let tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
+    let item: &TreeItem = find_item_by_path_recursive(&tree_items, path)?;
+
+    if item.item_type == item_type {
+        Some(item.clone())
+    } else {
+        // 类型不匹配，需要查找父节点
+        let parent_path = item.parent.as_ref()?.clone();
+        drop(tree_items); // 释放锁
+        find_parent_item(&parent_path, item_type)
+    }
 }
 
+// 根据路径查找树节点
+pub fn get_item_clone(path: &str) -> Option<TreeItem> {
+    let tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
+    fn get_item_by_path<'a>(items: &'a [TreeItem], path: &str) -> Option<&'a TreeItem> {
+        for item in items {
+            if item.fullpath == path {
+                return Some(item);
+            }
+
+            if let Some(found) = get_item_by_path(&item.children, path) {
+                return Some(found);
+            }
+        }
+        None
+    }
+
+    get_item_by_path(&tree_items, path).cloned()
+}
+
+// 获取枚举数据
 pub fn get_enum_cells<F, R>(link_name: &str, f: F) -> Option<R>
 where
     F: FnOnce(&GableData) -> R,

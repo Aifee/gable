@@ -185,6 +185,7 @@ impl GableApp {
         let action: ActionCommand = ActionCommand::new(ECommandType::EDITOR, Some(full_path));
         commands.push_back(action);
     }
+    /// 打开指令
     pub fn open_command(full_path: String) {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
         let action: ActionCommand = ActionCommand::new(ECommandType::OPEN, Some(full_path));
@@ -204,9 +205,7 @@ impl GableApp {
                 }
                 ECommandType::OPEN => {
                     if let Some(param) = command.param {
-                        if let Some(tree_item) =
-                            gables::find_tree_item_by_path(&param, EItemType::Excel)
-                        {
+                        if let Some(tree_item) = gables::find_item_clone(&param, EItemType::Excel) {
                             self.gable_form.open(&tree_item);
                         }
                     }

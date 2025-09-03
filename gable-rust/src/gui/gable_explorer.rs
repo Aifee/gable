@@ -48,8 +48,8 @@ impl GableExplorer {
                 ScrollArea::vertical()
                     .auto_shrink([false; 2])
                     .show(ui, |ui| {
-                        let tree_items_clone = gables::TREE_ITEMS.lock().unwrap().clone();
-                        let tree_items = tree_items_clone.clone();
+                        let tree_items = gables::TREE_ITEMS.lock().unwrap();
+                        // let tree_items = tree_items_clone.clone();
                         for item in tree_items.iter() {
                             Self::gui_tree_item(
                                 ui,
@@ -197,6 +197,7 @@ impl GableExplorer {
             // 处理双击事件
             if header_response.double_clicked() {
                 *double_clicked_item = Some(item.fullpath.clone());
+                // gables::open_command(item.fullpath.clone());
             }
 
             // 添加选中状态的视觉反馈
@@ -412,7 +413,8 @@ impl GableExplorer {
                     ui.close();
                 }
                 if ui.button("编辑").clicked() {
-                    gables::edit_gable(item.clone());
+                    // gables::edit_gable(item.clone());
+                    gables::editor_command(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
@@ -439,7 +441,8 @@ impl GableExplorer {
             }
             EItemType::Sheet => {
                 if ui.button("编辑").clicked() {
-                    gables::edit_gable(item.clone());
+                    // gables::edit_gable(item.clone());
+                    gables::editor_command(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();

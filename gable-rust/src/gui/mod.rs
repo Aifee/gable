@@ -15,6 +15,7 @@ pub mod gable_menu;
 pub mod gable_navigation;
 pub mod gable_popup;
 pub mod datas {
+    pub mod action_command;
     pub mod cell_data;
     pub mod edata_type;
     pub mod edevelop_type;

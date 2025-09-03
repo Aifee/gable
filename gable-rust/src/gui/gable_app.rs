@@ -182,6 +182,7 @@ impl App for GableApp {
         self.gable_log.ongui(ctx);
         self.gable_form.ongui(ctx);
         self.gable_popup.ongui(ctx);
+        gables::update_command();
         if let Some(double_clicked_path) = &self.gable_explorer.double_clicked_item {
             if let Some(tree_item) =
                 gables::find_tree_item_by_path(double_clicked_path, EItemType::Excel)

@@ -1,10 +1,12 @@
 use crate::common::{constant, excel_util, setting, utils};
+use crate::gui::datas::action_command::{ActionCommand, ECommandType};
 use crate::gui::datas::{
     eitem_type::EItemType, esheet_type::ESheetType, gable_data::GableData, tree_data::TreeData,
     tree_item::TreeItem, watcher_data::WatcherData,
 };
 use lazy_static::lazy_static;
 use rayon::prelude::*;
+use std::collections::VecDeque;
 use std::{
     cmp::Ordering, collections::HashMap, fs, io::Error, path::Path, path::PathBuf, sync::Arc,
     sync::Mutex, sync::MutexGuard,
@@ -15,6 +17,8 @@ lazy_static! {
     pub static ref TREE_ITEMS: Arc<Mutex<Vec<TreeItem>>> = Arc::new(Mutex::new(Vec::new()));
     /// 正在编辑的文件列表
     pub static ref EDITION_FILES: Arc<Mutex<HashMap<String, WatcherData>>> = Arc::new(Mutex::new(HashMap::new()));
+    /// 操作指令
+    pub static ref COMMANDS:Arc<Mutex<VecDeque<ActionCommand>>>= Arc::new(Mutex::new(VecDeque::new()));
 }
 
 /// 添加编辑文件到编辑列表
@@ -282,6 +286,25 @@ pub fn find_tree_item_by_path(path: &str, item_type: EItemType) -> Option<TreeIt
     }
 }
 
+pub fn get_item_clone(path: &str) -> Option<TreeItem> {
+    let tree_items = TREE_ITEMS.lock().unwrap();
+
+    fn find_item_by_path<'a>(items: &'a [TreeItem], path: &str) -> Option<&'a TreeItem> {
+        for item in items {
+            if item.fullpath == path {
+                return Some(item);
+            }
+
+            if let Some(found) = find_item_by_path(&item.children, path) {
+                return Some(found);
+            }
+        }
+        None
+    }
+
+    find_item_by_path(&tree_items, path).cloned()
+}
+
 pub fn get_enum_cells<F, R>(link_name: &str, f: F) -> Option<R>
 where
     F: FnOnce(&GableData) -> R,
@@ -315,117 +338,6 @@ where
         }
     }
     None
-}
-
-/// 编辑gable文件
-pub fn edit_gable(item: TreeItem) {
-    if item.item_type == EItemType::Folder {
-        log::error!("文件夹不能进行编辑");
-        return;
-    }
-
-    let excel_name: String = if item.item_type == EItemType::Excel {
-        item.display_name.clone()
-    } else {
-        let file_name: String = {
-            let path: &Path = Path::new(&item.fullpath);
-            if let Some(file_name) = path.file_name() {
-                file_name.to_string_lossy().to_string()
-            } else {
-                item.fullpath.clone()
-            }
-        };
-
-        if let Some(at_pos) = file_name.find('@') {
-            file_name[..at_pos].to_string()
-        } else if let Some(dot_pos) = file_name.rfind('.') {
-            file_name[..dot_pos].to_string()
-        } else {
-            item.display_name.clone()
-        }
-    };
-    let parent_path: String = {
-        let path: &Path = Path::new(&item.fullpath);
-        if let Some(parent) = path.parent() {
-            parent.to_string_lossy().to_string()
-        } else {
-            ".".to_string()
-        }
-    };
-    let mut related_files: Vec<String> = Vec::new();
-    if let Ok(entries) = fs::read_dir(&parent_path) {
-        for entry in entries.filter_map(|e| e.ok()) {
-            let entry_name: String = entry.file_name().to_string_lossy().to_string();
-
-            // 检查是否为.gable文件且excel名称匹配
-            if let Some((parsed_excel_name, _)) = parse_gable_filename(&entry_name) {
-                if parsed_excel_name == excel_name {
-                    related_files.push(entry.path().to_string_lossy().to_string());
-                }
-            }
-        }
-    }
-    let sheet_type: ESheetType = {
-        // 首先尝试从 item.data 获取
-        if let Some(ref data) = item.data {
-            data.gable_type.clone()
-        } else {
-            let mut found_type: Option<ESheetType> = None;
-            for child in &item.children {
-                if let Some(ref child_data) = child.data {
-                    found_type = Some(child_data.gable_type.clone());
-                    break;
-                }
-            }
-
-            // 如果仍然没有找到，则使用默认值
-            found_type.unwrap_or_else(|| {
-                log::warn!(
-                    "无法从 {} 或其子项中获取 sheet 类型，使用默认类型 DATA",
-                    item.fullpath
-                );
-                ESheetType::DATA
-            })
-        }
-    };
-    match excel_util::write_excel(&excel_name, &sheet_type, related_files) {
-        Ok(excel_file_path) => {
-            add_editor_file(excel_file_path.clone(), parent_path, sheet_type);
-            // 使用系统命令打开Excel文件
-            #[cfg(target_os = "windows")]
-            {
-                if let Err(e) = std::process::Command::new("cmd")
-                    .args(&["/C", "start", "", &excel_file_path])
-                    .spawn()
-                {
-                    log::error!("无法打开Excel文件: {}", e);
-                }
-            }
-
-            #[cfg(target_os = "macos")]
-            {
-                if let Err(e) = std::process::Command::new("open")
-                    .arg(&excel_file_path)
-                    .spawn()
-                {
-                    log::error!("无法打开Excel文件: {}", e);
-                }
-            }
-
-            #[cfg(target_os = "linux")]
-            {
-                if let Err(e) = std::process::Command::new("xdg-open")
-                    .arg(&excel_file_path)
-                    .spawn()
-                {
-                    log::error!("无法打开Excel文件: {}", e);
-                }
-            }
-        }
-        Err(e) => {
-            log::error!("写入Excel文件时出错: {}", e);
-        }
-    }
 }
 
 /// 项目目录调整好重置数据
@@ -685,4 +597,146 @@ fn remove_item_from_tree_recursive(items: &mut Vec<TreeItem>, fullpath: &str) ->
     }
 
     false
+}
+
+/// 编辑指令
+pub fn editor_command(full_path: String) {
+    let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
+    let action: ActionCommand = ActionCommand::new(ECommandType::EDITOR, Some(full_path));
+    commands.push_back(action);
+}
+pub fn open_command(full_path: String) {
+    let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
+    let action: ActionCommand = ActionCommand::new(ECommandType::OPEN, Some(full_path));
+    commands.push_back(action);
+}
+
+/// 更新指令
+pub fn update_command() {
+    let mut commands = COMMANDS.lock().unwrap();
+    while let Some(command) = commands.pop_front() {
+        match command.com_type {
+            ECommandType::EDITOR => {
+                if let Some(param) = command.param {
+                    if let Some(tree_item) = get_item_clone(&param) {
+                        command_edit_gable(&tree_item);
+                    }
+                }
+            }
+            _ => {
+                log::warn!("未知的命令: {:?}", command.com_type);
+            }
+        }
+    }
+}
+
+/// 编辑gable文件
+fn command_edit_gable(item: &TreeItem) {
+    if item.item_type == EItemType::Folder {
+        log::error!("文件夹不能进行编辑");
+        return;
+    }
+
+    let excel_name: String = if item.item_type == EItemType::Excel {
+        item.display_name.clone()
+    } else {
+        let file_name: String = {
+            let path: &Path = Path::new(&item.fullpath);
+            if let Some(file_name) = path.file_name() {
+                file_name.to_string_lossy().to_string()
+            } else {
+                item.fullpath.clone()
+            }
+        };
+
+        if let Some(at_pos) = file_name.find('@') {
+            file_name[..at_pos].to_string()
+        } else if let Some(dot_pos) = file_name.rfind('.') {
+            file_name[..dot_pos].to_string()
+        } else {
+            item.display_name.clone()
+        }
+    };
+    let parent_path: String = {
+        let path: &Path = Path::new(&item.fullpath);
+        if let Some(parent) = path.parent() {
+            parent.to_string_lossy().to_string()
+        } else {
+            ".".to_string()
+        }
+    };
+    let mut related_files: Vec<String> = Vec::new();
+    if let Ok(entries) = fs::read_dir(&parent_path) {
+        for entry in entries.filter_map(|e| e.ok()) {
+            let entry_name: String = entry.file_name().to_string_lossy().to_string();
+
+            // 检查是否为.gable文件且excel名称匹配
+            if let Some((parsed_excel_name, _)) = parse_gable_filename(&entry_name) {
+                if parsed_excel_name == excel_name {
+                    related_files.push(entry.path().to_string_lossy().to_string());
+                }
+            }
+        }
+    }
+    let sheet_type: ESheetType = {
+        // 首先尝试从 item.data 获取
+        if let Some(ref data) = item.data {
+            data.gable_type.clone()
+        } else {
+            let mut found_type: Option<ESheetType> = None;
+            for child in &item.children {
+                if let Some(ref child_data) = child.data {
+                    found_type = Some(child_data.gable_type.clone());
+                    break;
+                }
+            }
+
+            // 如果仍然没有找到，则使用默认值
+            found_type.unwrap_or_else(|| {
+                log::warn!(
+                    "无法从 {} 或其子项中获取 sheet 类型，使用默认类型 DATA",
+                    item.fullpath
+                );
+                ESheetType::DATA
+            })
+        }
+    };
+    match excel_util::write_excel(&excel_name, &sheet_type, related_files) {
+        Ok(excel_file_path) => {
+            add_editor_file(excel_file_path.clone(), parent_path, sheet_type);
+            // 使用系统命令打开Excel文件
+            #[cfg(target_os = "windows")]
+            {
+                if let Err(e) = std::process::Command::new("cmd")
+                    .args(&["/C", "start", "", &excel_file_path])
+                    .spawn()
+                {
+                    log::error!("无法打开Excel文件: {}", e);
+                }
+            }
+
+            #[cfg(target_os = "macos")]
+            {
+                if let Err(e) = std::process::Command::new("open")
+                    .arg(&excel_file_path)
+                    .spawn()
+                {
+                    log::error!("无法打开Excel文件: {}", e);
+                }
+            }
+
+            #[cfg(target_os = "linux")]
+            {
+                if let Err(e) = std::process::Command::new("xdg-open")
+                    .arg(&excel_file_path)
+                    .spawn()
+                {
+                    log::error!("无法打开Excel文件: {}", e);
+                }
+            }
+        }
+        Err(e) => {
+            log::error!("写入Excel文件时出错: {}", e);
+        }
+    }
 }

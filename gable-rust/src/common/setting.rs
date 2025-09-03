@@ -104,8 +104,7 @@ pub fn get_data_path() -> PathBuf {
 
 pub fn clone_build_settings() -> Vec<BuildSetting> {
     let settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();
-    let build_settings_clone: Vec<BuildSetting> = settings.build_settings.clone();
-    let build_settings: Vec<BuildSetting> = build_settings_clone.clone();
+    let build_settings: Vec<BuildSetting> = settings.build_settings.clone();
     build_settings
 }
 
@@ -115,7 +114,7 @@ pub fn add_build_setting(dev_type: EDevelopType) -> Option<usize> {
         display_name: dev_type.to_string().to_string(),
         keyword: dev_type.to_keyword().to_string(),
         target_type: ETargetType::JSON,
-        target_path: utils::get_env_relative_path(get_workspace().to_string_lossy().to_string()),
+        target_path: utils::get_env_relative_path(&get_workspace()),
     };
     let mut settings = APP_SETTINGS.lock().unwrap();
     settings.build_settings.push(build_setting);

@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::{
     common::{
         res,
@@ -20,7 +22,7 @@ pub struct GableBuildSetting {
 impl GableBuildSetting {
     pub fn new() -> Self {
         Self {
-            visible: false,
+            visible: true,
             add_selected: EDevelopType::Cpp,
             selected_index: 0,
         }
@@ -240,17 +242,17 @@ impl GableBuildSetting {
                 ui.set_min_size(item_size);
                 ui.add_sized(title_size, Label::new("target_path:").truncate());
                 ui.allocate_ui_with_layout(second_size, Layout::left_to_right(Align::Min), |ui| {
-                    ui.add(
-                        Label::new(build_settings.target_path.to_string_lossy().to_string())
-                            .truncate(),
-                    );
+                    let absolute_path: PathBuf =
+                        utils::get_absolute_path(&build_settings.target_path);
+                    ui.add(Label::new(absolute_path.to_string_lossy().to_string()).truncate());
                 });
                 if ui.add_sized(third_size, Button::new("Browse")).clicked() {
                     if let Some(path) = rfd::FileDialog::new()
                         .set_title("选择目标路径")
                         .pick_folder()
                     {
-                        build_settings.target_path = path;
+                        let re_path: PathBuf = utils::get_env_relative_path(&path);
+                        build_settings.target_path = re_path;
                     }
                 }
             });

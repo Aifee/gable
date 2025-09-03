@@ -1,3 +1,4 @@
+use crate::common::constant;
 use crate::gui::datas::esheet_type::ESheetType;
 use eframe::egui::{Color32, Context, Style};
 use std::path::{Path, PathBuf};
@@ -53,15 +54,74 @@ pub fn get_selected_color(ctx: &Context) -> Color32 {
 }
 
 /// 绝对路径转换成exe相对路径
-pub fn get_env_relative_path(path: String) -> PathBuf {
-    let absolute_path: &Path = Path::new(&path);
-    let exe_path: PathBuf = std::env::current_exe().expect("无法获取当前可执行文件路径");
-    let exe_dir: &Path = exe_path.parent().expect("无法获取可执行文件所在目录");
-
-    if let Ok(relative_path) = absolute_path.strip_prefix(exe_dir) {
+pub fn get_env_relative_path(path: &Path) -> PathBuf {
+    if let Ok(relative_path) = path.strip_prefix(&*constant::EXE_DIR) {
         relative_path.to_path_buf()
     } else {
-        absolute_path.to_path_buf()
+        // 尝试计算相对路径
+        match (path.canonicalize(), constant::EXE_DIR.canonicalize()) {
+            (Ok(canonical_path), Ok(canonical_exe_dir)) => {
+                if let Ok(relative_path) = canonical_path.strip_prefix(&canonical_exe_dir) {
+                    relative_path.to_path_buf()
+                } else {
+                    // 计算两个路径之间的相对路径
+                    let exe_components: Vec<_> = canonical_exe_dir.components().collect();
+                    let path_components: Vec<_> = canonical_path.components().collect();
+
+                    let mut common_prefix_len = 0;
+                    for (i, (exe_comp, path_comp)) in exe_components
+                        .iter()
+                        .zip(path_components.iter())
+                        .enumerate()
+                    {
+                        if exe_comp == path_comp {
+                            common_prefix_len = i + 1;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    let mut result: PathBuf = PathBuf::new();
+                    // 添加向上移动的目录 ".."
+                    for _ in common_prefix_len..exe_components.len() {
+                        result.push("..");
+                    }
+                    // 添加剩余的路径部分
+                    for comp in path_components.iter().skip(common_prefix_len) {
+                        result.push(comp);
+                    }
+
+                    result
+                }
+            }
+            _ => path.to_path_buf(),
+        }
+    }
+}
+
+// 获取绝对路径
+pub fn get_absolute_path(path: &Path) -> PathBuf {
+    if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        // 否则将路径与EXE_DIR连接，解析为绝对路径
+        let absolute_path = constant::EXE_DIR.join(path);
+        // 规范化路径，解析 .. 和 .
+        match absolute_path.canonicalize() {
+            Ok(canonical_path) => {
+                // 在Windows上，去除 \\?\ 前缀以获得更标准的路径格式
+                #[cfg(windows)]
+                {
+                    if let Some(path_str) = canonical_path.to_str() {
+                        if path_str.starts_with(r"\\?\") {
+                            return PathBuf::from(&path_str[4..]);
+                        }
+                    }
+                }
+                canonical_path
+            }
+            Err(_) => absolute_path, // 如果规范化失败，返回未规范化的路径
+        }
     }
 }
 

@@ -1,3 +1,6 @@
+use lazy_static::lazy_static;
+use std::path::PathBuf;
+
 ///数据文件类型
 pub const GABLE_FILE_TYPE: &str = ".gable";
 ///临时目录
@@ -20,6 +23,15 @@ pub const NUMBER_FORMAT_PERCENTAGE: &str = "0%";
 pub const NUMBER_FORMAT_PERMILLAGE: &str = "0‰";
 /// 单元格万分比格式
 pub const NUMBER_FORMAT_PERMIAN: &str = "0‱";
+lazy_static! {
+    pub static ref EXE_DIR: PathBuf = {
+        let exe_path = std::env::current_exe().expect("无法获取当前可执行文件路径");
+        exe_path
+            .parent()
+            .expect("无法获取可执行文件所在目录")
+            .to_path_buf()
+    };
+}
 
 /// 表单最小行数
 pub const FORM_MIN_ROW: u32 = 47;

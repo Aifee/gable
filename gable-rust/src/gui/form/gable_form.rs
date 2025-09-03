@@ -29,7 +29,7 @@ impl GableForm {
     }
 
     /// 打开一个项目
-    pub fn open(&mut self, item: TreeItem) {
+    pub fn open(&mut self, item: &TreeItem) {
         if let Some(index) = self
             .excels
             .iter()

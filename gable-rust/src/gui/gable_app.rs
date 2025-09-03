@@ -1,4 +1,5 @@
 use crate::common::{res, setting};
+use crate::gui::datas::action_command::{ActionCommand, ECommandType};
 use crate::gui::form::gable_form::GableForm;
 use crate::gui::gable_popup::GablePopup;
 use crate::gui::{
@@ -11,8 +12,15 @@ use eframe::egui::{
 };
 use eframe::emath::History;
 use eframe::{App, CreationContext, Frame};
+use lazy_static::lazy_static;
+use std::collections::VecDeque;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, MutexGuard};
+
+lazy_static! {
+    /// 操作指令
+    pub static ref COMMANDS:Arc<Mutex<VecDeque<ActionCommand>>>= Arc::new(Mutex::new(VecDeque::new()));
+}
 
 pub(crate) struct GableApp {
     frame_times: History<f32>,
@@ -170,6 +178,45 @@ impl GableApp {
         );
         ctx.send_viewport_cmd(ViewportCommand::Title(info));
     }
+
+    /// 编辑指令
+    pub fn editor_command(full_path: String) {
+        let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
+        let action: ActionCommand = ActionCommand::new(ECommandType::EDITOR, Some(full_path));
+        commands.push_back(action);
+    }
+    pub fn open_command(full_path: String) {
+        let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
+        let action: ActionCommand = ActionCommand::new(ECommandType::OPEN, Some(full_path));
+        commands.push_back(action);
+    }
+    /// 更新指令
+    pub fn update_command(&mut self) {
+        let mut commands = COMMANDS.lock().unwrap();
+        while let Some(command) = commands.pop_front() {
+            match command.com_type {
+                ECommandType::EDITOR => {
+                    if let Some(param) = command.param {
+                        if let Some(tree_item) = gables::get_item_clone(&param) {
+                            gables::command_edit_gable(&tree_item);
+                        }
+                    }
+                }
+                ECommandType::OPEN => {
+                    if let Some(param) = command.param {
+                        if let Some(tree_item) =
+                            gables::find_tree_item_by_path(&param, EItemType::Excel)
+                        {
+                            self.gable_form.open(&tree_item);
+                        }
+                    }
+                }
+                _ => {
+                    log::warn!("未知的命令: {:?}", command.com_type);
+                }
+            }
+        }
+    }
 }
 
 impl App for GableApp {
@@ -182,15 +229,6 @@ impl App for GableApp {
         self.gable_log.ongui(ctx);
         self.gable_form.ongui(ctx);
         self.gable_popup.ongui(ctx);
-        gables::update_command();
-        if let Some(double_clicked_path) = &self.gable_explorer.double_clicked_item {
-            if let Some(tree_item) =
-                gables::find_tree_item_by_path(double_clicked_path, EItemType::Excel)
-            {
-                self.gable_form.open(tree_item);
-            }
-            // 重置双击项，避免重复处理
-            self.gable_explorer.double_clicked_item = None;
-        }
+        self.update_command();
     }
 }

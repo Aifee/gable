@@ -13,19 +13,19 @@ pub struct OpenedExcel {
 }
 
 impl OpenedExcel {
-    pub fn new(item: TreeItem) -> Self {
+    pub fn new(item: &TreeItem) -> Self {
         Self {
             selected_sheet_index: 0,
-            full_path: item.fullpath,
-            display_name: item.display_name,
-            sheets: Self::pairs_sheets(item.children),
+            full_path: item.fullpath.clone(),
+            display_name: item.display_name.clone(),
+            sheets: Self::pairs_sheets(&item.children),
         }
     }
 
-    fn pairs_sheets(childs: Vec<TreeItem>) -> Vec<OpenedSheet> {
+    fn pairs_sheets(childs: &Vec<TreeItem>) -> Vec<OpenedSheet> {
         let mut sheets: Vec<OpenedSheet> = Vec::new();
         for child in childs {
-            let sheet: OpenedSheet = OpenedSheet::new(&child);
+            let sheet: OpenedSheet = OpenedSheet::new(child);
             sheets.push(sheet);
         }
         return sheets;

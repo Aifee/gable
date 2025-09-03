@@ -17,8 +17,6 @@ lazy_static! {
     pub static ref TREE_ITEMS: Arc<Mutex<Vec<TreeItem>>> = Arc::new(Mutex::new(Vec::new()));
     /// 正在编辑的文件列表
     pub static ref EDITION_FILES: Arc<Mutex<HashMap<String, WatcherData>>> = Arc::new(Mutex::new(HashMap::new()));
-    /// 操作指令
-    pub static ref COMMANDS:Arc<Mutex<VecDeque<ActionCommand>>>= Arc::new(Mutex::new(VecDeque::new()));
 }
 
 /// 添加编辑文件到编辑列表
@@ -599,39 +597,8 @@ fn remove_item_from_tree_recursive(items: &mut Vec<TreeItem>, fullpath: &str) ->
     false
 }
 
-/// 编辑指令
-pub fn editor_command(full_path: String) {
-    let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
-    let action: ActionCommand = ActionCommand::new(ECommandType::EDITOR, Some(full_path));
-    commands.push_back(action);
-}
-pub fn open_command(full_path: String) {
-    let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
-    let action: ActionCommand = ActionCommand::new(ECommandType::OPEN, Some(full_path));
-    commands.push_back(action);
-}
-
-/// 更新指令
-pub fn update_command() {
-    let mut commands = COMMANDS.lock().unwrap();
-    while let Some(command) = commands.pop_front() {
-        match command.com_type {
-            ECommandType::EDITOR => {
-                if let Some(param) = command.param {
-                    if let Some(tree_item) = get_item_clone(&param) {
-                        command_edit_gable(&tree_item);
-                    }
-                }
-            }
-            _ => {
-                log::warn!("未知的命令: {:?}", command.com_type);
-            }
-        }
-    }
-}
-
 /// 编辑gable文件
-fn command_edit_gable(item: &TreeItem) {
+pub fn command_edit_gable(item: &TreeItem) {
     if item.item_type == EItemType::Folder {
         log::error!("文件夹不能进行编辑");
         return;

@@ -1,6 +1,9 @@
 use crate::{
     common::{constant, setting, utils},
-    gui::datas::{eitem_type::EItemType, gables, tree_item::TreeItem},
+    gui::{
+        datas::{eitem_type::EItemType, gables, tree_item::TreeItem},
+        gable_app::GableApp,
+    },
 };
 use eframe::egui::{
     CollapsingHeader, Color32, Context, CornerRadius, Frame, InputState, Key, Response, ScrollArea,
@@ -23,8 +26,6 @@ pub struct GableExplorer {
     renaming_item: Option<String>,
     /// 重命名时的临时名称
     renaming_text: String,
-    /// 双击选中的项目路径
-    pub double_clicked_item: Option<String>,
 }
 
 impl GableExplorer {
@@ -33,7 +34,6 @@ impl GableExplorer {
             selected_tree_item: None,
             renaming_item: None,
             renaming_text: String::new(),
-            double_clicked_item: None,
         }
     }
 
@@ -57,7 +57,6 @@ impl GableExplorer {
                                 &mut self.selected_tree_item,
                                 &mut self.renaming_item,
                                 &mut self.renaming_text,
-                                &mut self.double_clicked_item,
                             );
                         }
                         // 添加空白区域右键菜单
@@ -94,7 +93,6 @@ impl GableExplorer {
         selected_id: &mut Option<String>,
         renaming_item: &mut Option<String>,
         renaming_text: &mut String,
-        double_clicked_item: &mut Option<String>,
     ) {
         let icon: &'static str = match item.item_type {
             EItemType::Folder => "📁",
@@ -181,7 +179,6 @@ impl GableExplorer {
                                     selected_id,
                                     renaming_item,
                                     renaming_text,
-                                    double_clicked_item,
                                 );
                             }
                         })
@@ -196,8 +193,7 @@ impl GableExplorer {
 
             // 处理双击事件
             if header_response.double_clicked() {
-                *double_clicked_item = Some(item.fullpath.clone());
-                // gables::open_command(item.fullpath.clone());
+                GableApp::open_command(item.fullpath.clone());
             }
 
             // 添加选中状态的视觉反馈
@@ -413,8 +409,7 @@ impl GableExplorer {
                     ui.close();
                 }
                 if ui.button("编辑").clicked() {
-                    // gables::edit_gable(item.clone());
-                    gables::editor_command(item.fullpath.clone());
+                    GableApp::editor_command(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
@@ -441,8 +436,7 @@ impl GableExplorer {
             }
             EItemType::Sheet => {
                 if ui.button("编辑").clicked() {
-                    // gables::edit_gable(item.clone());
-                    gables::editor_command(item.fullpath.clone());
+                    GableApp::editor_command(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();

@@ -284,7 +284,7 @@ pub fn find_tree_item_by_path(path: &str, item_type: EItemType) -> Option<TreeIt
 }
 
 fn get_enum_cells_item(
-    item: TreeItem,
+    item: &TreeItem,
     link_name: &str,
 ) -> Option<BTreeMap<u32, BTreeMap<u16, CellData>>> {
     // 检查当前项是否匹配link_name且类型为ENUM
@@ -299,7 +299,7 @@ fn get_enum_cells_item(
     }
 
     // 递归检查子项
-    for child in item.children {
+    for child in &item.children {
         if let Some(cells) = get_enum_cells_item(child, link_name) {
             return Some(cells);
         }
@@ -310,7 +310,7 @@ fn get_enum_cells_item(
 pub fn get_enum_cells(link_name: &str) -> Option<BTreeMap<u32, BTreeMap<u16, CellData>>> {
     let tree_items_copy: Vec<TreeItem> = TREE_ITEMS.lock().unwrap().clone();
     for root_item in tree_items_copy.iter() {
-        if let Some(cells) = get_enum_cells_item(root_item.clone(), link_name) {
+        if let Some(cells) = get_enum_cells_item(root_item, link_name) {
             return Some(cells);
         }
     }

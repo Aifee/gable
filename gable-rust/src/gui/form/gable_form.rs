@@ -1,17 +1,16 @@
-use crate::common::{constant, utils};
+use crate::common::constant;
 use crate::gui::component;
-use crate::gui::datas::cell_data::CellData;
-use crate::gui::datas::edata_type::EDataType;
-use crate::gui::datas::gables;
-use crate::gui::datas::{esheet_type::ESheetType, gable_data::GableData, tree_item::TreeItem};
+use crate::gui::datas::tree_item::TreeItem;
 use crate::gui::form::opened_excel::OpenedExcel;
+use crate::gui::form::opened_gable_data::OpenedGableData;
+use crate::gui::form::opened_sheet::OpenedSheet;
 use eframe::egui::Response;
 use eframe::egui::{
-    Align, CentralPanel, Context, Label, Layout, ScrollArea, TextWrapMode, Ui, Vec2,
+    Align, CentralPanel, Context, Label, Layout, ScrollArea, Ui, Vec2,
     scroll_area::ScrollBarVisibility, scroll_area::ScrollSource,
 };
-use egui_extras::{Column, TableBody, TableBuilder};
-use std::collections::{BTreeMap, HashMap};
+use egui_extras::{Column, TableBuilder};
+use std::collections::BTreeMap;
 
 #[derive(Debug, Clone)]
 pub struct GableForm {
@@ -34,7 +33,7 @@ impl GableForm {
         if let Some(index) = self
             .excels
             .iter()
-            .position(|opened_item| opened_item.item.fullpath == item.fullpath)
+            .position(|opened_item| opened_item.full_path == item.fullpath)
         {
             self.selected_excel_index = Some(index);
         } else {
@@ -106,10 +105,10 @@ impl GableForm {
     }
 
     /// 获取选中的Sheet
-    fn get_sheet(&mut self) -> Option<&mut TreeItem> {
+    fn get_sheet(&mut self) -> Option<&OpenedSheet> {
         if let Some(oe) = self.get_selected_excel() {
-            if oe.selected_sheet_index < oe.item.children.len() {
-                return Some(&mut oe.item.children[oe.selected_sheet_index]);
+            if oe.selected_sheet_index < oe.sheets.len() {
+                return Some(&oe.sheets[oe.selected_sheet_index]);
             }
         }
         None
@@ -132,7 +131,7 @@ impl GableForm {
                             let mut close_index: Option<usize> = None;
                             for (index, opened_item) in self.excels.iter().enumerate() {
                                 let is_selected: bool = self.selected_excel_index == Some(index);
-                                let info: &String = &opened_item.item.display_name;
+                                let info: &String = &opened_item.display_name;
                                 let (response, close_response) =
                                     component::excel_tap(ui, info, is_selected, tab_padding);
                                 if response.clicked() {
@@ -170,8 +169,8 @@ impl GableForm {
                         ui.horizontal(|ui| {
                             ui.spacing_mut().item_spacing.x = 0.0;
                             ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
-                                for index in 0..excel.item.children.len() {
-                                    let sheet_item: &TreeItem = &excel.item.children[index];
+                                for index in 0..excel.sheets.len() {
+                                    let sheet_item: &OpenedSheet = &excel.sheets[index];
                                     let is_selected: bool = excel.selected_sheet_index == index;
                                     let info: &String = &sheet_item.display_name;
                                     let response: Response =
@@ -189,14 +188,14 @@ impl GableForm {
 
     /// 数据表 绘制
     fn ongui_table(&mut self, ui: &mut Ui) {
-        let sheet: Option<&mut TreeItem> = self.get_sheet();
+        let sheet: Option<&OpenedSheet> = self.get_sheet();
         if sheet.is_none() {
             ui.centered_and_justified(|ui| ui.label("请选择要浏览的页签"));
             return;
         }
-        let sheet: &mut TreeItem = sheet.unwrap();
-        let sheet_type: ESheetType = sheet.data.as_ref().unwrap().gable_type.clone();
-        let gable_data: &GableData = &sheet.data.as_ref().unwrap().content;
+        let sheet: &OpenedSheet = sheet.unwrap();
+        // let sheet_type: &ESheetType = &sheet.gable_type;
+        let gable_data: &OpenedGableData = &sheet.data;
 
         let show_rows: u32 = if gable_data.max_row < constant::FORM_MIN_ROW {
             constant::FORM_MIN_ROW
@@ -224,312 +223,38 @@ impl GableForm {
                         header.col(|ui| {
                             ui.label("");
                         });
-                        for col in 1..=show_cols {
+                        for header_index in gable_data.column_headers.iter() {
                             header.col(|ui| {
                                 ui.centered_and_justified(|ui| {
-                                    ui.label(utils::column_index_to_name(col as u32));
+                                    ui.label(header_index);
                                 });
                             });
                         }
                     })
-                    .body(|body| match sheet_type {
-                        ESheetType::DATA => {
-                            Self::ongui_table_databody(body, &gable_data, show_rows, show_cols);
-                        }
-                        ESheetType::KV => {
-                            Self::ongui_table_kvbody(body, &gable_data, show_rows, show_cols);
-                        }
-                        ESheetType::ENUM => {
-                            Self::ongui_table_enumbody(body, &gable_data, show_rows, show_cols);
-                        }
+                    .body(|body| {
+                        body.rows(20.0, show_rows as usize, |mut row| {
+                            let row_index: u32 = (row.index() + 1) as u32;
+                            row.col(|ui| {
+                                ui.label(&row_index.to_string());
+                            });
+                            let row_data: Option<&BTreeMap<u16, String>> =
+                                gable_data.items.get(&row_index);
+                            for col_index in 1..show_cols + 1 {
+                                row.col(|ui| {
+                                    if let Some(row_data) = row_data {
+                                        if let Some(cell_data) = row_data.get(&col_index) {
+                                            ui.add(Label::new(cell_data).truncate());
+                                        } else {
+                                            ui.label("");
+                                        }
+                                    } else {
+                                        ui.label("");
+                                    }
+                                });
+                            }
+                        });
                     });
             });
-        });
-    }
-
-    /// 普通数据表绘制
-    fn ongui_table_databody(
-        body: TableBody<'_>,
-        sheet_content: &GableData,
-        show_rows: u32,
-        show_cols: u16,
-    ) {
-        let total_rows: u32 = sheet_content.max_row;
-        let total_cols: u16 = sheet_content.max_col;
-
-        let mut cell_types: HashMap<u16, EDataType> = HashMap::<u16, EDataType>::new();
-        let mut link_cells: HashMap<u16, BTreeMap<u32, BTreeMap<u16, CellData>>> = HashMap::new();
-        // 先遍历列找出需要特殊处理的数据类型
-        if total_rows >= constant::TABLE_DATA_ROW_TOTAL {
-            for col_index in 1..total_cols + 1 {
-                let row_type_data: Option<&BTreeMap<u16, CellData>> =
-                    sheet_content.heads.get(&constant::TABLE_DATA_ROW_TYPE);
-                if let Some(row_type_data) = row_type_data {
-                    let type_cell = row_type_data.get(&col_index);
-                    if let Some(type_cell) = type_cell {
-                        let cell_type: EDataType = EDataType::convert(&type_cell.value);
-                        // 枚举类型进行收集数据，供数据遍历时取值显示
-                        if cell_type == EDataType::ENUM {
-                            let row_link_data: Option<&BTreeMap<u16, CellData>> =
-                                sheet_content.heads.get(&constant::TABLE_DATA_ROW_LINK);
-                            if let Some(row_link_data) = row_link_data {
-                                let link_cell = row_link_data.get(&col_index);
-                                if let Some(link_cell) = link_cell {
-                                    if !link_cell.value.is_empty() {
-                                        if let Some(link_datas) =
-                                            gables::get_enum_cells(&link_cell.value)
-                                        {
-                                            link_cells.insert(col_index, link_datas);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        cell_types.insert(col_index, cell_type);
-                    }
-                }
-            }
-        }
-        body.rows(20.0, show_rows as usize, |mut row| {
-            let row_index: u32 = (row.index() + 1) as u32;
-            row.col(|ui| {
-                ui.label(&row_index.to_string());
-            });
-
-            let row_data: Option<&BTreeMap<u16, CellData>> =
-                if row_index < constant::TABLE_DATA_ROW_TOTAL {
-                    sheet_content.heads.get(&row_index)
-                } else if row_index < total_rows {
-                    sheet_content.cells.get(&row_index)
-                } else {
-                    None
-                };
-
-            for col_index in 1..show_cols + 1 {
-                row.col(|ui| {
-                    // 通过预先获取的行数据查找列数据
-                    if let Some(row_data) = row_data {
-                        if let Some(col_data) = row_data.get(&col_index) {
-                            if row_index >= constant::TABLE_DATA_ROW_TOTAL {
-                                ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
-                                let cell_type = cell_types.get(&col_index);
-                                if let Some(cell_type) = cell_type {
-                                    match cell_type {
-                                        EDataType::PERCENTAGE => {
-                                            ui.label(format!(
-                                                "{:.0}%",
-                                                col_data.parse_float() * 100.0
-                                            ));
-                                        }
-                                        EDataType::PERMILLAGE => {
-                                            ui.label(format!(
-                                                "{:.0}‰",
-                                                col_data.parse_float() * 1000.0
-                                            ));
-                                        }
-                                        EDataType::PERMIAN => {
-                                            ui.label(format!(
-                                                "{:.0}‱",
-                                                col_data.parse_float() * 10000.0
-                                            ));
-                                        }
-                                        EDataType::TIME => {
-                                            ui.label(col_data.convert_time());
-                                        }
-                                        EDataType::DATE => {
-                                            ui.label(col_data.convert_date());
-                                        }
-                                        EDataType::ENUM => {
-                                            if let Some(link_datas) = link_cells.get(&col_index) {
-                                                for (_, link_data) in link_datas.iter() {
-                                                    if let Some(enum_value_cell) = link_data
-                                                        .get(&constant::TABLE_ENUM_COL_VALUE)
-                                                    {
-                                                        if enum_value_cell.value == col_data.value {
-                                                            if let Some(enum_desc_cell) = link_data
-                                                                .get(&constant::TABLE_ENUM_COL_DESC)
-                                                            {
-                                                                ui.add(
-                                                                    Label::new(
-                                                                        &enum_desc_cell.value,
-                                                                    )
-                                                                    .truncate(),
-                                                                );
-                                                            }
-                                                            break;
-                                                        }
-                                                    }
-                                                }
-                                            } else {
-                                                ui.add(Label::new(&col_data.value).truncate());
-                                            }
-                                        }
-                                        _ => {
-                                            ui.add(Label::new(&col_data.value).truncate());
-                                        }
-                                    }
-                                } else {
-                                    ui.add(Label::new(&col_data.value).truncate());
-                                }
-                            } else {
-                                ui.add(Label::new(&col_data.value).truncate());
-                            }
-                        } else {
-                            ui.label("");
-                        }
-                    } else {
-                        ui.label("");
-                    }
-                });
-            }
-        });
-    }
-
-    /// KV表绘制
-    fn ongui_table_kvbody(
-        body: TableBody<'_>,
-        sheet_content: &GableData,
-        show_rows: u32,
-        show_cols: u16,
-    ) {
-        let total_rows: u32 = sheet_content.max_row;
-
-        body.rows(20.0, show_rows as usize, |mut row| {
-            let row_index: u32 = (row.index() + 1) as u32;
-            row.col(|ui| {
-                ui.label(&row_index.to_string());
-            });
-            let row_data: Option<&BTreeMap<u16, CellData>> =
-                if row_index < constant::TABLE_KV_ROW_TOTAL {
-                    sheet_content.heads.get(&row_index)
-                } else if row_index <= total_rows {
-                    sheet_content.cells.get(&row_index)
-                } else {
-                    None
-                };
-            let mut cell_type: EDataType = EDataType::STRING;
-            let mut cell_link_value: Option<&String> = None;
-            for col_index in 1..show_cols + 1 {
-                row.col(|ui| {
-                    if let Some(row_data) = row_data {
-                        if let Some(col_data) = row_data.get(&col_index) {
-                            ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
-
-                            if &col_index == &(constant::TABLE_KV_COL_TYPE as u16) {
-                                cell_type = EDataType::convert(&col_data.value);
-                            }
-                            if &col_index == &(constant::TABLE_KV_COL_LINK as u16) {
-                                cell_link_value = Some(&col_data.value);
-                            }
-                            if &col_index == &(constant::TABLE_KV_COL_VALUE as u16) {
-                                match cell_type {
-                                    EDataType::PERCENTAGE => {
-                                        ui.label(format!("{:.0}%", col_data.parse_float() * 100.0));
-                                    }
-                                    EDataType::PERMILLAGE => {
-                                        ui.label(format!(
-                                            "{:.0}‰",
-                                            col_data.parse_float() * 1000.0
-                                        ));
-                                    }
-                                    EDataType::PERMIAN => {
-                                        ui.label(format!(
-                                            "{:.0}‱",
-                                            col_data.parse_float() * 10000.0
-                                        ));
-                                    }
-                                    EDataType::TIME => {
-                                        ui.label(col_data.convert_time());
-                                    }
-                                    EDataType::DATE => {
-                                        ui.label(col_data.convert_date());
-                                    }
-                                    EDataType::ENUM => {
-                                        if let Some(cell_link_value) = cell_link_value {
-                                            if let Some(enum_cells) =
-                                                gables::get_enum_cells(cell_link_value)
-                                            {
-                                                for (_, enum_rows) in enum_cells.iter() {
-                                                    if let Some(enum_value_cell) = enum_rows
-                                                        .get(&constant::TABLE_ENUM_COL_VALUE)
-                                                    {
-                                                        if &enum_value_cell.value == &col_data.value
-                                                        {
-                                                            if let Some(enum_desc_cell) = enum_rows
-                                                                .get(&constant::TABLE_ENUM_COL_DESC)
-                                                            {
-                                                                ui.add(
-                                                                    Label::new(
-                                                                        &enum_desc_cell.value,
-                                                                    )
-                                                                    .truncate(),
-                                                                );
-                                                            }
-                                                            break;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        } else {
-                                            ui.add(Label::new(&col_data.value).truncate());
-                                        }
-                                    }
-                                    _ => {
-                                        ui.add(Label::new(&col_data.value).truncate());
-                                    }
-                                }
-                            } else {
-                                ui.add(Label::new(&col_data.value).truncate());
-                            }
-                        } else {
-                            ui.label("");
-                        }
-                    } else {
-                        ui.label("");
-                    }
-                });
-            }
-        });
-    }
-
-    /// 枚举表绘制器
-    fn ongui_table_enumbody(
-        body: TableBody<'_>,
-        sheet_content: &GableData,
-        show_rows: u32,
-        show_cols: u16,
-    ) {
-        let total_rows: u32 = sheet_content.max_row;
-        body.rows(20.0, show_rows as usize, |mut row| {
-            let row_index: u32 = (row.index() + 1) as u32;
-            row.col(|ui| {
-                ui.label(&row_index.to_string());
-            });
-
-            let row_data: Option<&BTreeMap<u16, CellData>> =
-                if row_index < constant::TABLE_ENUM_ROW_TOTAL {
-                    sheet_content.heads.get(&row_index)
-                } else if row_index < total_rows {
-                    sheet_content.cells.get(&row_index)
-                } else {
-                    None
-                };
-
-            for col_index in 1..show_cols + 1 {
-                row.col(|ui| {
-                    // 通过预先获取的行数据查找列数据
-                    if let Some(row_data) = row_data {
-                        if let Some(col_data) = row_data.get(&col_index) {
-                            ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
-                            ui.add(Label::new(&col_data.value).truncate());
-                        } else {
-                            ui.label("");
-                        }
-                    } else {
-                        ui.label("");
-                    }
-                });
-            }
         });
     }
 }

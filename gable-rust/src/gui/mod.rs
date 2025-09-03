@@ -6,7 +6,6 @@ pub mod gable_build_setting;
 pub mod gable_explorer;
 pub mod form {
     pub mod gable_form;
-    pub mod opened_cell_data;
     pub mod opened_excel;
     pub mod opened_gable_data;
     pub mod opened_sheet;

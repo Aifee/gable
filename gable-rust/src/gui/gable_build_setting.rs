@@ -21,7 +21,7 @@ impl GableBuildSetting {
     pub fn new() -> Self {
         Self {
             visible: false,
-            add_selected: EDevelopType::cpp,
+            add_selected: EDevelopType::Cpp,
             selected_index: 0,
         }
     }

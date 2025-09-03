@@ -50,15 +50,15 @@ pub fn load_texture(ctx: &Context, data: &[u8], name: &str) -> TextureHandle {
 /// 加载开发语言图标
 pub fn load_develop_icon(ctx: &Context, dev: &EDevelopType) -> TextureHandle {
     let icon_texture = match dev {
-        EDevelopType::cpp => ICON_C,
-        EDevelopType::cangjie => ICON_CANGJIE,
-        EDevelopType::csharp => ICON_CSHARP,
-        EDevelopType::go => ICON_GOLANG,
-        EDevelopType::java => ICON_JAVA,
-        EDevelopType::javascript => ICON_JAVASCRIPT,
-        EDevelopType::lua => ICON_LUA,
-        EDevelopType::python => ICON_PYTHON,
-        EDevelopType::typescript => ICON_TYPESCRIPT,
+        EDevelopType::Cpp => ICON_C,
+        EDevelopType::Cangjie => ICON_CANGJIE,
+        EDevelopType::Csharp => ICON_CSHARP,
+        EDevelopType::Golang => ICON_GOLANG,
+        EDevelopType::Java => ICON_JAVA,
+        EDevelopType::JavaScript => ICON_JAVASCRIPT,
+        EDevelopType::Lua => ICON_LUA,
+        EDevelopType::Python => ICON_PYTHON,
+        EDevelopType::TypeScript => ICON_TYPESCRIPT,
         _ => ICON_DEFUALT,
     };
     load_texture(ctx, icon_texture, dev.to_string())

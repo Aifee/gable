@@ -4,6 +4,7 @@ use crate::gui::datas::cell_data::CellData;
 use crate::gui::datas::edata_type::EDataType;
 use crate::gui::datas::gables;
 use crate::gui::datas::{esheet_type::ESheetType, gable_data::GableData, tree_item::TreeItem};
+use crate::gui::form::opened_excel::OpenedExcel;
 use eframe::egui::Response;
 use eframe::egui::{
     Align, CentralPanel, Context, Label, Layout, ScrollArea, TextWrapMode, Ui, Vec2,
@@ -11,14 +12,6 @@ use eframe::egui::{
 };
 use egui_extras::{Column, TableBody, TableBuilder};
 use std::collections::{BTreeMap, HashMap};
-
-#[derive(Debug, Clone)]
-pub struct OpenedExcel {
-    /// 当前excel中的sheet信息
-    pub item: TreeItem,
-    /// 当前选中的Sheet索引
-    pub selected_sheet_index: usize,
-}
 
 #[derive(Debug, Clone)]
 pub struct GableForm {
@@ -38,24 +31,18 @@ impl GableForm {
 
     /// 打开一个项目
     pub fn open(&mut self, item: TreeItem) {
-        // 检查项目是否已经打开
         if let Some(index) = self
             .excels
             .iter()
             .position(|opened_item| opened_item.item.fullpath == item.fullpath)
         {
-            // 如果已经打开，直接选中它
             self.selected_excel_index = Some(index);
         } else {
             let mut items: Vec<TreeItem> = Vec::new();
             for (_, v) in item.children.iter().enumerate() {
                 items.push(v.clone());
             }
-            // 如果未打开，添加到打开列表并选中它
-            let opened_item: OpenedExcel = OpenedExcel {
-                item,
-                selected_sheet_index: 0,
-            };
+            let opened_item: OpenedExcel = OpenedExcel::new(item);
             self.excels.push(opened_item);
             self.selected_excel_index = Some(self.excels.len() - 1);
         }

@@ -19,7 +19,7 @@ impl TreeData {
             ESheetType::Normal => self.normal_json_data(keyword),
             ESheetType::KV => self.kv_json_data(keyword),
             _ => {
-                log::error!("to_csv_data: not support type");
+                log::error!("The enumeration table does not export as JSON.");
                 Vec::new()
             }
         }
@@ -29,7 +29,7 @@ impl TreeData {
             ESheetType::Normal => self.normal_csv_data(keyword),
             ESheetType::KV => self.kv_csv_data(keyword),
             _ => {
-                log::error!("to_csv_data: not support type");
+                log::error!("The enumeration table does not export as CSV.");
                 Vec::new()
             }
         }

@@ -35,13 +35,13 @@ pub fn determine_sheet_type(path: &Path) -> ESheetType {
         if let Some(parent_name) = parent.file_name() {
             match parent_name.to_string_lossy().as_ref() {
                 "kvs" => return ESheetType::KV,
-                "enums" => return ESheetType::ENUM,
-                _ => return ESheetType::DATA,
+                "enums" => return ESheetType::Enum,
+                _ => return ESheetType::Normal,
             }
         }
     }
     // 默认类型
-    ESheetType::DATA
+    ESheetType::Normal
 }
 
 pub fn get_selected_color(ctx: &Context) -> Color32 {

@@ -298,7 +298,7 @@ where
         if let Some(ref item_link_name) = item.link_name {
             if *item_link_name == link_name {
                 if let Some(ref tree_data) = item.data {
-                    if tree_data.gable_type == ESheetType::ENUM {
+                    if tree_data.gable_type == ESheetType::Enum {
                         return Some(&tree_data.content);
                     }
                 }
@@ -650,7 +650,7 @@ pub fn command_edit_gable(item: &TreeItem) {
                     "无法从 {} 或其子项中获取 sheet 类型，使用默认类型 DATA",
                     item.fullpath
                 );
-                ESheetType::DATA
+                ESheetType::Normal
             })
         }
     };

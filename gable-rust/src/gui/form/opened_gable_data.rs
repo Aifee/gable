@@ -38,13 +38,13 @@ impl OpenedGableData {
         data: &GableData,
     ) -> BTreeMap<u32, BTreeMap<u16, String>> {
         match sheet_type {
-            ESheetType::DATA => Self::pairs_items_data(data),
+            ESheetType::Normal => Self::pairs_items_normal(data),
             ESheetType::KV => Self::pairs_items_kv(data),
-            ESheetType::ENUM => Self::pairs_items_enum(data),
+            ESheetType::Enum => Self::pairs_items_enum(data),
         }
     }
 
-    fn pairs_items_data(data: &GableData) -> BTreeMap<u32, BTreeMap<u16, String>> {
+    fn pairs_items_normal(data: &GableData) -> BTreeMap<u32, BTreeMap<u16, String>> {
         let total_rows: u32 = data.max_row;
         let total_cols: u16 = data.max_col;
         let mut cell_types: HashMap<u16, EDataType> = HashMap::<u16, EDataType>::new();

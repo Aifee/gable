@@ -120,9 +120,9 @@ pub fn write_excel(
                 }
             }
             match sheet_type {
-                ESheetType::DATA => write_excel_data(worksheet, &gable_data),
+                ESheetType::Normal => write_excel_normal(worksheet, &gable_data),
                 ESheetType::KV => write_excel_kv(worksheet, &gable_data),
-                ESheetType::ENUM => write_excel_enum(worksheet, &gable_data),
+                ESheetType::Enum => write_excel_enum(worksheet, &gable_data),
             }
         } else {
             log::error!("无法读取或解析文件: {}", file_path);
@@ -138,7 +138,7 @@ pub fn write_excel(
     Ok(excel_file_path)
 }
 
-fn write_excel_data(worksheet: &mut Worksheet, gable_data: &GableData) {
+fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
     let max_row: u32 = gable_data.max_row + 1;
     let max_col: u16 = gable_data.max_col + 1;
 
@@ -548,9 +548,9 @@ pub fn write_gable(
         let max_row: u32 = max_row + 1;
         let max_col: u32 = max_col + 1;
         match sheet_type {
-            ESheetType::DATA => write_gable_data(worksheet, &mut gable_data, max_row, max_col),
+            ESheetType::Normal => write_gable_normal(worksheet, &mut gable_data, max_row, max_col),
             ESheetType::KV => write_gable_kv(worksheet, &mut gable_data, max_row, max_col),
-            ESheetType::ENUM => write_gable_enum(worksheet, &mut gable_data, max_row, max_col),
+            ESheetType::Enum => write_gable_enum(worksheet, &mut gable_data, max_row, max_col),
         }
         let gable_file_path: PathBuf =
             PathBuf::from(&target_path).join(format!("{}@{}.gable", file_stem, &sheet_name));
@@ -562,7 +562,12 @@ pub fn write_gable(
     Ok(gable_file_paths)
 }
 
-fn write_gable_data(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u32, max_col: u32) {
+fn write_gable_normal(
+    worksheet: &Worksheet,
+    gable_data: &mut GableData,
+    max_row: u32,
+    max_col: u32,
+) {
     // 收集所有enum的link信息
     let mut links: BTreeMap<u32, String> = BTreeMap::new();
     if max_row >= constant::TABLE_DATA_ROW_TOTAL {

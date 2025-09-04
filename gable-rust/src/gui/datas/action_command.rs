@@ -4,8 +4,10 @@ pub enum ECommandType {
     Edit,
     // 打开
     Open,
-    // 转换
-    Convert,
+    // 根据表单导出数据
+    ConvertItem,
+    // 根据目标表单导出数据
+    ConvertTarget,
 }
 
 #[derive(Debug, Clone)]

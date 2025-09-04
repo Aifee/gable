@@ -192,10 +192,17 @@ impl GableApp {
         let action: ActionCommand = ActionCommand::new(ECommandType::Open, Some(full_path));
         commands.push_back(action);
     }
-    /// 导出指令
-    pub fn convert_command(full_path: String) {
+    /// 导出配置（根据节点导出）
+    pub fn convert_item_command(full_path: String) {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
-        let action: ActionCommand = ActionCommand::new(ECommandType::Convert, Some(full_path));
+        let action: ActionCommand = ActionCommand::new(ECommandType::ConvertItem, Some(full_path));
+        commands.push_back(action);
+    }
+    // 导出配置（根据设置导出）
+    pub fn convert_target_command(display_name: String) {
+        let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
+        let action: ActionCommand =
+            ActionCommand::new(ECommandType::ConvertTarget, Some(display_name));
         commands.push_back(action);
     }
     /// 更新指令
@@ -217,10 +224,17 @@ impl GableApp {
                         }
                     }
                 }
-                ECommandType::Convert => {
+                ECommandType::ConvertItem => {
                     if let Some(param) = command.param {
                         if let Some(tree_item) = gables::get_item_clone(&param) {
                             convert::from_items(&tree_item);
+                        }
+                    }
+                }
+                ECommandType::ConvertTarget => {
+                    if let Some(param) = command.param {
+                        if let Some(setting) = setting::get_build_setting_with_name(&param) {
+                            convert::from_target(&setting);
                         }
                     }
                 }

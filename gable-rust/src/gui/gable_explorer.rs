@@ -413,7 +413,7 @@ impl GableExplorer {
                 }
                 ui.separator();
                 if ui.button("导出").clicked() {
-                    GableApp::convert_command(item.fullpath.clone());
+                    GableApp::convert_item_command(item.fullpath.clone());
                     ui.close();
                 }
                 if ui.button("生成脚本").clicked() {
@@ -448,7 +448,7 @@ impl GableExplorer {
                 }
                 ui.separator();
                 if ui.button("导出").clicked() {
-                    GableApp::convert_command(item.fullpath.clone());
+                    GableApp::convert_item_command(item.fullpath.clone());
                     ui.close();
                 }
                 if ui.button("生成脚本").clicked() {

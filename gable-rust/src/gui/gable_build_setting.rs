@@ -1,18 +1,20 @@
-use std::path::PathBuf;
-
 use crate::{
     common::{
         res,
         setting::{self, BuildSetting},
         utils,
     },
-    gui::datas::{edevelop_type::EDevelopType, etarget_type::ETargetType},
+    gui::{
+        datas::{edevelop_type::EDevelopType, etarget_type::ETargetType},
+        gable_app::GableApp,
+    },
 };
 use eframe::egui::{
     Align, Align2, Button, CentralPanel, Color32, ComboBox, Context, FontId, Image, Label, Layout,
     Rect, Response, ScrollArea, Sense, SidePanel, TextEdit, TextureHandle, TopBottomPanel, Ui,
     Vec2, Window,
 };
+use std::path::PathBuf;
 
 pub struct GableBuildSetting {
     pub visible: bool,
@@ -156,11 +158,11 @@ impl GableBuildSetting {
 
             ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
                 if ui
-                    .add_sized([165.0, 26.0], Button::new("全量构建"))
+                    .add_sized([165.0, 26.0], Button::new("全部导出"))
                     .clicked()
                 {
                     if let Some(build_settings) = setting::get_build_setting(self.selected_index) {
-                        log::info!("开始构建:{}", build_settings.display_name);
+                        GableApp::convert_target_command(build_settings.display_name);
                     }
                 }
             });

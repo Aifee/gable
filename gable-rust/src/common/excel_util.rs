@@ -742,7 +742,11 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
                                                 enum_row.get(&constant::TABLE_ENUM_COL_DESC)
                                             {
                                                 if enum_cell.value == value {
-                                                    cell_value = enum_cell.value.to_string();
+                                                    if let Some(value_data) = enum_row
+                                                        .get(&constant::TABLE_ENUM_COL_VALUE)
+                                                    {
+                                                        cell_value = value_data.value.clone();
+                                                    }
                                                 }
                                             }
                                         }

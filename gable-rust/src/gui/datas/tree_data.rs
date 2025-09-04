@@ -17,6 +17,7 @@ impl TreeData {
     pub fn to_json_data(&self, keyword: &str) -> Vec<Map<String, Value>> {
         match self.gable_type {
             ESheetType::Normal => self.normal_json_data(keyword),
+            ESheetType::KV => self.kv_json_data(keyword),
             _ => Vec::new(),
         }
     }
@@ -52,9 +53,18 @@ impl TreeData {
                     row_valid = false;
                     continue;
                 };
-                let type_cell: &&CellData = head_data.get(&constant::TABLE_DATA_ROW_TYPE).unwrap();
+                let type_cell: &&CellData =
+                    if let Some(type_cell) = head_data.get(&constant::TABLE_DATA_ROW_TYPE) {
+                        type_cell
+                    } else {
+                        continue;
+                    };
                 let field_cell: &&CellData =
-                    head_data.get(&constant::TABLE_DATA_ROW_FIELD).unwrap();
+                    if let Some(field_cell) = head_data.get(&constant::TABLE_DATA_ROW_FIELD) {
+                        field_cell
+                    } else {
+                        continue;
+                    };
                 let value: Value = Self::get_json_value(type_cell, value_cell);
                 let field_value: String = field_cell.value.replace("*", "");
                 item_data.insert(field_value, value);
@@ -73,15 +83,76 @@ impl TreeData {
                 if value_cell.value.is_empty() {
                     continue;
                 };
-                let type_cell: &&CellData = head_data.get(&constant::TABLE_DATA_ROW_TYPE).unwrap();
+                let type_cell: &&CellData =
+                    if let Some(type_cell) = head_data.get(&constant::TABLE_DATA_ROW_TYPE) {
+                        type_cell
+                    } else {
+                        continue;
+                    };
                 let field_cell: &&CellData =
-                    head_data.get(&constant::TABLE_DATA_ROW_FIELD).unwrap();
+                    if let Some(field_cell) = head_data.get(&constant::TABLE_DATA_ROW_FIELD) {
+                        field_cell
+                    } else {
+                        continue;
+                    };
                 let value: Value = Self::get_json_value(type_cell, value_cell);
                 item_data.insert(field_cell.value.clone(), value);
             }
             items.push(item_data);
         }
         return items;
+    }
+
+    fn kv_json_data(&self, keyword: &str) -> Vec<Map<String, Value>> {
+        let mut items: Map<String, Value> = Map::new();
+        for (_, row_data) in self.content.cells.iter() {
+            let field_cell: &CellData =
+                if let Some(field_cell) = row_data.get(&(constant::TABLE_KV_COL_FIELD as u16)) {
+                    field_cell
+                } else {
+                    continue;
+                };
+            let type_cell: &CellData =
+                if let Some(type_cell) = row_data.get(&(constant::TABLE_KV_COL_TYPE as u16)) {
+                    type_cell
+                } else {
+                    continue;
+                };
+            let keyword_celldata: &CellData = if let Some(keyword_celldata) =
+                row_data.get(&(constant::TABLE_KV_COL_KEYWORD as u16))
+            {
+                keyword_celldata
+            } else {
+                continue;
+            };
+            let value_cell: &CellData =
+                if let Some(value_cell) = row_data.get(&(constant::TABLE_KV_COL_VALUE as u16)) {
+                    value_cell
+                } else {
+                    continue;
+                };
+            // 验证字段是否合法
+            if !field_cell.verify_lawful() {
+                continue;
+            }
+            // 验证数据类型是否合法
+            if !type_cell.verify_lawful() {
+                continue;
+            }
+            // 验证keyword是否合法
+            if !keyword_celldata.verify_lawful() {
+                continue;
+            }
+            if !keyword_celldata.value.contains(keyword) {
+                continue;
+            }
+            if value_cell.value.is_empty() {
+                continue;
+            }
+            let value: Value = Self::get_json_value(type_cell, value_cell);
+            items.insert(field_cell.value.clone(), value);
+        }
+        return vec![items];
     }
 
     fn get_json_value(type_cell: &CellData, value_cell: &CellData) -> Value {

@@ -80,7 +80,7 @@ impl OpenedGableData {
         for (row, cols) in data.heads.iter() {
             let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
             for (col, cell) in cols.iter() {
-                let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells);
+                let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells, false);
                 cols_items.insert(*col, value);
             }
             items.insert(*row, cols_items);
@@ -90,7 +90,7 @@ impl OpenedGableData {
             let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
             for (col, cell) in cols.iter() {
                 let cell_type: &EDataType = cell_types.get(&col).unwrap();
-                let value: String = Self::pairs_value(cell_type, cell, &link_cells);
+                let value: String = Self::pairs_value(cell_type, cell, &link_cells, false);
                 cols_items.insert(*col, value);
             }
             items.insert(*row, cols_items);
@@ -103,7 +103,7 @@ impl OpenedGableData {
         for (row, cols) in data.heads.iter() {
             let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
             for (col, cell) in cols.iter() {
-                let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells);
+                let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells, true);
                 cols_items.insert(*col, value);
             }
             items.insert(*row, cols_items);
@@ -119,14 +119,15 @@ impl OpenedGableData {
                 if col == &(constant::TABLE_KV_COL_LINK as u16) && cell_type == EDataType::Enum {
                     let cell_link_value: Option<&String> = Some(&cell.value);
                     if let Some(link_value) = cell_link_value {
-                        link_cells.insert(*col, link_value);
+                        link_cells.insert(*row as u16, link_value);
                     }
                 }
                 if col == &(constant::TABLE_KV_COL_VALUE as u16) {
-                    let value: String = Self::pairs_value(&cell_type, cell, &link_cells);
+                    let value: String = Self::pairs_value(&cell_type, cell, &link_cells, true);
                     cols_items.insert(*col, value);
                 } else {
-                    let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells);
+                    let value: String =
+                        Self::pairs_value(&EDataType::String, cell, &link_cells, true);
                     cols_items.insert(*col, value);
                 }
             }
@@ -140,7 +141,7 @@ impl OpenedGableData {
         for (row, cols) in data.heads.iter() {
             let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
             for (col, cell) in cols.iter() {
-                let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells);
+                let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells, false);
                 cols_items.insert(*col, value);
             }
             items.insert(*row, cols_items);
@@ -148,7 +149,7 @@ impl OpenedGableData {
         for (row, cols) in data.cells.iter() {
             let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
             for (col, cell) in cols.iter() {
-                let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells);
+                let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells, false);
                 cols_items.insert(*col, value);
             }
             items.insert(*row, cols_items);
@@ -160,6 +161,7 @@ impl OpenedGableData {
         data_type: &EDataType,
         cell: &CellData,
         link_cells: &HashMap<u16, &String>,
+        iskv: bool,
     ) -> String {
         match data_type {
             EDataType::Percentage => {
@@ -175,7 +177,8 @@ impl OpenedGableData {
             EDataType::Date => cell.convert_date(),
             EDataType::Enum => {
                 let mut enum_value: String = cell.value.clone();
-                if let Some(link_name) = link_cells.get(&cell.column) {
+                let index: u16 = if iskv { cell.row as u16 } else { cell.column };
+                if let Some(link_name) = link_cells.get(&index) {
                     gables::get_enum_cells(link_name, |cell_data| {
                         for (_, link_data) in cell_data.cells.iter() {
                             if let Some(enum_value_cell) =

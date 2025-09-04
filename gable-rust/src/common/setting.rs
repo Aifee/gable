@@ -153,6 +153,16 @@ pub fn get_build_setting(index: usize) -> Option<BuildSetting> {
     }
 }
 
+pub fn get_build_setting_with_name(name: &str) -> Option<BuildSetting> {
+    let settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();
+    for setting in settings.build_settings.iter() {
+        if setting.display_name == name {
+            return Some(setting.clone());
+        }
+    }
+    None
+}
+
 /// 更新指定索引的BuildSetting
 pub fn update_build_setting(index: usize, setting: BuildSetting) -> io::Result<()> {
     let mut settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();

@@ -3,21 +3,43 @@ use crate::{
         setting::{self, AppSettings, BuildSetting},
         utils,
     },
-    gui::datas::{etarget_type::ETargetType, tree_data::TreeData, tree_item::TreeItem},
+    gui::datas::{etarget_type::ETargetType, gables, tree_data::TreeData, tree_item::TreeItem},
 };
 use serde_json::{Map, Value};
 use std::{
+    collections::HashMap,
     fs::File,
     io::{BufWriter, Error, Write},
     path::PathBuf,
     sync::MutexGuard,
 };
 
-// 全量构建
-// pub fn all(setting: &BuildSetting) {}
+pub fn from_target(setting: &BuildSetting) {
+    let items: MutexGuard<'_, Vec<TreeItem>> = gables::TREE_ITEMS.lock().unwrap();
+    let mut datas: HashMap<String, &TreeData> = HashMap::new();
+    for item in items.iter() {
+        let item_datas: HashMap<String, &TreeData> = item.get_datas();
+        if item_datas.len() > 0 {
+            datas.extend(item_datas);
+        }
+    }
+    if datas.len() <= 0 {
+        log::error!("未找到要导出的配置");
+        return;
+    }
+    for (_, data) in datas.iter() {
+        match setting.target_type {
+            ETargetType::JSON => to_json(setting, data),
+            ETargetType::CSV => to_csv(setting, data),
+            _ => {
+                log::info!("暂未实现：{:?}", setting.target_type)
+            }
+        }
+    }
+}
 
 pub fn from_items(item: &TreeItem) {
-    let datas = item.get_datas();
+    let datas: HashMap<String, &TreeData> = item.get_datas();
     if datas.len() <= 0 {
         log::error!("获取数据为空:{}", item.display_name);
         return;

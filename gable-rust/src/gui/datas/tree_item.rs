@@ -1,4 +1,4 @@
-use crate::gui::datas::{eitem_type::EItemType, tree_data::TreeData};
+use crate::gui::datas::{eitem_type::EItemType, esheet_type::ESheetType, tree_data::TreeData};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
@@ -26,7 +26,9 @@ impl TreeItem {
         let mut cache: HashMap<String, &TreeData> = HashMap::new();
         if self.item_type == EItemType::Sheet {
             if let Some(data) = &self.data {
-                cache.insert(self.display_name.clone(), data);
+                if data.gable_type != ESheetType::Enum {
+                    cache.insert(self.display_name.clone(), data);
+                }
             }
         }
 

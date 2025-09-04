@@ -45,7 +45,7 @@ impl GableData {
                     continue;
                 };
             let keyword_celldata =
-                if let Some(row_data) = self.heads.get(&constant::TABLE_DATA_ROW_TARGET) {
+                if let Some(row_data) = self.heads.get(&constant::TABLE_DATA_ROW_KEYWORD) {
                     row_data.get(&col_index).unwrap()
                 } else {
                     continue;

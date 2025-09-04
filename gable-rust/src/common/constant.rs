@@ -45,18 +45,18 @@ pub const TABLE_DATA_ROW_FIELD: u32 = 2;
 ///[数据表单]类型行
 pub const TABLE_DATA_ROW_TYPE: u32 = 3;
 ///[数据表单]平台行
-pub const TABLE_DATA_ROW_TARGET: u32 = 4;
+pub const TABLE_DATA_ROW_KEYWORD: u32 = 4;
 ///[数据表单]关联信息行
 pub const TABLE_DATA_ROW_LINK: u32 = 5;
 /// [数据表单]有效数据起始行数
 pub const TABLE_DATA_ROW_TOTAL: u32 = 6;
 
 ///[KV表单]字段行
-// pub const TABLE_KV_COL_FIELD: u32 = 1;
+pub const TABLE_KV_COL_FIELD: u32 = 1;
 ///[KV表单]类型列
 pub const TABLE_KV_COL_TYPE: u32 = 2;
 ///[KV表单]平台行
-// pub const TABLE_KV_COL_TARGET: u32 = 3;
+pub const TABLE_KV_COL_KEYWORD: u32 = 3;
 ///[KV表单]关联信息列
 pub const TABLE_KV_COL_LINK: u32 = 4;
 ///[KV表单]值列

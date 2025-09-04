@@ -1,7 +1,11 @@
 #[derive(Debug, Clone)]
 pub enum ECommandType {
-    EDITOR,
-    OPEN,
+    // 编辑
+    Edit,
+    // 打开
+    Open,
+    // 转换
+    Convert,
 }
 
 #[derive(Debug, Clone)]

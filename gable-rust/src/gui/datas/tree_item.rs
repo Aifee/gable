@@ -1,4 +1,5 @@
 use crate::gui::datas::{eitem_type::EItemType, tree_data::TreeData};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct TreeItem {
@@ -18,4 +19,22 @@ pub struct TreeItem {
     pub children: Vec<TreeItem>,
     /// 数据
     pub data: Option<TreeData>,
+}
+
+impl TreeItem {
+    pub fn get_datas(&self) -> HashMap<String, &TreeData> {
+        let mut cache: HashMap<String, &TreeData> = HashMap::new();
+        if self.item_type == EItemType::Sheet {
+            if let Some(data) = &self.data {
+                cache.insert(self.display_name.clone(), data);
+            }
+        }
+
+        for item in &self.children {
+            let child_cache = item.get_datas();
+            cache.extend(child_cache);
+        }
+
+        cache
+    }
 }

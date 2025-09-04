@@ -412,6 +412,14 @@ impl GableExplorer {
                     ui.close();
                 }
                 ui.separator();
+                if ui.button("导出").clicked() {
+                    GableApp::convert_command(item.fullpath.clone());
+                    ui.close();
+                }
+                if ui.button("生成脚本").clicked() {
+                    ui.close();
+                }
+                ui.separator();
                 if ui.button("重命名").clicked() {
                     *renaming_item = Some(item.fullpath.clone());
                     *renaming_text = item.display_name.clone();
@@ -436,6 +444,14 @@ impl GableExplorer {
             EItemType::Sheet => {
                 if ui.button("编辑").clicked() {
                     GableApp::editor_command(item.fullpath.clone());
+                    ui.close();
+                }
+                ui.separator();
+                if ui.button("导出").clicked() {
+                    GableApp::convert_command(item.fullpath.clone());
+                    ui.close();
+                }
+                if ui.button("生成脚本").clicked() {
                     ui.close();
                 }
                 ui.separator();

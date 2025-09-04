@@ -22,7 +22,7 @@ pub struct GableBuildSetting {
 impl GableBuildSetting {
     pub fn new() -> Self {
         Self {
-            visible: true,
+            visible: false,
             add_selected: EDevelopType::Cpp,
             selected_index: 0,
         }
@@ -143,12 +143,7 @@ impl GableBuildSetting {
 
     fn ongui_bottom_panel(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
-            ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
-                if ui.add_sized([165.0, 26.0], Button::new("构建")).clicked() {}
-                if ui
-                    .add_sized([165.0, 26.0], Button::new("全部构建"))
-                    .clicked()
-                {}
+            ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
                 if ui.add_sized([165.0, 26.0], Button::new("删除")).clicked() {
                     self.selected_index =
                         if let Some(index) = setting::remove_build_setting(self.selected_index) {
@@ -156,6 +151,17 @@ impl GableBuildSetting {
                         } else {
                             0
                         }
+                }
+            });
+
+            ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
+                if ui
+                    .add_sized([165.0, 26.0], Button::new("全量构建"))
+                    .clicked()
+                {
+                    if let Some(build_settings) = setting::get_build_setting(self.selected_index) {
+                        log::info!("开始构建:{}", build_settings.display_name);
+                    }
                 }
             });
         });

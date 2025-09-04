@@ -1,3 +1,4 @@
+use crate::common::convert::convert;
 use crate::common::{res, setting};
 use crate::gui::datas::action_command::{ActionCommand, ECommandType};
 use crate::gui::form::gable_form::GableForm;
@@ -182,13 +183,19 @@ impl GableApp {
     /// 编辑指令
     pub fn editor_command(full_path: String) {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
-        let action: ActionCommand = ActionCommand::new(ECommandType::EDITOR, Some(full_path));
+        let action: ActionCommand = ActionCommand::new(ECommandType::Edit, Some(full_path));
         commands.push_back(action);
     }
     /// 打开指令
     pub fn open_command(full_path: String) {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
-        let action: ActionCommand = ActionCommand::new(ECommandType::OPEN, Some(full_path));
+        let action: ActionCommand = ActionCommand::new(ECommandType::Open, Some(full_path));
+        commands.push_back(action);
+    }
+    /// 导出指令
+    pub fn convert_command(full_path: String) {
+        let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
+        let action: ActionCommand = ActionCommand::new(ECommandType::Convert, Some(full_path));
         commands.push_back(action);
     }
     /// 更新指令
@@ -196,17 +203,24 @@ impl GableApp {
         let mut commands = COMMANDS.lock().unwrap();
         while let Some(command) = commands.pop_front() {
             match command.com_type {
-                ECommandType::EDITOR => {
+                ECommandType::Edit => {
                     if let Some(param) = command.param {
                         if let Some(tree_item) = gables::get_item_clone(&param) {
                             gables::command_edit_gable(&tree_item);
                         }
                     }
                 }
-                ECommandType::OPEN => {
+                ECommandType::Open => {
                     if let Some(param) = command.param {
                         if let Some(tree_item) = gables::find_item_clone(&param, EItemType::Excel) {
                             self.gable_form.open(&tree_item);
+                        }
+                    }
+                }
+                ECommandType::Convert => {
+                    if let Some(param) = command.param {
+                        if let Some(tree_item) = gables::get_item_clone(&param) {
+                            convert::from_items(&tree_item);
                         }
                     }
                 }

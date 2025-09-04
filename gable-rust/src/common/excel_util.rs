@@ -641,7 +641,11 @@ fn write_gable_normal(
                                             data_row.get(&constant::TABLE_ENUM_COL_DESC)
                                         {
                                             if data.value == value {
-                                                cell_value = data.value.clone();
+                                                if let Some(value_data) =
+                                                    data_row.get(&constant::TABLE_ENUM_COL_VALUE)
+                                                {
+                                                    cell_value = value_data.value.clone();
+                                                }
                                                 break;
                                             }
                                         }

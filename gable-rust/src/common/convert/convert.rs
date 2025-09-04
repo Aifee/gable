@@ -1,12 +1,17 @@
 use crate::{
     common::{
-        setting::{self, AppSettings},
+        setting::{self, AppSettings, BuildSetting},
         utils,
     },
-    gui::datas::{tree_data::TreeData, tree_item::TreeItem},
+    gui::datas::{etarget_type::ETargetType, tree_data::TreeData, tree_item::TreeItem},
 };
 use serde_json::{Map, Value};
-use std::{io::Error, sync::MutexGuard};
+use std::{
+    fs::File,
+    io::{BufWriter, Error, Write},
+    path::PathBuf,
+    sync::MutexGuard,
+};
 
 // 全量构建
 // pub fn all(setting: &BuildSetting) {}
@@ -20,23 +25,89 @@ pub fn from_items(item: &TreeItem) {
 
     let settings: MutexGuard<'_, AppSettings> = setting::APP_SETTINGS.lock().unwrap();
     for build_setting in settings.build_settings.iter() {
-        log::info!("开始构建:{}", build_setting.display_name);
-        for (display_name, data) in datas.iter() {
-            let target_path = utils::get_absolute_path(&build_setting.target_path)
-                .join(format!("{}.json", display_name));
-            let contents: String = to_json(data, &build_setting.keyword);
-            let result: Result<(), Error> = std::fs::write(&target_path, contents);
-            if result.is_err() {
-                log::error!("构建失败:{}", target_path.to_str().unwrap());
-            } else {
-                log::info!("构建成功:{}", target_path.to_str().unwrap());
+        for (_, data) in datas.iter() {
+            match build_setting.target_type {
+                ETargetType::JSON => to_json(build_setting, data),
+                ETargetType::CSV => to_csv(build_setting, data),
+                _ => {
+                    log::info!("暂未实现：{:?}", build_setting.target_type)
+                }
             }
         }
     }
 }
 
-fn to_json(tree_data: &TreeData, keyword: &str) -> String {
-    let json_data: Vec<Map<String, Value>> = tree_data.to_json_data(keyword);
-    let result = serde_json::to_string_pretty(&json_data).expect("JSON序列化失败");
-    result
+fn to_json(build_setting: &BuildSetting, tree_data: &TreeData) {
+    let target_path = utils::get_absolute_path(&build_setting.target_path)
+        .join(format!("{}.json", tree_data.content.sheetname));
+    let json_data: Vec<Map<String, Value>> = tree_data.to_json_data(&build_setting.keyword);
+    let contents: String = serde_json::to_string_pretty(&json_data).expect("JSON序列化失败");
+    let result: Result<(), Error> = std::fs::write(&target_path, contents);
+    if result.is_err() {
+        log::error!(
+            "导出【{}】失败:{}",
+            build_setting.display_name,
+            target_path.to_str().unwrap()
+        );
+    } else {
+        log::info!(
+            "导出【{}】成功:{}",
+            build_setting.display_name,
+            target_path.to_str().unwrap()
+        );
+    }
+}
+
+fn to_csv(build_setting: &BuildSetting, tree_data: &TreeData) {
+    let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
+        .join(format!("{}.csv", tree_data.content.sheetname));
+    let csv_data: Vec<Vec<String>> = tree_data.to_csv_data(&build_setting.keyword);
+    // 创建CSV文件
+    let file: Result<File, Error> = File::create(&target_path);
+    if file.is_err() {
+        log::error!(
+            "导出【{}】失败:{}",
+            build_setting.display_name,
+            target_path.to_str().unwrap()
+        );
+        return;
+    }
+    let file = file.unwrap();
+    let mut writer: BufWriter<File> = BufWriter::new(file);
+    // 写入CSV数据
+    for row_data in csv_data.iter() {
+        let mut line: String = String::new();
+        let mut is_first: bool = true;
+        for col_value in row_data.iter() {
+            if !is_first {
+                line.push(',');
+            }
+            // 转义包含逗号或引号的值
+            if col_value.contains(',') || col_value.contains('"') || col_value.contains('\n') {
+                line.push('"');
+                line.push_str(&col_value.replace("\"", "\"\""));
+                line.push('"');
+            } else {
+                line.push_str(col_value);
+            }
+            is_first = false;
+        }
+
+        line.push('\n');
+        if let Err(e) = writer.write_all(line.as_bytes()) {
+            log::error!("写入【{}】文件时出错:{}", build_setting.display_name, e);
+            return;
+        }
+    }
+
+    if let Err(e) = writer.flush() {
+        log::error!("刷新【{}】文件时出错:{}", build_setting.display_name, e);
+        return;
+    }
+
+    log::info!(
+        "导出【{}】成功:{}",
+        build_setting.display_name,
+        target_path.to_str().unwrap()
+    );
 }

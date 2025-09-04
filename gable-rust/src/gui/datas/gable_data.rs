@@ -12,7 +12,7 @@ pub struct GableData {
 }
 
 impl GableData {
-    /// 获取普通表的有效的数据头
+    /// 获取普通表的有效的数据头,列，行
     pub fn get_valid_normal_heads(
         &self,
         keyword: &str,
@@ -24,9 +24,14 @@ impl GableData {
         let mut valids_main: BTreeMap<u16, BTreeMap<u32, &CellData>> = BTreeMap::new();
         // 除主键外的其他表头数据
         let mut valids: BTreeMap<u16, BTreeMap<u32, &CellData>> = BTreeMap::new();
-
         let max_col = self.max_col + 1;
         for col_index in 1..max_col {
+            let desc_celldata = self
+                .heads
+                .get(&constant::TABLE_DATA_ROW_DESC)
+                .unwrap()
+                .get(&col_index)
+                .unwrap();
             let field_celldata =
                 if let Some(row_data) = self.heads.get(&constant::TABLE_DATA_ROW_FIELD) {
                     row_data.get(&col_index).unwrap()
@@ -63,6 +68,7 @@ impl GableData {
             }
 
             let mut col_datas: BTreeMap<u32, &CellData> = BTreeMap::new();
+            col_datas.insert(constant::TABLE_DATA_ROW_DESC, desc_celldata);
             col_datas.insert(constant::TABLE_DATA_ROW_FIELD, field_celldata);
             col_datas.insert(constant::TABLE_DATA_ROW_TYPE, type_celldata);
             if field_celldata.value.contains("*") {

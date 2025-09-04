@@ -39,7 +39,7 @@ pub const FORM_MIN_ROW: u32 = 47;
 pub const FORM_MIN_COL: u16 = 25;
 
 ///[数据表单]描述行
-pub const TABLE_DATA_ROW_DES: u32 = 1;
+pub const TABLE_DATA_ROW_DESC: u32 = 1;
 ///[数据表单]字段行
 pub const TABLE_DATA_ROW_FIELD: u32 = 2;
 ///[数据表单]类型行
@@ -62,7 +62,7 @@ pub const TABLE_KV_COL_LINK: u32 = 4;
 ///[KV表单]值列
 pub const TABLE_KV_COL_VALUE: u32 = 5;
 ///[数据表单]描述行
-// pub const TABLE_KV_COL_DES: u32 = 6;
+// pub const TABLE_KV_COL_DESC: u32 = 6;
 ///[KV表单]有效数据起始行数
 pub const TABLE_KV_ROW_TOTAL: u32 = 2;
 

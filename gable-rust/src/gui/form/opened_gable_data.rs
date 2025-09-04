@@ -174,8 +174,8 @@ impl OpenedGableData {
             EDataType::Time => cell.convert_time(),
             EDataType::Date => cell.convert_date(),
             EDataType::Enum => {
+                let mut enum_value: String = cell.value.clone();
                 if let Some(link_name) = link_cells.get(&cell.column) {
-                    let mut enum_value: String = String::new();
                     gables::get_enum_cells(link_name, |cell_data| {
                         for (_, link_data) in cell_data.cells.iter() {
                             if let Some(enum_value_cell) =
@@ -192,10 +192,8 @@ impl OpenedGableData {
                             }
                         }
                     });
-                    enum_value
-                } else {
-                    cell.value.clone()
                 }
+                enum_value
             }
             _ => cell.value.clone(),
         }

@@ -1,6 +1,6 @@
 use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{Map, Value};
 use umya_spreadsheet::Color;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -161,6 +161,15 @@ impl CellData {
         self.value.is_empty() && self.bg_fill.is_empty() && self.font_fill.is_empty()
     }
 
+    /// 验证数据合法性
+    pub fn verify_lawful(&self) -> bool {
+        if self.value.is_empty() {
+            return false;
+        }
+        // 这里扩展命名合法性
+        return true;
+    }
+
     pub fn parse_int(&self) -> i32 {
         if self.value.is_empty() {
             return 0;
@@ -264,5 +273,151 @@ impl CellData {
         let datetime: NaiveDateTime = date.and_time(time);
         // 格式化为 YYYY-mm-dd hh:mm:ss 格式
         datetime.format("%Y-%m-%d %H:%M:%S").to_string()
+    }
+
+    pub fn to_json_vector2(&self) -> Map<String, Value> {
+        let mut vector2: Map<String, Value> = Map::new();
+        let parts: Vec<&str> = self.value.split(';').collect();
+        if parts.len() == 2 {
+            if let (Ok(x), Ok(y)) = (parts[0].parse::<f64>(), parts[1].parse::<f64>()) {
+                vector2.insert("x".to_string(), Value::from(x));
+                vector2.insert("y".to_string(), Value::from(y));
+            }
+        }
+        return vector2;
+    }
+
+    pub fn to_json_vector3(&self) -> Map<String, Value> {
+        let mut vector3: Map<String, Value> = Map::new();
+        let parts: Vec<&str> = self.value.split(';').collect();
+        if parts.len() == 3 {
+            if let (Ok(x), Ok(y), Ok(z)) = (
+                parts[0].parse::<f64>(),
+                parts[1].parse::<f64>(),
+                parts[2].parse::<f64>(),
+            ) {
+                vector3.insert("x".to_string(), Value::from(x));
+                vector3.insert("y".to_string(), Value::from(y));
+                vector3.insert("z".to_string(), Value::from(z));
+            }
+        }
+        return vector3;
+    }
+
+    pub fn to_json_vector4(&self) -> Map<String, Value> {
+        let mut vector4: Map<String, Value> = Map::new();
+        let parts: Vec<&str> = self.value.split(';').collect();
+        if parts.len() == 4 {
+            if let (Ok(x), Ok(y), Ok(z), Ok(w)) = (
+                parts[0].parse::<f64>(),
+                parts[1].parse::<f64>(),
+                parts[2].parse::<f64>(),
+                parts[3].parse::<f64>(),
+            ) {
+                vector4.insert("x".to_string(), Value::from(x));
+                vector4.insert("y".to_string(), Value::from(y));
+                vector4.insert("z".to_string(), Value::from(z));
+                vector4.insert("w".to_string(), Value::from(w));
+            }
+        }
+        return vector4;
+    }
+    pub fn to_json_int_array(&self) -> Vec<Value> {
+        let mut arr: Vec<Value> = Vec::new();
+        let parts: Vec<&str> = self.value.split(';').collect();
+        for part in parts.iter() {
+            let value: i64 = part.parse::<i64>().unwrap();
+            arr.push(Value::from(value));
+        }
+        return arr;
+    }
+    pub fn to_json_string_array(&self) -> Vec<Value> {
+        let mut arr: Vec<Value> = Vec::new();
+        let parts: Vec<&str> = self.value.split(';').collect();
+        for part in parts.iter() {
+            arr.push(Value::from(*part));
+        }
+        return arr;
+    }
+    pub fn to_json_bool_array(&self) -> Vec<Value> {
+        let mut arr: Vec<Value> = Vec::new();
+        let parts: Vec<&str> = self.value.split(';').collect();
+        for part in parts.iter() {
+            let value: bool = part.parse::<bool>().unwrap();
+            arr.push(Value::from(value));
+        }
+        return arr;
+    }
+    pub fn to_json_float_array(&self) -> Vec<Value> {
+        let mut arr: Vec<Value> = Vec::new();
+        let parts: Vec<&str> = self.value.split(';').collect();
+        for part in parts.iter() {
+            let value: f64 = part.parse::<f64>().unwrap();
+            arr.push(Value::from(value));
+        }
+        return arr;
+    }
+    pub fn to_json_vector2_array(&self) -> Vec<Map<String, Value>> {
+        let mut arr: Vec<Map<String, Value>> = Vec::new();
+        let parts: Vec<&str> = self.value.split('|').collect();
+        for part in parts.iter() {
+            let mut vector2: Map<String, Value> = Map::new();
+            let subs: Vec<&str> = part.split(';').collect();
+            if subs.len() == 2 {
+                if let (Ok(x), Ok(y)) = (subs[0].parse::<f64>(), subs[1].parse::<f64>()) {
+                    vector2.insert("x".to_string(), Value::from(x));
+                    vector2.insert("y".to_string(), Value::from(y));
+                }
+            }
+
+            arr.push(vector2);
+        }
+        return arr;
+    }
+    pub fn to_json_vector3_array(&self) -> Vec<Map<String, Value>> {
+        let mut arr: Vec<Map<String, Value>> = Vec::new();
+        let parts: Vec<&str> = self.value.split('|').collect();
+        for part in parts.iter() {
+            let mut vector3: Map<String, Value> = Map::new();
+            let subs: Vec<&str> = part.split(';').collect();
+            if subs.len() == 3 {
+                if let (Ok(x), Ok(y), Ok(z)) = (
+                    subs[0].parse::<f64>(),
+                    subs[1].parse::<f64>(),
+                    subs[2].parse::<f64>(),
+                ) {
+                    vector3.insert("x".to_string(), Value::from(x));
+                    vector3.insert("y".to_string(), Value::from(y));
+                    vector3.insert("z".to_string(), Value::from(z));
+                }
+            }
+
+            arr.push(vector3);
+        }
+        return arr;
+    }
+    pub fn to_json_vector4_array(&self) -> Vec<Map<String, Value>> {
+        let mut arr: Vec<Map<String, Value>> = Vec::new();
+        let parts: Vec<&str> = self.value.split('|').collect();
+        for part in parts.iter() {
+            let mut vector4: Map<String, Value> = Map::new();
+            let subs: Vec<&str> = part.split(';').collect();
+            if subs.len() == 4 {
+                if let (Ok(x), Ok(y), Ok(z), Ok(w)) = (
+                    subs[0].parse::<f64>(),
+                    subs[1].parse::<f64>(),
+                    subs[2].parse::<f64>(),
+                    subs[3].parse::<f64>(),
+                ) {
+                    vector4.insert("x".to_string(), Value::from(x));
+                    vector4.insert("y".to_string(), Value::from(y));
+                    vector4.insert("z".to_string(), Value::from(z));
+                    vector4.insert("w".to_string(), Value::from(w));
+                }
+            }
+
+            arr.push(vector4);
+        }
+        return arr;
     }
 }

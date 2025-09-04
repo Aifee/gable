@@ -39,13 +39,13 @@ pub const FORM_MIN_ROW: u32 = 47;
 pub const FORM_MIN_COL: u16 = 25;
 
 ///[数据表单]描述行
-// pub const TABLE_DATA_ROW_DES: u32 = 1;
-// ///[数据表单]字段行
-// pub const TABLE_DATA_ROW_FIELD: u32 = 2;
+pub const TABLE_DATA_ROW_DES: u32 = 1;
+///[数据表单]字段行
+pub const TABLE_DATA_ROW_FIELD: u32 = 2;
 ///[数据表单]类型行
 pub const TABLE_DATA_ROW_TYPE: u32 = 3;
 ///[数据表单]平台行
-// pub const TABLE_DATA_ROW_TARGET: u32 = 4;
+pub const TABLE_DATA_ROW_TARGET: u32 = 4;
 ///[数据表单]关联信息行
 pub const TABLE_DATA_ROW_LINK: u32 = 5;
 /// [数据表单]有效数据起始行数

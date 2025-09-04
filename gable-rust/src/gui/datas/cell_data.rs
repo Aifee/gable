@@ -170,11 +170,11 @@ impl CellData {
         return true;
     }
 
-    pub fn parse_int(&self) -> i32 {
+    pub fn parse_int(&self) -> i64 {
         if self.value.is_empty() {
             return 0;
         }
-        return self.value.parse::<i32>().unwrap_or(0);
+        return self.value.parse::<i64>().unwrap_or(0);
     }
     pub fn parse_bool(&self) -> bool {
         if self.value.is_empty() {

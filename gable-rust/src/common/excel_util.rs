@@ -256,7 +256,7 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
             if let Some(row_data) = &gable_data.heads.get(&constant::TABLE_DATA_ROW_TYPE) {
                 if let Some(cell_type_data) = row_data.get(&col_index) {
                     match EDataType::convert(&cell_type_data.value) {
-                        EDataType::Int => cell.set_value_number(cell_data.parse_int()),
+                        EDataType::Int => cell.set_value_number(cell_data.parse_int() as f64),
                         EDataType::Boolean => cell.set_value_bool(cell_data.parse_bool()),
                         EDataType::Float => cell.set_value_number(cell_data.parse_float()),
                         EDataType::Percentage => cell.set_value_number(cell_data.parse_float()),
@@ -407,7 +407,7 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
             if *col_index == constant::TABLE_KV_COL_VALUE as u16 {
                 if let Some(cell_type_data) = cell_type_data_temp {
                     match EDataType::convert(&cell_type_data.value) {
-                        EDataType::Int => cell.set_value_number(cell_data.parse_int()),
+                        EDataType::Int => cell.set_value_number(cell_data.parse_int() as f64),
                         EDataType::Boolean => cell.set_value_bool(cell_data.parse_bool()),
                         EDataType::Float => cell.set_value_number(cell_data.parse_float()),
                         EDataType::Percentage => cell.set_value_number(cell_data.parse_float()),

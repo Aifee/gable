@@ -18,14 +18,20 @@ impl TreeData {
         match self.gable_type {
             ESheetType::Normal => self.normal_json_data(keyword),
             ESheetType::KV => self.kv_json_data(keyword),
-            _ => Vec::new(),
+            _ => {
+                log::error!("to_csv_data: not support type");
+                Vec::new()
+            }
         }
     }
     pub fn to_csv_data(&self, keyword: &str) -> Vec<Vec<String>> {
         match self.gable_type {
             ESheetType::Normal => self.normal_csv_data(keyword),
             ESheetType::KV => self.kv_csv_data(keyword),
-            _ => Vec::new(),
+            _ => {
+                log::error!("to_csv_data: not support type");
+                Vec::new()
+            }
         }
     }
 

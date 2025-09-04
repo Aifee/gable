@@ -6,7 +6,7 @@ use crate::{
     gui::datas::{tree_data::TreeData, tree_item::TreeItem},
 };
 use serde_json::{Map, Value};
-use std::sync::MutexGuard;
+use std::{io::Error, sync::MutexGuard};
 
 // 全量构建
 // pub fn all(setting: &BuildSetting) {}
@@ -24,8 +24,8 @@ pub fn from_items(item: &TreeItem) {
         for (display_name, data) in datas.iter() {
             let target_path = utils::get_absolute_path(&build_setting.target_path)
                 .join(format!("{}.json", display_name));
-            let json_content = to_json(data, &build_setting.keyword);
-            let result = std::fs::write(&target_path, json_content);
+            let contents: String = to_json(data, &build_setting.keyword);
+            let result: Result<(), Error> = std::fs::write(&target_path, contents);
             if result.is_err() {
                 log::error!("构建失败:{}", target_path.to_str().unwrap());
             } else {

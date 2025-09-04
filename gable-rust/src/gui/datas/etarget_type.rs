@@ -6,24 +6,24 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Copy, Serialize, Deserialize)]
 pub enum ETargetType {
     /// json
-    JSON = 0,
+    Json = 0,
     /// csv
     CSV = 1,
     /// protobuff
-    PROTOBUFF = 2,
+    Protobuff = 2,
 }
 
 impl ETargetType {
     pub fn iter() -> Iter<'static, ETargetType> {
         static VARIANTS: &[ETargetType] =
-            &[ETargetType::JSON, ETargetType::CSV, ETargetType::PROTOBUFF];
+            &[ETargetType::Json, ETargetType::CSV, ETargetType::Protobuff];
         VARIANTS.iter()
     }
     pub fn to_string(&self) -> &'static str {
         match self {
-            ETargetType::JSON => "Json",
+            ETargetType::Json => "Json",
             ETargetType::CSV => "CSV",
-            ETargetType::PROTOBUFF => "Protobuff",
+            ETargetType::Protobuff => "Protobuff",
         }
     }
 }

@@ -29,7 +29,7 @@ pub fn from_target(setting: &BuildSetting) {
     }
     for (_, data) in datas.iter() {
         match setting.target_type {
-            ETargetType::JSON => to_json(setting, data),
+            ETargetType::Json => to_json(setting, data),
             ETargetType::CSV => to_csv(setting, data),
             _ => {
                 log::info!("暂未实现：{:?}", setting.target_type)
@@ -49,7 +49,7 @@ pub fn from_items(item: &TreeItem) {
     for build_setting in settings.build_settings.iter() {
         for (_, data) in datas.iter() {
             match build_setting.target_type {
-                ETargetType::JSON => to_json(build_setting, data),
+                ETargetType::Json => to_json(build_setting, data),
                 ETargetType::CSV => to_csv(build_setting, data),
                 _ => {
                     log::info!("暂未实现：{:?}", build_setting.target_type)

@@ -10,9 +10,9 @@ use crate::{
     },
 };
 use eframe::egui::{
-    Align, Align2, Button, CentralPanel, Color32, ComboBox, Context, FontId, Image, Label, Layout,
-    Rect, Response, ScrollArea, Sense, SidePanel, TextEdit, TextureHandle, TopBottomPanel, Ui,
-    Vec2, Window,
+    Align, Align2, Button, CentralPanel, Checkbox, Color32, ComboBox, Context, FontId, Image,
+    Label, Layout, Rect, Response, ScrollArea, Sense, SidePanel, TextEdit, TextureHandle,
+    TopBottomPanel, Ui, Vec2, Window,
 };
 use std::path::PathBuf;
 
@@ -24,7 +24,7 @@ pub struct GableBuildSetting {
 impl GableBuildSetting {
     pub fn new() -> Self {
         Self {
-            visible: false,
+            visible: true,
             add_selected: EDevelopType::Cpp,
             selected_index: 0,
         }
@@ -197,7 +197,7 @@ impl GableBuildSetting {
         ui.horizontal(|ui| {
             ui.group(|ui| {
                 ui.set_min_size(item_size);
-                ui.add_sized(title_size, Label::new("develop:").truncate());
+                ui.add_sized(title_size, Label::new("开发环境:").truncate());
                 ui.allocate_ui_with_layout(content_size, Layout::left_to_right(Align::Min), |ui| {
                     ui.label(build_settings.dev.to_string());
                 });
@@ -207,7 +207,7 @@ impl GableBuildSetting {
         ui.horizontal(|ui| {
             ui.group(|ui| {
                 ui.set_min_size(item_size);
-                ui.add_sized(title_size, Label::new("alias:").truncate());
+                ui.add_sized(title_size, Label::new("标识:").truncate());
                 ui.add_sized(
                     content_size,
                     TextEdit::singleline(&mut build_settings.display_name),
@@ -218,7 +218,7 @@ impl GableBuildSetting {
         ui.horizontal(|ui| {
             ui.group(|ui| {
                 ui.set_min_size(item_size);
-                ui.add_sized(title_size, Label::new("keyword:").truncate());
+                ui.add_sized(title_size, Label::new("关键字:").truncate());
                 ui.add_sized(
                     content_size,
                     TextEdit::singleline(&mut build_settings.keyword),
@@ -230,7 +230,7 @@ impl GableBuildSetting {
             ui.group(|ui| {
                 ui.set_min_size(item_size);
 
-                ui.add_sized(title_size, Label::new("target_type:").truncate());
+                ui.add_sized(title_size, Label::new("导出类型:").truncate());
                 ComboBox::from_id_salt("build_settings.target_type")
                     .selected_text(format!("{:?}", build_settings.target_type))
                     .show_ui(ui, |ui| {
@@ -244,17 +244,77 @@ impl GableBuildSetting {
                     });
             });
         });
+        if build_settings.target_type == ETargetType::Protobuff {
+            // is_proto_2
+            ui.horizontal(|ui| {
+                ui.group(|ui| {
+                    ui.set_min_size(item_size);
+                    ui.add_sized(title_size, Label::new("Proto版本:").truncate());
+                    ui.allocate_ui_with_layout(
+                        content_size,
+                        Layout::left_to_right(Align::Min),
+                        |ui| {
+                            for (text, value) in [("Proto 2", true), ("Proto 3", false)] {
+                                ui.radio_value(&mut build_settings.is_proto_2, value, text);
+                            }
+                        },
+                    );
+                });
+            });
+            // is_proto_custom
+            ui.horizontal(|ui| {
+                ui.group(|ui| {
+                    ui.set_min_size(item_size);
+                    ui.add_sized(title_size, Label::new("自定义模板:").truncate());
+                    ui.allocate_ui_with_layout(
+                        content_size,
+                        Layout::left_to_right(Align::Min),
+                        |ui| ui.add(Checkbox::new(&mut build_settings.is_proto_custom, "")),
+                    );
+                });
+            });
+            if build_settings.is_proto_custom {
+                // proto_custom_template
+                ui.horizontal(|ui| {
+                    ui.group(|ui| {
+                        ui.set_min_size(item_size);
+                        ui.add_sized(title_size, Label::new("模板文件:").truncate());
+                        ui.allocate_ui_with_layout(
+                            second_size,
+                            Layout::left_to_right(Align::Min),
+                            |ui| {
+                                let absolute_path: PathBuf =
+                                    utils::get_absolute_path(&build_settings.proto_custom_template);
+                                ui.add(
+                                    Label::new(absolute_path.to_string_lossy().to_string())
+                                        .truncate(),
+                                );
+                            },
+                        );
+                        if ui.add_sized(third_size, Button::new("Browse")).clicked() {
+                            if let Some(path) =
+                                rfd::FileDialog::new().set_title("选择文件").pick_file()
+                            {
+                                let re_path: PathBuf = utils::get_env_relative_path(&path);
+                                build_settings.proto_custom_template = re_path;
+                            }
+                        }
+                    });
+                });
+            }
+        }
+
         // target_path
         ui.horizontal(|ui| {
             ui.group(|ui| {
                 ui.set_min_size(item_size);
-                ui.add_sized(title_size, Label::new("target_path:").truncate());
+                ui.add_sized(title_size, Label::new("导出路径:").truncate());
                 ui.allocate_ui_with_layout(second_size, Layout::left_to_right(Align::Min), |ui| {
                     let absolute_path: PathBuf =
                         utils::get_absolute_path(&build_settings.target_path);
                     ui.add(Label::new(absolute_path.to_string_lossy().to_string()).truncate());
                 });
-                if ui.add_sized(third_size, Button::new("Browse")).clicked() {
+                if ui.add_sized(third_size, Button::new("浏览")).clicked() {
                     if let Some(path) = rfd::FileDialog::new()
                         .set_title("选择目标路径")
                         .pick_folder()

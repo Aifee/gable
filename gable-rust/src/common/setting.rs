@@ -7,6 +7,7 @@ use std::sync::{Mutex, MutexGuard};
 use std::{fs, io};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct BuildSetting {
     /// 开发环境
     pub dev: EDevelopType,
@@ -16,8 +17,29 @@ pub struct BuildSetting {
     pub keyword: String,
     /// 构建目标类型
     pub target_type: ETargetType,
+    // 是否是protobuff 2版本
+    pub is_proto_2: bool,
+    // 是否自定义模板
+    pub is_proto_custom: bool,
+    // 自定义模板路径
+    pub proto_custom_template: PathBuf,
     /// 构建目标路径，相对路径
     pub target_path: PathBuf,
+}
+
+impl Default for BuildSetting {
+    fn default() -> Self {
+        Self {
+            dev: EDevelopType::Cpp,
+            display_name: String::new(),
+            keyword: String::new(),
+            target_type: ETargetType::Json,
+            is_proto_2: false,
+            is_proto_custom: false,
+            proto_custom_template: PathBuf::new(),
+            target_path: PathBuf::new(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -113,7 +135,10 @@ pub fn add_build_setting(dev_type: EDevelopType) -> Option<usize> {
         dev: dev_type,
         display_name: dev_type.to_string().to_string(),
         keyword: dev_type.to_keyword().to_string(),
-        target_type: ETargetType::JSON,
+        target_type: ETargetType::Json,
+        is_proto_2: false,
+        is_proto_custom: false,
+        proto_custom_template: PathBuf::new(),
         target_path: utils::get_env_relative_path(&get_workspace()),
     };
     let mut settings = APP_SETTINGS.lock().unwrap();

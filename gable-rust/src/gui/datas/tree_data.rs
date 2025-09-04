@@ -24,6 +24,7 @@ impl TreeData {
     pub fn to_csv_data(&self, keyword: &str) -> Vec<Vec<String>> {
         match self.gable_type {
             ESheetType::Normal => self.normal_csv_data(keyword),
+            ESheetType::KV => self.kv_csv_data(keyword),
             _ => Vec::new(),
         }
     }
@@ -264,6 +265,84 @@ impl TreeData {
                 item_data.push(value_cell);
             }
             items.push(item_data);
+        }
+        return items;
+    }
+
+    fn kv_csv_data(&self, keyword: &str) -> Vec<Vec<String>> {
+        let mut items: Vec<Vec<String>> = Vec::new();
+        for row_data in self.content.heads.values() {
+            let mut head_item: Vec<String> = Vec::new();
+            let field_value =
+                if let Some(field_cell) = row_data.get(&(constant::TABLE_KV_COL_FIELD as u16)) {
+                    field_cell.value.clone()
+                } else {
+                    String::new()
+                };
+            let type_value =
+                if let Some(type_cell) = row_data.get(&(constant::TABLE_KV_COL_TYPE as u16)) {
+                    type_cell.value.clone()
+                } else {
+                    String::new()
+                };
+            let value_value =
+                if let Some(value_cell) = row_data.get(&(constant::TABLE_KV_COL_VALUE as u16)) {
+                    value_cell.value.clone()
+                } else {
+                    String::new()
+                };
+            head_item.push(field_value);
+            head_item.push(type_value);
+            head_item.push(value_value);
+            items.push(head_item);
+        }
+        for (_, row_data) in self.content.cells.iter() {
+            let mut row_item: Vec<String> = Vec::new();
+            let field_cell =
+                if let Some(field_cell) = row_data.get(&(constant::TABLE_KV_COL_FIELD as u16)) {
+                    field_cell
+                } else {
+                    continue;
+                };
+            let type_cell =
+                if let Some(type_cell) = row_data.get(&(constant::TABLE_KV_COL_TYPE as u16)) {
+                    type_cell
+                } else {
+                    continue;
+                };
+            let keyword_cell = if let Some(keyword_cell) =
+                row_data.get(&(constant::TABLE_KV_COL_KEYWORD as u16))
+            {
+                keyword_cell
+            } else {
+                continue;
+            };
+            let value_cell =
+                if let Some(value_cell) = row_data.get(&(constant::TABLE_KV_COL_VALUE as u16)) {
+                    value_cell
+                } else {
+                    continue;
+                };
+
+            // 验证字段是否合法
+            if !field_cell.verify_lawful() {
+                continue;
+            }
+            // 验证数据类型是否合法
+            if !type_cell.verify_lawful() {
+                continue;
+            }
+            // 验证keyword是否合法
+            if !keyword_cell.verify_lawful() {
+                continue;
+            }
+            if !keyword_cell.value.contains(keyword) {
+                continue;
+            }
+            row_item.push(field_cell.value.clone());
+            row_item.push(type_cell.value.clone());
+            row_item.push(value_cell.value.clone());
+            items.push(row_item);
         }
         return items;
     }

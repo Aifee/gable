@@ -26,14 +26,15 @@ impl TreeItem {
         let mut cache: HashMap<String, &TreeData> = HashMap::new();
         if self.item_type == EItemType::Sheet {
             if let Some(data) = &self.data {
-                if data.gable_type != ESheetType::Enum {
-                    cache.insert(self.display_name.clone(), data);
-                }
+                // if data.gable_type != ESheetType::Enum {
+
+                // }
+                cache.insert(self.display_name.clone(), data);
             }
         }
 
         for item in &self.children {
-            let child_cache = item.get_datas();
+            let child_cache: HashMap<String, &TreeData> = item.get_datas();
             cache.extend(child_cache);
         }
 

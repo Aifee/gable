@@ -47,10 +47,7 @@ impl TreeData {
         match self.gable_type {
             ESheetType::Normal => self.normal_proto_data(keyword),
             ESheetType::KV => self.kv_proto_data(keyword),
-            _ => {
-                log::error!("The enumeration table does not export as CSV.");
-                Vec::new()
-            }
+            ESheetType::Enum => self.enum_proto_data(),
         }
     }
 
@@ -558,6 +555,48 @@ impl TreeData {
             };
             fields.push(field_info);
             field_index += 1;
+        }
+        return fields;
+    }
+
+    pub fn enum_proto_data(&self) -> Vec<FieldInfo> {
+        let mut fields: Vec<FieldInfo> = Vec::new();
+        for (_, row_data) in self.content.cells.iter() {
+            let field_cell: &CellData =
+                if let Some(field_cell) = row_data.get(&(constant::TABLE_ENUM_COL_FIELD as u16)) {
+                    field_cell
+                } else {
+                    continue;
+                };
+            let value_cell: &CellData =
+                if let Some(value_cell) = row_data.get(&(constant::TABLE_ENUM_COL_VALUE as u16)) {
+                    value_cell
+                } else {
+                    continue;
+                };
+            let desc_cell: Option<&CellData> =
+                row_data.get(&(constant::TABLE_ENUM_COL_DESC as u16));
+            // 验证字段是否合法
+            if !field_cell.verify_lawful() {
+                continue;
+            }
+            // 验证数据类型是否合法
+            if !value_cell.verify_lawful() {
+                continue;
+            }
+            let value_value: i32 = value_cell.parse_int() as i32;
+            let desc_value: String = if let Some(desc_cell) = desc_cell {
+                desc_cell.value.clone()
+            } else {
+                String::new()
+            };
+            let field_info: FieldInfo = FieldInfo {
+                field_type: "".to_string(),
+                field_name: field_cell.value.clone(),
+                field_desc: desc_value,
+                field_index: value_value,
+            };
+            fields.push(field_info);
         }
         return fields;
     }

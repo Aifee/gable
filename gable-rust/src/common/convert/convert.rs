@@ -4,7 +4,10 @@ use crate::{
         utils,
     },
     gui::datas::{
-        etarget_type::ETargetType, gables, tree_data::FieldInfo, tree_data::TreeData,
+        esheet_type::ESheetType,
+        etarget_type::ETargetType,
+        gables,
+        tree_data::{FieldInfo, TreeData},
         tree_item::TreeItem,
     },
 };
@@ -33,8 +36,16 @@ pub fn from_target(setting: &BuildSetting) {
     }
     for (_, data) in datas.iter() {
         match setting.target_type {
-            ETargetType::Json => to_json(setting, data),
-            ETargetType::CSV => to_csv(setting, data),
+            ETargetType::Json => {
+                if data.gable_type != ESheetType::Enum {
+                    to_json(setting, data)
+                }
+            }
+            ETargetType::CSV => {
+                if data.gable_type != ESheetType::Enum {
+                    to_csv(setting, data)
+                }
+            }
             ETargetType::Protobuff => to_proto(setting, data),
         }
     }
@@ -147,7 +158,11 @@ fn to_proto(build_setting: &BuildSetting, tree_data: &TreeData) {
     let mut context = Context::new();
     context.insert("CLASS_NAME", &tree_data.content.sheetname);
     context.insert("fields", &proto_data);
-    let rendered_result: Result<String, tera::Error> = tera.render("template.proto", &context);
+    let rendered_result: Result<String, tera::Error> = if tree_data.gable_type == ESheetType::Enum {
+        tera.render("enums.proto", &context)
+    } else {
+        tera.render("template.proto", &context)
+    };
     if rendered_result.is_err() {
         log::error!("渲染模板错误: {}", rendered_result.unwrap_err());
         return;
@@ -158,7 +173,7 @@ fn to_proto(build_setting: &BuildSetting, tree_data: &TreeData) {
     let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
         .join(format!("{}.proto", tree_data.content.sheetname));
 
-    let result: Result<(), std::io::Error> = std::fs::write(&target_path, rendered);
+    let result: Result<(), Error> = std::fs::write(&target_path, rendered);
     if result.is_err() {
         log::error!(
             "导出【{}】失败:{}",

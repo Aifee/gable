@@ -1,0 +1,6 @@
+syntax = "proto2";
+package com.gable.proto;
+
+enum {{CLASS_NAME}} { {% for field in fields %}
+    {{ field.field_name }} = {{ field.field_index }};// {{field.field_desc}} {% endfor %}
+}

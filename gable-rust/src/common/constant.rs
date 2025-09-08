@@ -66,6 +66,8 @@ pub const TABLE_KV_COL_DESC: u32 = 6;
 ///[KV表单]有效数据起始行数
 pub const TABLE_KV_ROW_TOTAL: u32 = 2;
 
+///[枚举表单]字段行
+pub const TABLE_ENUM_COL_FIELD: u32 = 1;
 ///[枚举表单]值列
 pub const TABLE_ENUM_COL_VALUE: u16 = 2;
 ///[枚举表单]描述列

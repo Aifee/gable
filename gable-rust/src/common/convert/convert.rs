@@ -59,11 +59,17 @@ pub fn from_items(item: &TreeItem) {
     for build_setting in settings.build_settings.iter() {
         for (_, data) in datas.iter() {
             match build_setting.target_type {
-                ETargetType::Json => to_json(build_setting, data),
-                ETargetType::CSV => to_csv(build_setting, data),
-                _ => {
-                    log::info!("暂未实现：{:?}", build_setting.target_type)
+                ETargetType::Json => {
+                    if data.gable_type != ESheetType::Enum {
+                        to_json(build_setting, data)
+                    }
                 }
+                ETargetType::CSV => {
+                    if data.gable_type != ESheetType::Enum {
+                        to_csv(build_setting, data)
+                    }
+                }
+                ETargetType::Protobuff => to_proto(build_setting, data),
             }
         }
     }

@@ -4,5 +4,5 @@ package com.gable.proto;
 import "{{ item }}.proto";
 {% endfor %}
 message {{CLASS_NAME}} { {% for field in fields %}
-    optional {{ field.field_type }} {{ field.field_name }} = {{ field.field_index }};// {{field.field_desc}} {% endfor %}
+    {% if field.field_type is starting_with("repeated") %}{{ field.field_type }} {{ field.field_name }} = {{ field.field_index }};{% else %}optional {{ field.field_type }} {{ field.field_name }} = {{ field.field_index }};{% endif %}// {{field.field_desc}} {% endfor %}
 }

@@ -165,6 +165,7 @@ impl GableBuildSetting {
                         GableApp::convert_target_command(build_settings.display_name);
                     }
                 }
+                if ui.add_sized([165.0, 26.0], Button::new("编译")).clicked() {}
             });
         });
     }
@@ -325,6 +326,45 @@ impl GableBuildSetting {
                 }
             });
         });
+        // generate_script
+        ui.horizontal(|ui| {
+            ui.group(|ui| {
+                ui.set_min_size(item_size);
+                ui.add_sized(title_size, Label::new("生成脚本:").truncate());
+                ui.allocate_ui_with_layout(content_size, Layout::left_to_right(Align::Min), |ui| {
+                    ui.add(Checkbox::new(&mut build_settings.generate_script, ""))
+                });
+            });
+        });
+        if build_settings.generate_script {
+            // script_path
+            ui.horizontal(|ui| {
+                ui.group(|ui| {
+                    ui.set_min_size(item_size);
+                    ui.add_sized(title_size, Label::new("脚本路径:").truncate());
+                    ui.allocate_ui_with_layout(
+                        second_size,
+                        Layout::left_to_right(Align::Min),
+                        |ui| {
+                            let absolute_path: PathBuf =
+                                utils::get_absolute_path(&build_settings.script_path);
+                            ui.add(
+                                Label::new(absolute_path.to_string_lossy().to_string()).truncate(),
+                            );
+                        },
+                    );
+                    if ui.add_sized(third_size, Button::new("浏览")).clicked() {
+                        if let Some(path) = rfd::FileDialog::new()
+                            .set_title("选择目标路径")
+                            .pick_folder()
+                        {
+                            let re_path: PathBuf = utils::get_env_relative_path(&path);
+                            build_settings.script_path = re_path;
+                        }
+                    }
+                });
+            });
+        }
         if build_settings != before_settings {
             if let Err(e) = setting::update_build_setting(self.selected_index, build_settings) {
                 log::error!("Failed to update build setting: {}", e);

@@ -25,6 +25,10 @@ pub struct BuildSetting {
     pub proto_custom_template: PathBuf,
     /// 构建目标路径，相对路径
     pub target_path: PathBuf,
+    // 是否生成脚本
+    pub generate_script: bool,
+    /// 脚本生成路径
+    pub script_path: PathBuf,
 }
 
 impl Default for BuildSetting {
@@ -38,6 +42,8 @@ impl Default for BuildSetting {
             is_proto_custom: false,
             proto_custom_template: PathBuf::new(),
             target_path: PathBuf::new(),
+            generate_script: false,
+            script_path: PathBuf::new(),
         }
     }
 }
@@ -140,6 +146,8 @@ pub fn add_build_setting(dev_type: EDevelopType) -> Option<usize> {
         is_proto_custom: false,
         proto_custom_template: PathBuf::new(),
         target_path: utils::get_env_relative_path(&get_workspace()),
+        generate_script: false,
+        script_path: PathBuf::new(),
     };
     let mut settings = APP_SETTINGS.lock().unwrap();
     settings.build_settings.push(build_setting);

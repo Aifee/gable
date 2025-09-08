@@ -43,7 +43,7 @@ impl TreeData {
         }
     }
 
-    pub fn to_proto_data(&self, keyword: &str) -> Vec<FieldInfo> {
+    pub fn to_proto_data(&self, keyword: &str) -> (Vec<String>, Vec<FieldInfo>) {
         match self.gable_type {
             ESheetType::Normal => self.normal_proto_data(keyword),
             ESheetType::KV => self.kv_proto_data(keyword),
@@ -369,8 +369,9 @@ impl TreeData {
         return items;
     }
 
-    fn normal_proto_data(&self, keyword: &str) -> Vec<FieldInfo> {
+    fn normal_proto_data(&self, keyword: &str) -> (Vec<String>, Vec<FieldInfo>) {
         let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
+        let mut imports: Vec<String> = Vec::new();
         let mut fields: Vec<FieldInfo> = Vec::new();
         let mut field_index: i32 = 1;
         let mut row_valid: bool = true;
@@ -389,10 +390,11 @@ impl TreeData {
                     row_valid = false;
                     continue;
                 };
+            let link_cell: Option<&&CellData> = head_data.get(&constant::TABLE_DATA_ROW_LINK);
 
             let data_type: EDataType = EDataType::convert(&type_cell.value);
-            let proto_type: &'static str = match data_type {
-                EDataType::Int | EDataType::Time | EDataType::Enum => "int32",
+            let proto_type = match data_type {
+                EDataType::Int | EDataType::Time => "int32",
                 EDataType::Date => "int64",
                 EDataType::String => "string",
                 EDataType::Boolean => "bool",
@@ -407,7 +409,20 @@ impl TreeData {
                 EDataType::FloatArr => "repeated float",
                 EDataType::Vector2Arr | EDataType::Vector3Arr | EDataType::Vector4Arr => {
                     "repeated string"
-                } // 简化处理
+                }
+                EDataType::Enum => {
+                    if let Some(link_cell) = link_cell {
+                        let link_name = if let Some(pos) = link_cell.value.find('@') {
+                            &link_cell.value[pos + 1..]
+                        } else {
+                            link_cell.value.as_str()
+                        };
+                        imports.push(link_name.to_string());
+                        link_name
+                    } else {
+                        "int32"
+                    }
+                }
                 _ => "string",
             };
             let desc_cell: Option<&&CellData> = head_data.get(&constant::TABLE_DATA_ROW_DESC);
@@ -428,7 +443,7 @@ impl TreeData {
         }
         // 行数据无效
         if !row_valid {
-            return Vec::new();
+            return (Vec::new(), Vec::new());
         }
 
         for (_, head_data) in valids.iter() {
@@ -445,9 +460,10 @@ impl TreeData {
                     continue;
                 };
 
-            let data_type = EDataType::convert(&type_cell.value);
+            let link_cell: Option<&&CellData> = head_data.get(&constant::TABLE_DATA_ROW_LINK);
+            let data_type: EDataType = EDataType::convert(&type_cell.value);
             let proto_type = match data_type {
-                EDataType::Int | EDataType::Time | EDataType::Enum => "int32",
+                EDataType::Int | EDataType::Time => "int32",
                 EDataType::Date => "int64",
                 EDataType::String => "string",
                 EDataType::Boolean => "bool",
@@ -462,7 +478,20 @@ impl TreeData {
                 EDataType::FloatArr => "repeated float",
                 EDataType::Vector2Arr | EDataType::Vector3Arr | EDataType::Vector4Arr => {
                     "repeated string"
-                } // 简化处理
+                }
+                EDataType::Enum => {
+                    if let Some(link_cell) = link_cell {
+                        let link_name = if let Some(pos) = link_cell.value.find('@') {
+                            &link_cell.value[pos + 1..]
+                        } else {
+                            link_cell.value.as_str()
+                        };
+                        imports.push(link_name.to_string());
+                        link_name
+                    } else {
+                        "int32"
+                    }
+                }
                 _ => "string",
             };
             let desc_cell: Option<&&CellData> = head_data.get(&constant::TABLE_DATA_ROW_DESC);
@@ -480,10 +509,11 @@ impl TreeData {
             fields.push(field_info);
             field_index += 1;
         }
-        return fields;
+        return (imports, fields);
     }
 
-    pub fn kv_proto_data(&self, keyword: &str) -> Vec<FieldInfo> {
+    pub fn kv_proto_data(&self, keyword: &str) -> (Vec<String>, Vec<FieldInfo>) {
+        let mut imports: Vec<String> = Vec::new();
         let mut fields: Vec<FieldInfo> = Vec::new();
         let mut field_index: i32 = 1;
         for (_, row_data) in self.content.cells.iter() {
@@ -506,6 +536,7 @@ impl TreeData {
             } else {
                 continue;
             };
+            let link_cell: Option<&CellData> = row_data.get(&(constant::TABLE_KV_COL_LINK as u16));
             let desc_cell: Option<&CellData> = row_data.get(&(constant::TABLE_KV_COL_DESC as u16));
             // 验证字段是否合法
             if !field_cell.verify_lawful() {
@@ -524,7 +555,7 @@ impl TreeData {
             }
             let data_type = EDataType::convert(&type_cell.value);
             let proto_type = match data_type {
-                EDataType::Int | EDataType::Time | EDataType::Enum => "int32",
+                EDataType::Int | EDataType::Time => "int32",
                 EDataType::Date => "int64",
                 EDataType::String => "string",
                 EDataType::Boolean => "bool",
@@ -539,7 +570,20 @@ impl TreeData {
                 EDataType::FloatArr => "repeated float",
                 EDataType::Vector2Arr | EDataType::Vector3Arr | EDataType::Vector4Arr => {
                     "repeated string"
-                } // 简化处理
+                }
+                EDataType::Enum => {
+                    if let Some(link_cell) = link_cell {
+                        let link_name = if let Some(pos) = link_cell.value.find('@') {
+                            &link_cell.value[pos + 1..]
+                        } else {
+                            link_cell.value.as_str()
+                        };
+                        imports.push(link_name.to_string());
+                        link_name
+                    } else {
+                        "int32"
+                    }
+                }
                 _ => "string",
             };
             let desc_value: String = if let Some(desc_cell) = desc_cell {
@@ -556,10 +600,11 @@ impl TreeData {
             fields.push(field_info);
             field_index += 1;
         }
-        return fields;
+        return (imports, fields);
     }
 
-    pub fn enum_proto_data(&self) -> Vec<FieldInfo> {
+    pub fn enum_proto_data(&self) -> (Vec<String>, Vec<FieldInfo>) {
+        let imports: Vec<String> = Vec::new();
         let mut fields: Vec<FieldInfo> = Vec::new();
         for (_, row_data) in self.content.cells.iter() {
             let field_cell: &CellData =
@@ -598,6 +643,6 @@ impl TreeData {
             };
             fields.push(field_info);
         }
-        return fields;
+        return (imports, fields);
     }
 }

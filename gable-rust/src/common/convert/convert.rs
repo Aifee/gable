@@ -4,10 +4,7 @@ use crate::{
         utils,
     },
     gui::datas::{
-        esheet_type::ESheetType,
-        etarget_type::ETargetType,
-        gables,
-        tree_data::{FieldInfo, TreeData},
+        esheet_type::ESheetType, etarget_type::ETargetType, gables, tree_data::TreeData,
         tree_item::TreeItem,
     },
 };
@@ -148,7 +145,7 @@ fn to_csv(build_setting: &BuildSetting, tree_data: &TreeData) {
 }
 
 fn to_proto(build_setting: &BuildSetting, tree_data: &TreeData) {
-    let proto_data: Vec<FieldInfo> = tree_data.to_proto_data(&build_setting.keyword);
+    let (import_data, proto_data) = tree_data.to_proto_data(&build_setting.keyword);
     let tera_result: Result<Tera, tera::Error> = Tera::new("assets/templates/proto2/*");
     if tera_result.is_err() {
         log::error!("创建Tera模板失败: {}", tera_result.unwrap_err());
@@ -158,6 +155,7 @@ fn to_proto(build_setting: &BuildSetting, tree_data: &TreeData) {
     let mut context = Context::new();
     context.insert("CLASS_NAME", &tree_data.content.sheetname);
     context.insert("fields", &proto_data);
+    context.insert("imports", &import_data);
     let rendered_result: Result<String, tera::Error> = if tree_data.gable_type == ESheetType::Enum {
         tera.render("enums.proto", &context)
     } else {

@@ -303,6 +303,33 @@ impl GableBuildSetting {
                     });
                 });
             }
+            // target_path
+            ui.horizontal(|ui| {
+                ui.group(|ui| {
+                    ui.set_min_size(item_size);
+                    ui.add_sized(title_size, Label::new("proto文件路径:").truncate());
+                    ui.allocate_ui_with_layout(
+                        second_size,
+                        Layout::left_to_right(Align::Min),
+                        |ui| {
+                            let absolute_path: PathBuf =
+                                utils::get_absolute_path(&build_settings.proto_target_path);
+                            ui.add(
+                                Label::new(absolute_path.to_string_lossy().to_string()).truncate(),
+                            );
+                        },
+                    );
+                    if ui.add_sized(third_size, Button::new("浏览")).clicked() {
+                        if let Some(path) = rfd::FileDialog::new()
+                            .set_title("选择目标路径")
+                            .pick_folder()
+                        {
+                            let re_path: PathBuf = utils::get_env_relative_path(&path);
+                            build_settings.proto_target_path = re_path;
+                        }
+                    }
+                });
+            });
         }
 
         // target_path

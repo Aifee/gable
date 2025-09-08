@@ -4,7 +4,10 @@ use crate::{
         utils,
     },
     gui::datas::{
-        esheet_type::ESheetType, etarget_type::ETargetType, gables, tree_data::TreeData,
+        esheet_type::ESheetType,
+        etarget_type::ETargetType,
+        gables,
+        tree_data::{FieldInfo, TreeData},
         tree_item::TreeItem,
     },
 };
@@ -174,7 +177,7 @@ fn to_proto(build_setting: &BuildSetting, tree_data: &TreeData) {
     let rendered: String = rendered_result.unwrap();
 
     // 写入文件
-    let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
+    let target_path: PathBuf = utils::get_absolute_path(&build_setting.proto_target_path)
         .join(format!("{}.proto", tree_data.content.sheetname));
 
     let result: Result<(), Error> = std::fs::write(&target_path, rendered);
@@ -190,5 +193,225 @@ fn to_proto(build_setting: &BuildSetting, tree_data: &TreeData) {
             build_setting.display_name,
             target_path.to_str().unwrap()
         );
+    }
+    to_proto_binary(build_setting, tree_data, &proto_data);
+}
+fn to_proto_binary(
+    build_setting: &BuildSetting,
+    tree_data: &TreeData,
+    field_infos: &Vec<FieldInfo>,
+) {
+    match tree_data.gable_type {
+        ESheetType::Normal => {
+            let json_data: Vec<Map<String, Value>> = tree_data.to_json_data(&build_setting.keyword);
+            let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
+                .join(format!("{}.bin", tree_data.content.sheetname));
+
+            // 为每个数据条目生成protobuf二进制数据
+            let mut buffer: Vec<u8> = Vec::new();
+            for item in json_data.iter() {
+                if let Ok(encoded) = encode_normal_data_to_proto(item, field_infos) {
+                    // 使用长度分隔编码
+                    let len: u32 = encoded.len() as u32;
+                    buffer.extend_from_slice(&len.to_le_bytes());
+                    buffer.extend_from_slice(&encoded);
+                }
+            }
+
+            if let Err(e) = std::fs::write(&target_path, &buffer) {
+                log::error!("写入二进制文件失败: {}", e);
+            } else {
+                log::info!(
+                    "导出【{}】Protobuf二进制数据成功:{}",
+                    build_setting.display_name,
+                    target_path.to_str().unwrap()
+                );
+            }
+        }
+        ESheetType::KV => {
+            let json_data: Vec<Map<String, Value>> = tree_data.to_json_data(&build_setting.keyword);
+            let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
+                .join(format!("{}.bin", tree_data.content.sheetname));
+
+            // KV数据通常是单个对象
+            if !json_data.is_empty() {
+                if let Ok(encoded) = encode_kv_data_to_proto(&json_data[0], field_infos) {
+                    if let Err(e) = std::fs::write(&target_path, &encoded) {
+                        log::error!("写入二进制文件失败: {}", e);
+                    } else {
+                        log::info!(
+                            "导出【{}】Protobuf二进制数据成功:{}",
+                            build_setting.display_name,
+                            target_path.to_str().unwrap()
+                        );
+                    }
+                }
+            }
+        }
+        ESheetType::Enum => {}
+    }
+}
+
+fn encode_normal_data_to_proto(
+    item: &Map<String, Value>,
+    field_infos: &Vec<FieldInfo>,
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let mut buffer = Vec::new();
+
+    // 根据字段信息编码数据
+    for (index, field_info) in field_infos.iter().enumerate() {
+        let field_number: u32 = (index + 1) as u32;
+
+        // 在JSON数据中查找对应的字段值
+        if let Some(value) = item.get(&field_info.field_name) {
+            encode_field_value(field_number, value, &field_info.field_type, &mut buffer)?;
+        }
+    }
+
+    Ok(buffer)
+}
+
+fn encode_kv_data_to_proto(
+    item: &Map<String, Value>,
+    field_infos: &Vec<FieldInfo>,
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let mut buffer = Vec::new();
+
+    // 根据字段信息编码数据
+    for (index, field_info) in field_infos.iter().enumerate() {
+        let field_number = (index + 1) as u32;
+
+        // 在JSON数据中查找对应的字段值
+        if let Some(value) = item.get(&field_info.field_name) {
+            encode_field_value(field_number, value, &field_info.field_type, &mut buffer)?;
+        }
+    }
+
+    Ok(buffer)
+}
+
+fn encode_field_value(
+    field_number: u32,
+    value: &Value,
+    field_type: &str,
+    buffer: &mut Vec<u8>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    match field_type {
+        "int32" => {
+            if let Some(n) = value.as_i64() {
+                // varint编码
+                let key = (field_number << 3) | 0; // wire type 0 for varint
+                encode_varint(key as u64, buffer);
+                encode_varint(n as u64, buffer);
+            }
+        }
+        "int64" => {
+            if let Some(n) = value.as_i64() {
+                let key = (field_number << 3) | 0; // wire type 0 for varint
+                encode_varint(key as u64, buffer);
+                encode_varint(n as u64, buffer);
+            }
+        }
+        "string" => {
+            if let Some(s) = value.as_str() {
+                let key = (field_number << 3) | 2; // wire type 2 for length-delimited
+                encode_varint(key as u64, buffer);
+                encode_varint(s.len() as u64, buffer);
+                buffer.extend_from_slice(s.as_bytes());
+            }
+        }
+        "bool" => {
+            if let Some(b) = value.as_bool() {
+                let key = (field_number << 3) | 0; // wire type 0 for varint
+                encode_varint(key as u64, buffer);
+                encode_varint(if b { 1 } else { 0 }, buffer);
+            }
+        }
+        "float" => {
+            if let Some(n) = value.as_f64() {
+                let key = (field_number << 3) | 5; // wire type 5 for 32-bit
+                encode_varint(key as u64, buffer);
+                let float_bytes = (n as f32).to_le_bytes();
+                buffer.extend_from_slice(&float_bytes);
+            }
+        }
+        "repeated int32" => {
+            if let Some(arr) = value.as_array() {
+                for val in arr {
+                    if let Some(n) = val.as_i64() {
+                        let key = (field_number << 3) | 0; // wire type 0 for varint
+                        encode_varint(key as u64, buffer);
+                        encode_varint(n as u64, buffer);
+                    }
+                }
+            }
+        }
+        "repeated string" => {
+            if let Some(arr) = value.as_array() {
+                for val in arr {
+                    if let Some(s) = val.as_str() {
+                        let key = (field_number << 3) | 2; // wire type 2 for length-delimited
+                        encode_varint(key as u64, buffer);
+                        encode_varint(s.len() as u64, buffer);
+                        buffer.extend_from_slice(s.as_bytes());
+                    }
+                }
+            }
+        }
+        "repeated bool" => {
+            if let Some(arr) = value.as_array() {
+                for val in arr {
+                    if let Some(b) = val.as_bool() {
+                        let key = (field_number << 3) | 0; // wire type 0 for varint
+                        encode_varint(key as u64, buffer);
+                        encode_varint(if b { 1 } else { 0 }, buffer);
+                    }
+                }
+            }
+        }
+        "repeated float" => {
+            if let Some(arr) = value.as_array() {
+                for val in arr {
+                    if let Some(n) = val.as_f64() {
+                        let key = (field_number << 3) | 5; // wire type 5 for 32-bit
+                        encode_varint(key as u64, buffer);
+                        let float_bytes = (n as f32).to_le_bytes();
+                        buffer.extend_from_slice(&float_bytes);
+                    }
+                }
+            }
+        }
+        _ => {
+            // 默认处理为字符串
+            if let Some(s) = value.as_str() {
+                let key = (field_number << 3) | 2; // wire type 2 for length-delimited
+                encode_varint(key as u64, buffer);
+                encode_varint(s.len() as u64, buffer);
+                buffer.extend_from_slice(s.as_bytes());
+            } else {
+                // 尝试转换为字符串
+                let s = value.to_string();
+                let key = (field_number << 3) | 2; // wire type 2 for length-delimited
+                encode_varint(key as u64, buffer);
+                encode_varint(s.len() as u64, buffer);
+                buffer.extend_from_slice(s.as_bytes());
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn encode_varint(mut value: u64, buffer: &mut Vec<u8>) {
+    loop {
+        let mut byte = (value & 0x7F) as u8;
+        value >>= 7;
+        if value != 0 {
+            byte |= 0x80;
+        }
+        buffer.push(byte);
+        if value == 0 {
+            break;
+        }
     }
 }

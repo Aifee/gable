@@ -9,10 +9,10 @@ use std::collections::BTreeMap;
 
 #[derive(serde::Serialize)]
 pub struct FieldInfo {
-    field_type: String,
-    field_name: String,
-    field_desc: String,
-    field_index: i32,
+    pub field_type: String,
+    pub field_name: String,
+    pub field_desc: String,
+    pub field_index: i32,
 }
 
 #[derive(Debug, Clone)]

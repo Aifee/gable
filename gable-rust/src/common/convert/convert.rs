@@ -3,7 +3,10 @@ use crate::{
         setting::{self, AppSettings, BuildSetting},
         utils,
     },
-    gui::datas::{etarget_type::ETargetType, gables, tree_data::TreeData, tree_item::TreeItem},
+    gui::datas::{
+        etarget_type::ETargetType, gables, tree_data::FieldInfo, tree_data::TreeData,
+        tree_item::TreeItem,
+    },
 };
 use serde_json::{Map, Value};
 use std::{
@@ -13,6 +16,7 @@ use std::{
     path::PathBuf,
     sync::MutexGuard,
 };
+use tera::{Context, Tera};
 
 pub fn from_target(setting: &BuildSetting) {
     let items: MutexGuard<'_, Vec<TreeItem>> = gables::TREE_ITEMS.lock().unwrap();
@@ -31,9 +35,7 @@ pub fn from_target(setting: &BuildSetting) {
         match setting.target_type {
             ETargetType::Json => to_json(setting, data),
             ETargetType::CSV => to_csv(setting, data),
-            _ => {
-                log::info!("暂未实现：{:?}", setting.target_type)
-            }
+            ETargetType::Protobuff => to_proto(setting, data),
         }
     }
 }
@@ -132,4 +134,42 @@ fn to_csv(build_setting: &BuildSetting, tree_data: &TreeData) {
         build_setting.display_name,
         target_path.to_str().unwrap()
     );
+}
+
+fn to_proto(build_setting: &BuildSetting, tree_data: &TreeData) {
+    let proto_data: Vec<FieldInfo> = tree_data.to_proto_data(&build_setting.keyword);
+    let tera_result: Result<Tera, tera::Error> = Tera::new("assets/templates/proto2/*");
+    if tera_result.is_err() {
+        log::error!("创建Tera模板失败: {}", tera_result.unwrap_err());
+        return;
+    }
+    let tera: Tera = tera_result.unwrap();
+    let mut context = Context::new();
+    context.insert("CLASS_NAME", &tree_data.content.sheetname);
+    context.insert("fields", &proto_data);
+    let rendered_result: Result<String, tera::Error> = tera.render("template.proto", &context);
+    if rendered_result.is_err() {
+        log::error!("渲染模板错误: {}", rendered_result.unwrap_err());
+        return;
+    }
+    let rendered: String = rendered_result.unwrap();
+
+    // 写入文件
+    let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
+        .join(format!("{}.proto", tree_data.content.sheetname));
+
+    let result: Result<(), std::io::Error> = std::fs::write(&target_path, rendered);
+    if result.is_err() {
+        log::error!(
+            "导出【{}】失败:{}",
+            build_setting.display_name,
+            target_path.to_str().unwrap()
+        );
+    } else {
+        log::info!(
+            "导出【{}】成功:{}",
+            build_setting.display_name,
+            target_path.to_str().unwrap()
+        );
+    }
 }

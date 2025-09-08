@@ -1,0 +1,6 @@
+syntax = "proto2";
+package com.gable.proto;
+
+message {{CLASS_NAME}} { {% for field in fields %}
+    optional {{ field.field_type }} {{ field.field_name }} = {{ field.field_index }};{% endfor %}
+}

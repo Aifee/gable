@@ -5,4 +5,11 @@ pub mod setting;
 pub mod utils;
 pub mod convert {
     pub mod convert;
+    pub mod convert_csv;
+    pub mod convert_json;
+    pub mod convert_protobuff;
+}
+
+pub mod generate {
+    pub mod generate;
 }

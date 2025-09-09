@@ -12,4 +12,5 @@ pub mod convert {
 
 pub mod generate {
     pub mod generate;
+    pub mod generate_csharp;
 }

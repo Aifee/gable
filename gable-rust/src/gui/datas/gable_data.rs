@@ -30,8 +30,7 @@ impl GableData {
                 .heads
                 .get(&constant::TABLE_DATA_ROW_DESC)
                 .unwrap()
-                .get(&col_index)
-                .unwrap();
+                .get(&col_index);
             let field_celldata =
                 if let Some(row_data) = self.heads.get(&constant::TABLE_DATA_ROW_FIELD) {
                     row_data.get(&col_index).unwrap()
@@ -68,9 +67,19 @@ impl GableData {
             }
 
             let mut col_datas: BTreeMap<u32, &CellData> = BTreeMap::new();
-            col_datas.insert(constant::TABLE_DATA_ROW_DESC, desc_celldata);
+            if let Some(desc_celldata) = desc_celldata {
+                col_datas.insert(constant::TABLE_DATA_ROW_DESC, desc_celldata);
+            }
             col_datas.insert(constant::TABLE_DATA_ROW_FIELD, field_celldata);
             col_datas.insert(constant::TABLE_DATA_ROW_TYPE, type_celldata);
+            let link_celldata = self
+                .heads
+                .get(&constant::TABLE_DATA_ROW_LINK)
+                .unwrap()
+                .get(&col_index);
+            if let Some(link_celldata) = link_celldata {
+                col_datas.insert(constant::TABLE_DATA_ROW_LINK, link_celldata);
+            }
             if field_celldata.value.contains("*") {
                 valids_main.insert(col_index, col_datas);
             } else {

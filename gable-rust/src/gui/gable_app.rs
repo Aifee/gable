@@ -1,4 +1,5 @@
 use crate::common::convert::convert;
+use crate::common::generate::generate;
 use crate::common::{res, setting};
 use crate::gui::datas::action_command::{ActionCommand, ECommandType};
 use crate::gui::form::gable_form::GableForm;
@@ -228,6 +229,7 @@ impl GableApp {
                     if let Some(param) = command.param {
                         if let Some(tree_item) = gables::get_item_clone(&param) {
                             convert::from_items(&tree_item);
+                            generate::from_items(&tree_item);
                         }
                     }
                 }
@@ -235,6 +237,7 @@ impl GableApp {
                     if let Some(param) = command.param {
                         if let Some(setting) = setting::get_build_setting_with_name(&param) {
                             convert::from_target(&setting);
+                            generate::from_target(&setting);
                         }
                     }
                 }

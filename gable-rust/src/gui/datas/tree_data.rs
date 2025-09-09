@@ -51,6 +51,14 @@ impl TreeData {
         }
     }
 
+    pub fn to_csharp_data(&self, keyword: &str) -> (Vec<FieldInfo>, Vec<FieldInfo>) {
+        match self.gable_type {
+            ESheetType::Normal => self.normal_csharp_data(keyword),
+            ESheetType::KV => (Vec::new(), Vec::new()),
+            ESheetType::Enum => (Vec::new(), Vec::new()),
+        }
+    }
+
     fn normal_json_data(&self, keyword: &str) -> Vec<Map<String, Value>> {
         let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
         let mut items: Vec<Map<String, Value>> = Vec::new();
@@ -644,5 +652,149 @@ impl TreeData {
             fields.push(field_info);
         }
         return (imports, fields);
+    }
+
+    fn normal_csharp_data(&self, keyword: &str) -> (Vec<FieldInfo>, Vec<FieldInfo>) {
+        let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
+        let mut main_fields: Vec<FieldInfo> = Vec::new();
+        let mut fields: Vec<FieldInfo> = Vec::new();
+        let mut field_index: i32 = 1;
+        let mut row_valid: bool = true;
+        for (_, head_data) in valids_main.iter() {
+            let field_cell: &&CellData =
+                if let Some(field_cell) = head_data.get(&constant::TABLE_DATA_ROW_FIELD) {
+                    field_cell
+                } else {
+                    row_valid = false;
+                    continue;
+                };
+            let type_cell: &&CellData =
+                if let Some(type_cell) = head_data.get(&constant::TABLE_DATA_ROW_TYPE) {
+                    type_cell
+                } else {
+                    row_valid = false;
+                    continue;
+                };
+
+            let data_type: EDataType = EDataType::convert(&type_cell.value);
+            let proto_type = match data_type {
+                EDataType::Int | EDataType::Time => "int",
+                EDataType::Date => "long",
+                EDataType::String => "string",
+                EDataType::Boolean => "bool",
+                EDataType::Float
+                | EDataType::Percentage
+                | EDataType::Permillage
+                | EDataType::Permian => "float",
+                EDataType::Vector2 => "Vector2",
+                EDataType::Vector3 => "Vector3",
+                EDataType::Vector4 => "Vector4",
+                EDataType::IntArr => "int[]",
+                EDataType::StringArr => "string[]",
+                EDataType::BooleanArr => "bool[]",
+                EDataType::FloatArr => "float[]",
+                EDataType::Vector2Arr => "Vector2[]",
+                EDataType::Vector3Arr => "Vector3[]",
+                EDataType::Vector4Arr => "Vector4[]",
+                EDataType::Enum => {
+                    let link_cell: Option<&&CellData> =
+                        head_data.get(&constant::TABLE_DATA_ROW_LINK);
+                    if let Some(link_cell) = link_cell {
+                        let link_name = if let Some(pos) = link_cell.value.find('@') {
+                            &link_cell.value[pos + 1..]
+                        } else {
+                            link_cell.value.as_str()
+                        };
+                        link_name
+                    } else {
+                        "int"
+                    }
+                }
+                _ => "string",
+            };
+            let desc_cell: Option<&&CellData> = head_data.get(&constant::TABLE_DATA_ROW_DESC);
+            let desc_value: String = if let Some(desc_cell) = desc_cell {
+                desc_cell.value.clone()
+            } else {
+                String::new()
+            };
+            let field_value: String = field_cell.value.replace("*", "");
+            let field_info: FieldInfo = FieldInfo {
+                field_type: proto_type.to_string(),
+                field_name: field_value,
+                field_desc: desc_value,
+                field_index,
+            };
+            main_fields.push(field_info);
+            field_index += 1;
+        }
+        // 行数据无效
+        if !row_valid {
+            return (Vec::new(), Vec::new());
+        }
+
+        for (_, head_data) in valids.iter() {
+            let field_cell: &&CellData =
+                if let Some(field_cell) = head_data.get(&constant::TABLE_DATA_ROW_FIELD) {
+                    field_cell
+                } else {
+                    continue;
+                };
+            let type_cell: &&CellData =
+                if let Some(type_cell) = head_data.get(&constant::TABLE_DATA_ROW_TYPE) {
+                    type_cell
+                } else {
+                    continue;
+                };
+            let data_type: EDataType = EDataType::convert(&type_cell.value);
+            let proto_type = match data_type {
+                EDataType::Int | EDataType::Time => "int",
+                EDataType::Date => "long",
+                EDataType::String => "string",
+                EDataType::Boolean => "bool",
+                EDataType::Float
+                | EDataType::Percentage
+                | EDataType::Permillage
+                | EDataType::Permian => "float",
+                EDataType::Vector2 => "Vector2",
+                EDataType::Vector3 => "Vector3",
+                EDataType::Vector4 => "Vector4",
+                EDataType::IntArr => "int[]",
+                EDataType::StringArr => "string[]",
+                EDataType::BooleanArr => "bool[]",
+                EDataType::FloatArr => "float[]",
+                EDataType::Vector2Arr => "Vector2[]",
+                EDataType::Vector3Arr => "Vector3[]",
+                EDataType::Vector4Arr => "Vector4[]",
+                EDataType::Enum => {
+                    if let Some(link_cell) = head_data.get(&constant::TABLE_DATA_ROW_LINK) {
+                        let link_name: &str = if let Some(pos) = link_cell.value.find('@') {
+                            &link_cell.value[pos + 1..]
+                        } else {
+                            link_cell.value.as_str()
+                        };
+                        link_name
+                    } else {
+                        "int"
+                    }
+                }
+                _ => "string",
+            };
+            let desc_cell: Option<&&CellData> = head_data.get(&constant::TABLE_DATA_ROW_DESC);
+            let desc_value: String = if let Some(desc_cell) = desc_cell {
+                desc_cell.value.clone()
+            } else {
+                String::new()
+            };
+            let field_info: FieldInfo = FieldInfo {
+                field_type: proto_type.to_string(),
+                field_name: field_cell.value.clone(),
+                field_desc: desc_value,
+                field_index,
+            };
+            fields.push(field_info);
+            field_index += 1;
+        }
+        return (main_fields, fields);
     }
 }

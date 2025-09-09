@@ -12,7 +12,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
     let target_path = utils::get_absolute_path(&build_setting.target_path)
         .join(format!("{}.json", tree_data.content.sheetname));
-    let json_data: Vec<Map<String, Value>> = tree_data.to_json_data(&build_setting.keyword);
+    let json_data: Vec<Map<String, Value>> = tree_data.to_values(&build_setting.keyword);
     let contents: String = serde_json::to_string_pretty(&json_data).expect("JSON序列化失败");
     let result: Result<(), Error> = std::fs::write(&target_path, contents);
     if result.is_err() {

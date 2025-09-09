@@ -26,24 +26,24 @@ impl GableData {
         let mut valids: BTreeMap<u16, BTreeMap<u32, &CellData>> = BTreeMap::new();
         let max_col = self.max_col + 1;
         for col_index in 1..max_col {
-            let desc_celldata = self
+            let desc_celldata: Option<&CellData> = self
                 .heads
                 .get(&constant::TABLE_DATA_ROW_DESC)
                 .unwrap()
                 .get(&col_index);
-            let field_celldata =
+            let field_celldata: &CellData =
                 if let Some(row_data) = self.heads.get(&constant::TABLE_DATA_ROW_FIELD) {
                     row_data.get(&col_index).unwrap()
                 } else {
                     continue;
                 };
-            let type_celldata =
+            let type_celldata: &CellData =
                 if let Some(row_data) = self.heads.get(&constant::TABLE_DATA_ROW_TYPE) {
                     row_data.get(&col_index).unwrap()
                 } else {
                     continue;
                 };
-            let keyword_celldata =
+            let keyword_celldata: &CellData =
                 if let Some(row_data) = self.heads.get(&constant::TABLE_DATA_ROW_KEYWORD) {
                     row_data.get(&col_index).unwrap()
                 } else {
@@ -72,7 +72,7 @@ impl GableData {
             }
             col_datas.insert(constant::TABLE_DATA_ROW_FIELD, field_celldata);
             col_datas.insert(constant::TABLE_DATA_ROW_TYPE, type_celldata);
-            let link_celldata = self
+            let link_celldata: Option<&CellData> = self
                 .heads
                 .get(&constant::TABLE_DATA_ROW_LINK)
                 .unwrap()

@@ -1,6 +1,8 @@
 use crate::{
-    common::{setting::BuildSetting, utils},
+    common::{constant, setting::BuildSetting, utils},
     gui::datas::{
+        cell_data::CellData,
+        edata_type::EDataType,
         esheet_type::ESheetType,
         tree_data::{FieldInfo, TreeData},
     },
@@ -10,7 +12,7 @@ use std::{io::Error, path::PathBuf};
 use tera::{Context, Tera};
 
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
-    let (import_data, proto_data) = tree_data.to_proto_data(&build_setting.keyword);
+    let (import_data, proto_data) = to_proto_data(tree_data, &build_setting.keyword);
     let tera_result: Result<Tera, tera::Error> = Tera::new("assets/templates/proto2/*");
     if tera_result.is_err() {
         log::error!("创建Tera模板失败: {}", tera_result.unwrap_err());
@@ -56,7 +58,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
 fn to_binary(build_setting: &BuildSetting, tree_data: &TreeData, field_infos: &Vec<FieldInfo>) {
     match tree_data.gable_type {
         ESheetType::Normal => {
-            let json_data: Vec<Map<String, Value>> = tree_data.to_json_data(&build_setting.keyword);
+            let json_data: Vec<Map<String, Value>> = tree_data.to_values(&build_setting.keyword);
             let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
                 .join(format!("{}.bin", tree_data.content.sheetname));
 
@@ -79,7 +81,7 @@ fn to_binary(build_setting: &BuildSetting, tree_data: &TreeData, field_infos: &V
             }
         }
         ESheetType::KV => {
-            let json_data: Vec<Map<String, Value>> = tree_data.to_json_data(&build_setting.keyword);
+            let json_data: Vec<Map<String, Value>> = tree_data.to_values(&build_setting.keyword);
             let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
                 .join(format!("{}.bin", tree_data.content.sheetname));
 
@@ -375,4 +377,287 @@ fn encode_varint(mut value: u64, buffer: &mut Vec<u8>) {
             break;
         }
     }
+}
+
+pub fn to_proto_data(tree_data: &TreeData, keyword: &str) -> (Vec<String>, Vec<FieldInfo>) {
+    match tree_data.gable_type {
+        ESheetType::Normal => normal_proto_data(tree_data, keyword),
+        ESheetType::KV => kv_proto_data(tree_data, keyword),
+        ESheetType::Enum => enum_proto_data(tree_data),
+    }
+}
+
+fn normal_proto_data(tree_data: &TreeData, keyword: &str) -> (Vec<String>, Vec<FieldInfo>) {
+    let (valids_main, valids) = tree_data.content.get_valid_normal_heads(keyword);
+    let mut imports: Vec<String> = Vec::new();
+    let mut fields: Vec<FieldInfo> = Vec::new();
+    let mut field_index: i32 = 1;
+    let mut row_valid: bool = true;
+    for (_, head_data) in valids_main.iter() {
+        let field_cell: &&CellData =
+            if let Some(field_cell) = head_data.get(&constant::TABLE_DATA_ROW_FIELD) {
+                field_cell
+            } else {
+                row_valid = false;
+                continue;
+            };
+        let type_cell: &&CellData =
+            if let Some(type_cell) = head_data.get(&constant::TABLE_DATA_ROW_TYPE) {
+                type_cell
+            } else {
+                row_valid = false;
+                continue;
+            };
+        let data_type: EDataType = EDataType::convert(&type_cell.value);
+        let proto_type = match data_type {
+            EDataType::Int | EDataType::Time => "int32",
+            EDataType::Date => "int64",
+            EDataType::String => "string",
+            EDataType::Boolean => "bool",
+            EDataType::Float
+            | EDataType::Percentage
+            | EDataType::Permillage
+            | EDataType::Permian => "float",
+            EDataType::Vector2 | EDataType::Vector3 | EDataType::Vector4 => "string", // 简化处理
+            EDataType::IntArr => "repeated int32",
+            EDataType::StringArr => "repeated string",
+            EDataType::BooleanArr => "repeated bool",
+            EDataType::FloatArr => "repeated float",
+            EDataType::Vector2Arr | EDataType::Vector3Arr | EDataType::Vector4Arr => {
+                "repeated string"
+            }
+            EDataType::Enum => {
+                let link_cell: Option<&&CellData> = head_data.get(&constant::TABLE_DATA_ROW_LINK);
+                if let Some(link_cell) = link_cell {
+                    let link_name = if let Some(pos) = link_cell.value.find('@') {
+                        &link_cell.value[pos + 1..]
+                    } else {
+                        link_cell.value.as_str()
+                    };
+                    imports.push(link_name.to_string());
+                    link_name
+                } else {
+                    "int32"
+                }
+            }
+            _ => "string",
+        };
+        let desc_cell: Option<&&CellData> = head_data.get(&constant::TABLE_DATA_ROW_DESC);
+        let desc_value: String = if let Some(desc_cell) = desc_cell {
+            desc_cell.value.clone()
+        } else {
+            String::new()
+        };
+        let field_value: String = field_cell.value.replace("*", "");
+        let field_info: FieldInfo = FieldInfo {
+            field_type: proto_type.to_string(),
+            field_name: field_value,
+            field_desc: desc_value,
+            field_index,
+        };
+        fields.push(field_info);
+        field_index += 1;
+    }
+    // 行数据无效
+    if !row_valid {
+        return (Vec::new(), Vec::new());
+    }
+
+    for (_, head_data) in valids.iter() {
+        let field_cell: &&CellData =
+            if let Some(field_cell) = head_data.get(&constant::TABLE_DATA_ROW_FIELD) {
+                field_cell
+            } else {
+                continue;
+            };
+        let type_cell: &&CellData =
+            if let Some(type_cell) = head_data.get(&constant::TABLE_DATA_ROW_TYPE) {
+                type_cell
+            } else {
+                continue;
+            };
+        let data_type: EDataType = EDataType::convert(&type_cell.value);
+        let proto_type = match data_type {
+            EDataType::Int | EDataType::Time => "int32",
+            EDataType::Date => "int64",
+            EDataType::String => "string",
+            EDataType::Boolean => "bool",
+            EDataType::Float
+            | EDataType::Percentage
+            | EDataType::Permillage
+            | EDataType::Permian => "float",
+            EDataType::Vector2 | EDataType::Vector3 | EDataType::Vector4 => "string", // 简化处理
+            EDataType::IntArr => "repeated int32",
+            EDataType::StringArr => "repeated string",
+            EDataType::BooleanArr => "repeated bool",
+            EDataType::FloatArr => "repeated float",
+            EDataType::Vector2Arr | EDataType::Vector3Arr | EDataType::Vector4Arr => {
+                "repeated string"
+            }
+            EDataType::Enum => {
+                let link_cell: Option<&&CellData> = head_data.get(&constant::TABLE_DATA_ROW_LINK);
+                if let Some(link_cell) = link_cell {
+                    let link_name = if let Some(pos) = link_cell.value.find('@') {
+                        &link_cell.value[pos + 1..]
+                    } else {
+                        link_cell.value.as_str()
+                    };
+                    imports.push(link_name.to_string());
+                    link_name
+                } else {
+                    "int32"
+                }
+            }
+            _ => "string",
+        };
+        let desc_cell: Option<&&CellData> = head_data.get(&constant::TABLE_DATA_ROW_DESC);
+        let desc_value: String = if let Some(desc_cell) = desc_cell {
+            desc_cell.value.clone()
+        } else {
+            String::new()
+        };
+        let field_info: FieldInfo = FieldInfo {
+            field_type: proto_type.to_string(),
+            field_name: field_cell.value.clone(),
+            field_desc: desc_value,
+            field_index,
+        };
+        fields.push(field_info);
+        field_index += 1;
+    }
+    return (imports, fields);
+}
+
+fn kv_proto_data(tree_data: &TreeData, keyword: &str) -> (Vec<String>, Vec<FieldInfo>) {
+    let mut imports: Vec<String> = Vec::new();
+    let mut fields: Vec<FieldInfo> = Vec::new();
+    let mut field_index: i32 = 1;
+    for (_, row_data) in tree_data.content.cells.iter() {
+        let field_cell: &CellData =
+            if let Some(field_cell) = row_data.get(&(constant::TABLE_KV_COL_FIELD as u16)) {
+                field_cell
+            } else {
+                continue;
+            };
+        let type_cell: &CellData =
+            if let Some(type_cell) = row_data.get(&(constant::TABLE_KV_COL_TYPE as u16)) {
+                type_cell
+            } else {
+                continue;
+            };
+        let keyword_celldata: &CellData = if let Some(keyword_celldata) =
+            row_data.get(&(constant::TABLE_KV_COL_KEYWORD as u16))
+        {
+            keyword_celldata
+        } else {
+            continue;
+        };
+        let desc_cell: Option<&CellData> = row_data.get(&(constant::TABLE_KV_COL_DESC as u16));
+        // 验证字段是否合法
+        if !field_cell.verify_lawful() {
+            continue;
+        }
+        // 验证数据类型是否合法
+        if !type_cell.verify_lawful() {
+            continue;
+        }
+        // 验证keyword是否合法
+        if !keyword_celldata.verify_lawful() {
+            continue;
+        }
+        if !keyword_celldata.value.contains(keyword) {
+            continue;
+        }
+        let data_type: EDataType = EDataType::convert(&type_cell.value);
+        let proto_type = match data_type {
+            EDataType::Int | EDataType::Time => "int32",
+            EDataType::Date => "int64",
+            EDataType::String => "string",
+            EDataType::Boolean => "bool",
+            EDataType::Float
+            | EDataType::Percentage
+            | EDataType::Permillage
+            | EDataType::Permian => "float",
+            EDataType::Vector2 | EDataType::Vector3 | EDataType::Vector4 => "string", // 简化处理
+            EDataType::IntArr => "repeated int32",
+            EDataType::StringArr => "repeated string",
+            EDataType::BooleanArr => "repeated bool",
+            EDataType::FloatArr => "repeated float",
+            EDataType::Vector2Arr | EDataType::Vector3Arr | EDataType::Vector4Arr => {
+                "repeated string"
+            }
+            EDataType::Enum => {
+                let link_cell: Option<&CellData> =
+                    row_data.get(&(constant::TABLE_KV_COL_LINK as u16));
+                if let Some(link_cell) = link_cell {
+                    let link_name = if let Some(pos) = link_cell.value.find('@') {
+                        &link_cell.value[pos + 1..]
+                    } else {
+                        link_cell.value.as_str()
+                    };
+                    imports.push(link_name.to_string());
+                    link_name
+                } else {
+                    "int32"
+                }
+            }
+            _ => "string",
+        };
+        let desc_value: String = if let Some(desc_cell) = desc_cell {
+            desc_cell.value.clone()
+        } else {
+            String::new()
+        };
+        let field_info: FieldInfo = FieldInfo {
+            field_type: proto_type.to_string(),
+            field_name: field_cell.value.clone(),
+            field_desc: desc_value,
+            field_index,
+        };
+        fields.push(field_info);
+        field_index += 1;
+    }
+    return (imports, fields);
+}
+
+fn enum_proto_data(tree_data: &TreeData) -> (Vec<String>, Vec<FieldInfo>) {
+    let imports: Vec<String> = Vec::new();
+    let mut fields: Vec<FieldInfo> = Vec::new();
+    for (_, row_data) in tree_data.content.cells.iter() {
+        let field_cell: &CellData =
+            if let Some(field_cell) = row_data.get(&(constant::TABLE_ENUM_COL_FIELD as u16)) {
+                field_cell
+            } else {
+                continue;
+            };
+        let value_cell: &CellData =
+            if let Some(value_cell) = row_data.get(&(constant::TABLE_ENUM_COL_VALUE as u16)) {
+                value_cell
+            } else {
+                continue;
+            };
+        let desc_cell: Option<&CellData> = row_data.get(&(constant::TABLE_ENUM_COL_DESC as u16));
+        // 验证字段是否合法
+        if !field_cell.verify_lawful() {
+            continue;
+        }
+        // 验证数据类型是否合法
+        if !value_cell.verify_lawful() {
+            continue;
+        }
+        let value_value: i32 = value_cell.parse_int() as i32;
+        let desc_value: String = if let Some(desc_cell) = desc_cell {
+            desc_cell.value.clone()
+        } else {
+            String::new()
+        };
+        let field_info: FieldInfo = FieldInfo {
+            field_type: "".to_string(),
+            field_name: field_cell.value.clone(),
+            field_desc: desc_value,
+            field_index: value_value,
+        };
+        fields.push(field_info);
+    }
+    return (imports, fields);
 }

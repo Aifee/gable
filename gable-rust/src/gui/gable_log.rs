@@ -14,8 +14,8 @@ impl GableLog {
         Self {
             row_height: 20.0,
             time_col_width: 200.0,
-            level_col_width: 100.0,
-            target_col_width: 300.0,
+            level_col_width: 80.0,
+            target_col_width: 400.0,
         }
     }
     pub fn ongui(&mut self, ctx: &Context) {

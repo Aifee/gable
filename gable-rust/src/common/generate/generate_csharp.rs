@@ -10,7 +10,7 @@ use crate::{
 use std::{fs, io::Error, path::PathBuf};
 use tera::{Context, Tera};
 
-pub fn by(build_setting: &BuildSetting, tree_data: &TreeData) {
+pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let (main_fields, sub_fields) = to_csharp_data(tree_data, &build_setting.keyword);
     let tera_result: Result<Tera, tera::Error> = Tera::new("assets/templates/csharp/*");
     if tera_result.is_err() {
@@ -56,8 +56,8 @@ pub fn by(build_setting: &BuildSetting, tree_data: &TreeData) {
 fn to_csharp_data(tree_data: &TreeData, keyword: &str) -> (Vec<FieldInfo>, Vec<FieldInfo>) {
     match tree_data.gable_type {
         ESheetType::Normal => normal_csharp_data(tree_data, keyword),
-        ESheetType::KV => (Vec::new(), Vec::new()),
-        ESheetType::Enum => (Vec::new(), Vec::new()),
+        ESheetType::KV => kv_csharp_data(tree_data, keyword),
+        ESheetType::Enum => enum_csharp_data(tree_data),
     }
 }
 
@@ -202,4 +202,139 @@ fn normal_csharp_data(tree_data: &TreeData, keyword: &str) -> (Vec<FieldInfo>, V
         field_index += 1;
     }
     return (main_fields, fields);
+}
+
+fn kv_csharp_data(tree_data: &TreeData, keyword: &str) -> (Vec<FieldInfo>, Vec<FieldInfo>) {
+    let mut fields: Vec<FieldInfo> = Vec::new();
+    let mut field_index: i32 = 1;
+    for (_, head_data) in tree_data.content.cells.iter() {
+        let field_cell: &CellData =
+            if let Some(field_cell) = head_data.get(&(constant::TABLE_KV_COL_FIELD as u16)) {
+                field_cell
+            } else {
+                continue;
+            };
+        let type_cell: &CellData =
+            if let Some(type_cell) = head_data.get(&(constant::TABLE_KV_COL_TYPE as u16)) {
+                type_cell
+            } else {
+                continue;
+            };
+        let keyword_cell =
+            if let Some(keyword_cell) = head_data.get(&(constant::TABLE_KV_COL_KEYWORD as u16)) {
+                keyword_cell
+            } else {
+                continue;
+            };
+        if !field_cell.verify_lawful() {
+            continue;
+        };
+
+        if !type_cell.verify_lawful() {
+            continue;
+        };
+
+        if !keyword_cell.verify_lawful() {
+            continue;
+        };
+
+        if !keyword_cell.value.contains(keyword) {
+            continue;
+        }
+
+        let data_type: EDataType = EDataType::convert(&type_cell.value);
+        let proto_type = match data_type {
+            EDataType::Int | EDataType::Time => "int",
+            EDataType::Date => "long",
+            EDataType::String => "string",
+            EDataType::Boolean => "bool",
+            EDataType::Float
+            | EDataType::Percentage
+            | EDataType::Permillage
+            | EDataType::Permian => "float",
+            EDataType::Vector2 => "Vector2",
+            EDataType::Vector3 => "Vector3",
+            EDataType::Vector4 => "Vector4",
+            EDataType::IntArr => "int[]",
+            EDataType::StringArr => "string[]",
+            EDataType::BooleanArr => "bool[]",
+            EDataType::FloatArr => "float[]",
+            EDataType::Vector2Arr => "Vector2[]",
+            EDataType::Vector3Arr => "Vector3[]",
+            EDataType::Vector4Arr => "Vector4[]",
+            EDataType::Enum => {
+                let link_cell: Option<&CellData> =
+                    head_data.get(&(constant::TABLE_KV_COL_LINK as u16));
+                if let Some(link_cell) = link_cell {
+                    let link_name = if let Some(pos) = link_cell.value.find('@') {
+                        &link_cell.value[pos + 1..]
+                    } else {
+                        link_cell.value.as_str()
+                    };
+                    link_name
+                } else {
+                    "int"
+                }
+            }
+            _ => "string",
+        };
+        let desc_cell: Option<&CellData> = head_data.get(&(constant::TABLE_KV_COL_DESC as u16));
+        let desc_value: String = if let Some(desc_cell) = desc_cell {
+            desc_cell.value.clone()
+        } else {
+            String::new()
+        };
+        let field_value: String = field_cell.value.replace("*", "");
+        let field_info: FieldInfo = FieldInfo {
+            field_type: proto_type.to_string(),
+            field_name: field_value,
+            field_desc: desc_value,
+            field_index,
+        };
+        fields.push(field_info);
+        field_index += 1;
+    }
+
+    return (Vec::new(), fields);
+}
+
+fn enum_csharp_data(tree_data: &TreeData) -> (Vec<FieldInfo>, Vec<FieldInfo>) {
+    let mut fields: Vec<FieldInfo> = Vec::new();
+    for (_, row_data) in tree_data.content.cells.iter() {
+        let field_cell: &CellData =
+            if let Some(field_cell) = row_data.get(&(constant::TABLE_ENUM_COL_FIELD as u16)) {
+                field_cell
+            } else {
+                continue;
+            };
+        let value_cell: &CellData =
+            if let Some(value_cell) = row_data.get(&(constant::TABLE_ENUM_COL_VALUE as u16)) {
+                value_cell
+            } else {
+                continue;
+            };
+        let desc_cell: Option<&CellData> = row_data.get(&(constant::TABLE_ENUM_COL_DESC as u16));
+        // 验证字段是否合法
+        if !field_cell.verify_lawful() {
+            continue;
+        }
+        // 验证数据类型是否合法
+        if !value_cell.verify_lawful() {
+            continue;
+        }
+        let value_value: i32 = value_cell.parse_int() as i32;
+        let desc_value: String = if let Some(desc_cell) = desc_cell {
+            desc_cell.value.clone()
+        } else {
+            String::new()
+        };
+        let field_info: FieldInfo = FieldInfo {
+            field_type: "".to_string(),
+            field_name: field_cell.value.clone(),
+            field_desc: desc_value,
+            field_index: value_value,
+        };
+        fields.push(field_info);
+    }
+    return (Vec::new(), fields);
 }

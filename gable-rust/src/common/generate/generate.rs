@@ -25,7 +25,7 @@ pub fn from_target(setting: &BuildSetting) {
     }
     for (_, data) in datas.iter() {
         match setting.dev {
-            EDevelopType::Csharp => generate_csharp::by(setting, data),
+            EDevelopType::Csharp => generate_csharp::to(setting, data),
             _ => {
                 log::error!("当前开发环境不支持导出配置:{:?}", setting.dev);
             }
@@ -47,7 +47,7 @@ pub fn from_items(item: &TreeItem) {
         }
         for (_, data) in datas.iter() {
             match setting.dev {
-                EDevelopType::Csharp => generate_csharp::by(setting, data),
+                EDevelopType::Csharp => generate_csharp::to(setting, data),
                 _ => {
                     log::error!("当前开发环境不支持导出配置:{:?}", setting.dev);
                 }

@@ -25,6 +25,8 @@ pub struct BuildSetting {
     pub proto_custom_template: PathBuf,
     // 生成proto文件路径
     pub proto_target_path: PathBuf,
+    // 生成proto文件后处理
+    pub postprocessing: String,
     /// 构建目标路径，相对路径
     pub target_path: PathBuf,
     // 是否生成脚本
@@ -44,6 +46,7 @@ impl Default for BuildSetting {
             is_proto_custom: false,
             proto_custom_template: PathBuf::new(),
             proto_target_path: PathBuf::new(),
+            postprocessing: String::new(),
             target_path: PathBuf::new(),
             generate_script: false,
             script_path: PathBuf::new(),
@@ -149,6 +152,7 @@ pub fn add_build_setting(dev_type: EDevelopType) -> Option<usize> {
         is_proto_custom: false,
         proto_custom_template: PathBuf::new(),
         proto_target_path: PathBuf::new(),
+        postprocessing: String::new(),
         target_path: utils::get_env_relative_path(&get_workspace()),
         generate_script: false,
         script_path: PathBuf::new(),

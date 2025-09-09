@@ -262,74 +262,6 @@ impl GableBuildSetting {
                     );
                 });
             });
-            // is_proto_custom
-            ui.horizontal(|ui| {
-                ui.group(|ui| {
-                    ui.set_min_size(item_size);
-                    ui.add_sized(title_size, Label::new("自定义模板:").truncate());
-                    ui.allocate_ui_with_layout(
-                        content_size,
-                        Layout::left_to_right(Align::Min),
-                        |ui| ui.add(Checkbox::new(&mut build_settings.is_proto_custom, "")),
-                    );
-                });
-            });
-            if build_settings.is_proto_custom {
-                // proto_custom_template
-                ui.horizontal(|ui| {
-                    ui.group(|ui| {
-                        ui.set_min_size(item_size);
-                        ui.add_sized(title_size, Label::new("模板文件:").truncate());
-                        ui.allocate_ui_with_layout(
-                            second_size,
-                            Layout::left_to_right(Align::Min),
-                            |ui| {
-                                let absolute_path: PathBuf =
-                                    utils::get_absolute_path(&build_settings.proto_custom_template);
-                                ui.add(
-                                    Label::new(absolute_path.to_string_lossy().to_string())
-                                        .truncate(),
-                                );
-                            },
-                        );
-                        if ui.add_sized(third_size, Button::new("Browse")).clicked() {
-                            if let Some(path) =
-                                rfd::FileDialog::new().set_title("选择文件").pick_file()
-                            {
-                                let re_path: PathBuf = utils::get_env_relative_path(&path);
-                                build_settings.proto_custom_template = re_path;
-                            }
-                        }
-                    });
-                });
-            }
-            // target_path
-            ui.horizontal(|ui| {
-                ui.group(|ui| {
-                    ui.set_min_size(item_size);
-                    ui.add_sized(title_size, Label::new("proto文件路径:").truncate());
-                    ui.allocate_ui_with_layout(
-                        second_size,
-                        Layout::left_to_right(Align::Min),
-                        |ui| {
-                            let absolute_path: PathBuf =
-                                utils::get_absolute_path(&build_settings.proto_target_path);
-                            ui.add(
-                                Label::new(absolute_path.to_string_lossy().to_string()).truncate(),
-                            );
-                        },
-                    );
-                    if ui.add_sized(third_size, Button::new("浏览")).clicked() {
-                        if let Some(path) = rfd::FileDialog::new()
-                            .set_title("选择目标路径")
-                            .pick_folder()
-                        {
-                            let re_path: PathBuf = utils::get_env_relative_path(&path);
-                            build_settings.proto_target_path = re_path;
-                        }
-                    }
-                });
-            });
         }
 
         // target_path
@@ -364,33 +296,119 @@ impl GableBuildSetting {
             });
         });
         if build_settings.generate_script {
-            // script_path
-            ui.horizontal(|ui| {
-                ui.group(|ui| {
-                    ui.set_min_size(item_size);
-                    ui.add_sized(title_size, Label::new("脚本路径:").truncate());
-                    ui.allocate_ui_with_layout(
-                        second_size,
-                        Layout::left_to_right(Align::Min),
-                        |ui| {
-                            let absolute_path: PathBuf =
-                                utils::get_absolute_path(&build_settings.script_path);
-                            ui.add(
-                                Label::new(absolute_path.to_string_lossy().to_string()).truncate(),
-                            );
-                        },
-                    );
-                    if ui.add_sized(third_size, Button::new("浏览")).clicked() {
-                        if let Some(path) = rfd::FileDialog::new()
-                            .set_title("选择目标路径")
-                            .pick_folder()
-                        {
-                            let re_path: PathBuf = utils::get_env_relative_path(&path);
-                            build_settings.script_path = re_path;
-                        }
-                    }
+            if build_settings.target_type == ETargetType::Protobuff {
+                // is_proto_custom
+                ui.horizontal(|ui| {
+                    ui.group(|ui| {
+                        ui.set_min_size(item_size);
+                        ui.add_sized(title_size, Label::new("自定义模板:").truncate());
+                        ui.allocate_ui_with_layout(
+                            content_size,
+                            Layout::left_to_right(Align::Min),
+                            |ui| ui.add(Checkbox::new(&mut build_settings.is_proto_custom, "")),
+                        );
+                    });
                 });
-            });
+                if build_settings.is_proto_custom {
+                    // proto_custom_template
+                    ui.horizontal(|ui| {
+                        ui.group(|ui| {
+                            ui.set_min_size(item_size);
+                            ui.add_sized(title_size, Label::new("模板文件:").truncate());
+                            ui.allocate_ui_with_layout(
+                                second_size,
+                                Layout::left_to_right(Align::Min),
+                                |ui| {
+                                    let absolute_path: PathBuf = utils::get_absolute_path(
+                                        &build_settings.proto_custom_template,
+                                    );
+                                    ui.add(
+                                        Label::new(absolute_path.to_string_lossy().to_string())
+                                            .truncate(),
+                                    );
+                                },
+                            );
+                            if ui.add_sized(third_size, Button::new("Browse")).clicked() {
+                                if let Some(path) =
+                                    rfd::FileDialog::new().set_title("选择文件").pick_file()
+                                {
+                                    let re_path: PathBuf = utils::get_env_relative_path(&path);
+                                    build_settings.proto_custom_template = re_path;
+                                }
+                            }
+                        });
+                    });
+                }
+                // proto_target_path
+                ui.horizontal(|ui| {
+                    ui.group(|ui| {
+                        ui.set_min_size(item_size);
+                        ui.add_sized(title_size, Label::new("proto文件路径:").truncate());
+                        ui.allocate_ui_with_layout(
+                            second_size,
+                            Layout::left_to_right(Align::Min),
+                            |ui| {
+                                let absolute_path: PathBuf =
+                                    utils::get_absolute_path(&build_settings.proto_target_path);
+                                ui.add(
+                                    Label::new(absolute_path.to_string_lossy().to_string())
+                                        .truncate(),
+                                );
+                            },
+                        );
+                        if ui.add_sized(third_size, Button::new("浏览")).clicked() {
+                            if let Some(path) = rfd::FileDialog::new()
+                                .set_title("选择目标路径")
+                                .pick_folder()
+                            {
+                                let re_path: PathBuf = utils::get_env_relative_path(&path);
+                                build_settings.proto_target_path = re_path;
+                            }
+                        }
+                    });
+                });
+
+                // postprocessing
+                ui.horizontal(|ui| {
+                    ui.group(|ui| {
+                        ui.set_min_size(item_size);
+                        ui.add_sized(title_size, Label::new("proto后处理:").truncate());
+                        ui.add_sized(
+                            content_size,
+                            TextEdit::multiline(&mut build_settings.postprocessing),
+                        )
+                    });
+                });
+            } else {
+                // script_path
+                ui.horizontal(|ui| {
+                    ui.group(|ui| {
+                        ui.set_min_size(item_size);
+                        ui.add_sized(title_size, Label::new("脚本路径:").truncate());
+                        ui.allocate_ui_with_layout(
+                            second_size,
+                            Layout::left_to_right(Align::Min),
+                            |ui| {
+                                let absolute_path: PathBuf =
+                                    utils::get_absolute_path(&build_settings.script_path);
+                                ui.add(
+                                    Label::new(absolute_path.to_string_lossy().to_string())
+                                        .truncate(),
+                                );
+                            },
+                        );
+                        if ui.add_sized(third_size, Button::new("浏览")).clicked() {
+                            if let Some(path) = rfd::FileDialog::new()
+                                .set_title("选择目标路径")
+                                .pick_folder()
+                            {
+                                let re_path: PathBuf = utils::get_env_relative_path(&path);
+                                build_settings.script_path = re_path;
+                            }
+                        }
+                    });
+                });
+            }
         }
         if build_settings != before_settings {
             if let Err(e) = setting::update_build_setting(self.selected_index, build_settings) {

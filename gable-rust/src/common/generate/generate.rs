@@ -1,11 +1,16 @@
 use crate::{
     common::{
-        generate::generate_csharp,
+        generate::{generate_csharp, generate_protobuff},
         setting::{self, AppSettings, BuildSetting},
+        utils,
     },
-    gui::datas::{edevelop_type::EDevelopType, gables, tree_data::TreeData, tree_item::TreeItem},
+    gui::datas::{
+        edevelop_type::EDevelopType, etarget_type::ETargetType, gables, tree_data::TreeData,
+        tree_item::TreeItem,
+    },
 };
-use std::{collections::HashMap, sync::MutexGuard};
+use std::process::Command;
+use std::{collections::HashMap, path::PathBuf, sync::MutexGuard};
 
 pub fn from_target(setting: &BuildSetting) {
     if !setting.generate_script {
@@ -24,12 +29,20 @@ pub fn from_target(setting: &BuildSetting) {
         return;
     }
     for (_, data) in datas.iter() {
-        match setting.dev {
-            EDevelopType::Csharp => generate_csharp::to(setting, data),
-            _ => {
-                log::error!("当前开发环境不支持导出配置:{:?}", setting.dev);
+        if setting.target_type == ETargetType::Protobuff {
+            generate_protobuff::to(setting, data);
+        } else {
+            match setting.dev {
+                EDevelopType::Csharp => generate_csharp::to(setting, data),
+                _ => {
+                    log::error!("当前开发环境不支持导出配置:{:?}", setting.dev);
+                }
             }
         }
+    }
+    if setting.target_type == ETargetType::Protobuff {
+        let target_path: PathBuf = utils::get_absolute_path(&setting.proto_target_path);
+        system_command(&setting.postprocessing, &target_path);
     }
 }
 
@@ -46,12 +59,60 @@ pub fn from_items(item: &TreeItem) {
             continue;
         }
         for (_, data) in datas.iter() {
-            match setting.dev {
-                EDevelopType::Csharp => generate_csharp::to(setting, data),
-                _ => {
-                    log::error!("当前开发环境不支持导出配置:{:?}", setting.dev);
+            if setting.target_type == ETargetType::Protobuff {
+                generate_protobuff::to(setting, data);
+            } else {
+                match setting.dev {
+                    EDevelopType::Csharp => generate_csharp::to(setting, data),
+                    _ => {
+                        log::error!("当前开发环境不支持导出配置:{:?}", setting.dev);
+                    }
                 }
             }
+        }
+        if setting.target_type == ETargetType::Protobuff {
+            let target_path: PathBuf = utils::get_absolute_path(&setting.proto_target_path);
+            system_command(&setting.postprocessing, &target_path);
+        }
+    }
+}
+
+fn system_command(command: &str, path: &PathBuf) {
+    if command.is_empty() {
+        return;
+    }
+    #[cfg(target_os = "windows")]
+    {
+        if let Err(e) = Command::new("cmd")
+            .current_dir(&path)
+            .args(&["/C", &command])
+            .spawn()
+        {
+            log::error!("无法执行后处理命令: {}", e);
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        if let Err(e) = Command::new("sh")
+            .current_dir(&path)
+            .arg("-c")
+            .arg(&command)
+            .spawn()
+        {
+            log::error!("无法执行后处理命令: {}", e);
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        if let Err(e) = Command::new("sh")
+            .current_dir(&path)
+            .arg("-c")
+            .arg(&command)
+            .spawn()
+        {
+            log::error!("无法执行后处理命令: {}", e);
         }
     }
 }

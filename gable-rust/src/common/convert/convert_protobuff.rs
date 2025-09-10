@@ -103,11 +103,9 @@ fn encode_kv_data(
     item: &Map<String, Value>,
     field_infos: &Vec<ProtoFieldInfo>,
 ) -> Result<Vec<u8>, Box<dyn Error>> {
-    let mut table_buffer = Vec::new();
-    let items_field_number = 1u32; // UnitTable中items字段的编号 (repeated Unit items = 1)
-
-    // 编码单个数据项
     let mut item_buffer = Vec::new();
+
+    // 直接编码KV数据项为单个消息，不使用repeated字段包装
     for field_info in field_infos {
         let field_number: u32 = field_info.field_index as u32;
         if let Some(value) = item.get(&field_info.field_name) {
@@ -120,14 +118,7 @@ fn encode_kv_data(
         }
     }
 
-    // 将编码后的Unit消息作为repeated字段的一个元素添加到UnitTable中
-    // 字段key = (field_number << 3) | wire_type
-    let field_key: u32 = (items_field_number << 3) | 2; // wire type 2 = length-delimited
-    encode_varint(field_key as u64, &mut table_buffer);
-    encode_varint(item_buffer.len() as u64, &mut table_buffer);
-    table_buffer.extend_from_slice(&item_buffer);
-
-    Ok(table_buffer)
+    Ok(item_buffer)
 }
 
 fn encode_field_value(

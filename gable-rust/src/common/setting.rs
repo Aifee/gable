@@ -3,7 +3,7 @@ use crate::gui::datas::{edevelop_type::EDevelopType, etarget_type::ETargetType};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, MutexGuard};
+use std::sync::RwLock;
 use std::{fs, io};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -61,7 +61,7 @@ pub struct AppSettings {
 }
 
 lazy_static! {
-    pub static ref APP_SETTINGS: Mutex<AppSettings> = Mutex::new(AppSettings {
+    pub static ref APP_SETTINGS: RwLock<AppSettings> = RwLock::new(AppSettings {
         workspace: None,
         build_settings: Vec::new(),
     });
@@ -74,7 +74,7 @@ pub fn init() {
         match fs::read_to_string(path) {
             Ok(json) => match serde_json::from_str::<AppSettings>(&json) {
                 Ok(content) => {
-                    let mut settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();
+                    let mut settings = APP_SETTINGS.write().unwrap();
                     *settings = content;
                 }
                 Err(e) => {
@@ -96,13 +96,13 @@ pub fn get_title() -> String {
 
 // 提供一个安全的设置方法
 pub fn set_workspace(path: String) -> io::Result<()> {
-    let mut settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();
+    let mut settings = APP_SETTINGS.write().unwrap();
     settings.workspace = Some(path);
     save_build_settings_to_file(&*settings)
 }
 
 pub fn get_workspace() -> PathBuf {
-    let settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();
+    let settings = APP_SETTINGS.read().unwrap();
     let root_path: PathBuf = if let Some(path) = settings.workspace.as_ref() {
         PathBuf::from(path)
     } else {
@@ -137,7 +137,7 @@ pub fn get_data_path() -> PathBuf {
 }
 
 pub fn clone_build_settings() -> Vec<BuildSetting> {
-    let settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();
+    let settings = APP_SETTINGS.read().unwrap();
     let build_settings: Vec<BuildSetting> = settings.build_settings.clone();
     build_settings
 }
@@ -157,7 +157,7 @@ pub fn add_build_setting(dev_type: EDevelopType) -> Option<usize> {
         generate_script: false,
         script_path: PathBuf::new(),
     };
-    let mut settings = APP_SETTINGS.lock().unwrap();
+    let mut settings = APP_SETTINGS.write().unwrap();
     settings.build_settings.push(build_setting);
     if let Err(e) = save_build_settings_to_file(&*settings) {
         log::error!("Failed to save build settings: {}", e);
@@ -169,7 +169,7 @@ pub fn add_build_setting(dev_type: EDevelopType) -> Option<usize> {
 
 /// 删除BuildSetting
 pub fn remove_build_setting(index: usize) -> Option<usize> {
-    let mut settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();
+    let mut settings = APP_SETTINGS.write().unwrap();
     settings.build_settings.remove(index);
     if let Err(e) = save_build_settings_to_file(&*settings) {
         log::error!("Failed to save build settings: {}", e);
@@ -186,7 +186,7 @@ pub fn remove_build_setting(index: usize) -> Option<usize> {
 }
 
 pub fn get_build_setting(index: usize) -> Option<BuildSetting> {
-    let settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();
+    let settings = APP_SETTINGS.read().unwrap();
     if index < settings.build_settings.len() {
         Some(settings.build_settings[index].clone())
     } else {
@@ -195,7 +195,7 @@ pub fn get_build_setting(index: usize) -> Option<BuildSetting> {
 }
 
 pub fn get_build_setting_with_name(name: &str) -> Option<BuildSetting> {
-    let settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();
+    let settings = APP_SETTINGS.read().unwrap();
     for setting in settings.build_settings.iter() {
         if setting.display_name == name {
             return Some(setting.clone());
@@ -206,7 +206,7 @@ pub fn get_build_setting_with_name(name: &str) -> Option<BuildSetting> {
 
 /// 更新指定索引的BuildSetting
 pub fn update_build_setting(index: usize, setting: BuildSetting) -> io::Result<()> {
-    let mut settings: MutexGuard<'_, AppSettings> = APP_SETTINGS.lock().unwrap();
+    let mut settings = APP_SETTINGS.write().unwrap();
     if index < settings.build_settings.len() {
         settings.build_settings[index] = setting;
         save_build_settings_to_file(&*settings)

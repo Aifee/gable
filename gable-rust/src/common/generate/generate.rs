@@ -1,7 +1,7 @@
 use crate::{
     common::{
         generate::{generate_csharp, generate_protobuff},
-        setting::{self, AppSettings, BuildSetting},
+        setting::{self, BuildSetting},
         utils,
     },
     gui::datas::{
@@ -10,7 +10,7 @@ use crate::{
     },
 };
 use std::process::Command;
-use std::{collections::HashMap, path::PathBuf, sync::MutexGuard};
+use std::{collections::HashMap, path::PathBuf};
 
 pub fn from_target(setting: &BuildSetting) {
     if !setting.generate_script {
@@ -53,7 +53,7 @@ pub fn from_items(item: &TreeItem) {
         return;
     }
 
-    let settings: MutexGuard<'_, AppSettings> = setting::APP_SETTINGS.lock().unwrap();
+    let settings = setting::APP_SETTINGS.read().unwrap();
     for setting in settings.build_settings.iter() {
         if !setting.generate_script {
             continue;

@@ -1,11 +1,11 @@
 use crate::{
     common::{
         convert::{convert_csv, convert_json, convert_protobuff},
-        setting::{self, AppSettings, BuildSetting},
+        setting::{self, BuildSetting},
     },
     gui::datas::{etarget_type::ETargetType, gables, tree_data::TreeData, tree_item::TreeItem},
 };
-use std::{collections::HashMap, sync::MutexGuard};
+use std::collections::HashMap;
 
 pub fn from_target(setting: &BuildSetting) {
     let items = gables::TREE_ITEMS.read().unwrap();
@@ -36,7 +36,7 @@ pub fn from_items(item: &TreeItem) {
         return;
     }
 
-    let settings: MutexGuard<'_, AppSettings> = setting::APP_SETTINGS.lock().unwrap();
+    let settings = setting::APP_SETTINGS.read().unwrap();
     for setting in settings.build_settings.iter() {
         for (_, data) in datas.iter() {
             match setting.target_type {

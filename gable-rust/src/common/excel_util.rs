@@ -813,14 +813,14 @@ fn write_gable_normal(
                                     }
 
                                     for (_, loc_row_cell) in loc_item_cells.cells.iter() {
-                                        if let Some(loc_value_cell) =
-                                            loc_row_cell.get(link_key_index)
+                                        if let Some(loc_desc_cell) =
+                                            loc_row_cell.get(link_value_index)
                                         {
-                                            if loc_value_cell.value == value {
-                                                if let Some(loc_desc_cell) =
-                                                    loc_row_cell.get(link_value_index)
+                                            if loc_desc_cell.value == value {
+                                                if let Some(loc_key_cell) =
+                                                    loc_row_cell.get(link_key_index)
                                                 {
-                                                    cell_value = loc_desc_cell.value.clone();
+                                                    cell_value = loc_key_cell.value.clone();
                                                 }
                                                 break;
                                             }
@@ -990,14 +990,14 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
                                         }
 
                                         for (_, loc_row_cell) in loc_item_cells.cells.iter() {
-                                            if let Some(loc_value_cell) =
-                                                loc_row_cell.get(link_key_index)
+                                            if let Some(loc_desc_cell) =
+                                                loc_row_cell.get(link_value_index)
                                             {
-                                                if loc_value_cell.value == value {
-                                                    if let Some(loc_desc_cell) =
-                                                        loc_row_cell.get(link_value_index)
+                                                if loc_desc_cell.value == value {
+                                                    if let Some(loc_key_cell) =
+                                                        loc_row_cell.get(link_key_index)
                                                     {
-                                                        cell_value = loc_desc_cell.value.clone();
+                                                        cell_value = loc_key_cell.value.clone();
                                                     }
                                                     break;
                                                 }

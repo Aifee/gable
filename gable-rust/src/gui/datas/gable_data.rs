@@ -28,23 +28,23 @@ impl GableData {
         for col_index in 1..max_col {
             let desc_celldata: Option<&CellData> = self
                 .heads
-                .get(&constant::TABLE_DATA_ROW_DESC)
+                .get(&constant::TABLE_NORMAL_ROW_DESC)
                 .unwrap()
                 .get(&col_index);
             let field_celldata: &CellData =
-                if let Some(row_data) = self.heads.get(&constant::TABLE_DATA_ROW_FIELD) {
+                if let Some(row_data) = self.heads.get(&constant::TABLE_NORMAL_ROW_FIELD) {
                     row_data.get(&col_index).unwrap()
                 } else {
                     continue;
                 };
             let type_celldata: &CellData =
-                if let Some(row_data) = self.heads.get(&constant::TABLE_DATA_ROW_TYPE) {
+                if let Some(row_data) = self.heads.get(&constant::TABLE_NORMAL_ROW_TYPE) {
                     row_data.get(&col_index).unwrap()
                 } else {
                     continue;
                 };
             let keyword_celldata: &CellData =
-                if let Some(row_data) = self.heads.get(&constant::TABLE_DATA_ROW_KEYWORD) {
+                if let Some(row_data) = self.heads.get(&constant::TABLE_NORMAL_ROW_KEYWORD) {
                     row_data.get(&col_index).unwrap()
                 } else {
                     continue;
@@ -68,17 +68,17 @@ impl GableData {
 
             let mut col_datas: BTreeMap<u32, &CellData> = BTreeMap::new();
             if let Some(desc_celldata) = desc_celldata {
-                col_datas.insert(constant::TABLE_DATA_ROW_DESC, desc_celldata);
+                col_datas.insert(constant::TABLE_NORMAL_ROW_DESC, desc_celldata);
             }
-            col_datas.insert(constant::TABLE_DATA_ROW_FIELD, field_celldata);
-            col_datas.insert(constant::TABLE_DATA_ROW_TYPE, type_celldata);
+            col_datas.insert(constant::TABLE_NORMAL_ROW_FIELD, field_celldata);
+            col_datas.insert(constant::TABLE_NORMAL_ROW_TYPE, type_celldata);
             let link_celldata: Option<&CellData> = self
                 .heads
-                .get(&constant::TABLE_DATA_ROW_LINK)
+                .get(&constant::TABLE_NORMAL_ROW_LINK)
                 .unwrap()
                 .get(&col_index);
             if let Some(link_celldata) = link_celldata {
-                col_datas.insert(constant::TABLE_DATA_ROW_LINK, link_celldata);
+                col_datas.insert(constant::TABLE_NORMAL_ROW_LINK, link_celldata);
             }
             if field_celldata.value.contains("*") {
                 valids_main.insert(col_index, col_datas);

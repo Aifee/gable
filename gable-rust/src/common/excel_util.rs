@@ -144,9 +144,9 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
 
     // 数据类型下拉框
     let range: String = utils::cell_range(
-        constant::TABLE_DATA_ROW_TYPE,
+        constant::TABLE_NORMAL_ROW_TYPE,
         1,
-        constant::TABLE_DATA_ROW_TYPE,
+        constant::TABLE_NORMAL_ROW_TYPE,
         gable_data.max_col,
     );
     let mut data_validation: DataValidation = DataValidation::default();
@@ -163,7 +163,7 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
     for col_index in 1..max_col {
         let cell_type_data: Option<&CellData> = gable_data
             .heads
-            .get(&constant::TABLE_DATA_ROW_TYPE)
+            .get(&constant::TABLE_NORMAL_ROW_TYPE)
             .and_then(|row| row.get(&col_index));
         let cell_type: EDataType = if let Some(data) = cell_type_data {
             EDataType::convert(&data.value)
@@ -184,7 +184,7 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
         if cell_type == EDataType::Enum {
             let cell_link_data: Option<&CellData> = gable_data
                 .heads
-                .get(&constant::TABLE_DATA_ROW_LINK)
+                .get(&constant::TABLE_NORMAL_ROW_LINK)
                 .and_then(|row| row.get(&col_index));
             if let Some(cell_link_data) = cell_link_data {
                 gables::get_enum_cells(&cell_link_data.value, |enum_datas| {
@@ -197,7 +197,7 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
                         }
                     }
                     let range: String = utils::cell_range(
-                        constant::TABLE_DATA_ROW_TOTAL,
+                        constant::TABLE_NORMAL_ROW_TOTAL,
                         col_index as u32,
                         max_col as u32,
                         col_index,
@@ -213,7 +213,7 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
                 enum_cells.insert(col_index, &cell_link_data.value);
             }
         }
-        for row_index in constant::TABLE_DATA_ROW_TOTAL..max_row {
+        for row_index in constant::TABLE_NORMAL_ROW_TOTAL..max_row {
             let cell: &mut Cell = worksheet.get_cell_mut((&(col_index as u32), &row_index));
             match cell_type {
                 EDataType::Percentage => {
@@ -253,7 +253,7 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
     for (row_index, row_data) in &gable_data.cells {
         for (col_index, cell_data) in row_data {
             let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));
-            if let Some(row_data) = &gable_data.heads.get(&constant::TABLE_DATA_ROW_TYPE) {
+            if let Some(row_data) = &gable_data.heads.get(&constant::TABLE_NORMAL_ROW_TYPE) {
                 if let Some(cell_type_data) = row_data.get(&col_index) {
                     match EDataType::convert(&cell_type_data.value) {
                         EDataType::Int => cell.set_value_number(cell_data.parse_int() as f64),
@@ -570,10 +570,10 @@ fn write_gable_normal(
 ) {
     // 收集所有enum的link信息
     let mut links: BTreeMap<u32, String> = BTreeMap::new();
-    if max_row >= constant::TABLE_DATA_ROW_TOTAL {
+    if max_row >= constant::TABLE_NORMAL_ROW_TOTAL {
         for col_idx in 0..max_col {
             if let Some(cell_link_cell) =
-                worksheet.get_cell((&col_idx, &constant::TABLE_DATA_ROW_LINK))
+                worksheet.get_cell((&col_idx, &constant::TABLE_NORMAL_ROW_LINK))
             {
                 links.insert(col_idx, cell_link_cell.get_value().to_string());
             }
@@ -584,9 +584,9 @@ fn write_gable_normal(
         let mut row_data: BTreeMap<u16, CellData> = BTreeMap::new();
         let mut cell_type: EDataType = EDataType::String;
         for col_idx in 0..max_col {
-            if row_idx >= constant::TABLE_DATA_ROW_TOTAL {
+            if row_idx >= constant::TABLE_NORMAL_ROW_TOTAL {
                 cell_type = if let Some(cell_type_data) =
-                    worksheet.get_cell((&col_idx, &constant::TABLE_DATA_ROW_TYPE))
+                    worksheet.get_cell((&col_idx, &constant::TABLE_NORMAL_ROW_TYPE))
                 {
                     EDataType::convert(&cell_type_data.get_value())
                 } else {
@@ -665,7 +665,7 @@ fn write_gable_normal(
                 }
             }
         }
-        if row_idx < constant::TABLE_DATA_ROW_TOTAL {
+        if row_idx < constant::TABLE_NORMAL_ROW_TOTAL {
             gable_data.heads.insert(row_idx, row_data);
         } else {
             if row_data.len() > 0 {

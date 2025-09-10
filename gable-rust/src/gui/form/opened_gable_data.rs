@@ -50,17 +50,17 @@ impl OpenedGableData {
         let mut cell_types: HashMap<u16, EDataType> = HashMap::<u16, EDataType>::new();
         let mut link_cells: HashMap<u16, &String> = HashMap::new();
         // 通过预先获取的行数据查找列数据
-        if total_rows >= constant::TABLE_DATA_ROW_TOTAL {
+        if total_rows >= constant::TABLE_NORMAL_ROW_TOTAL {
             for col_index in 1..total_cols + 1 {
                 let row_type_data: Option<&BTreeMap<u16, CellData>> =
-                    data.heads.get(&constant::TABLE_DATA_ROW_TYPE);
+                    data.heads.get(&constant::TABLE_NORMAL_ROW_TYPE);
                 if let Some(row_type_data) = row_type_data {
                     let type_cell = row_type_data.get(&col_index);
                     if let Some(type_cell) = type_cell {
                         let cell_type: EDataType = EDataType::convert(&type_cell.value);
                         if cell_type == EDataType::Enum {
                             let row_link_data: Option<&BTreeMap<u16, CellData>> =
-                                data.heads.get(&constant::TABLE_DATA_ROW_LINK);
+                                data.heads.get(&constant::TABLE_NORMAL_ROW_LINK);
                             if let Some(row_link_data) = row_link_data {
                                 let link_cell = row_link_data.get(&col_index);
                                 if let Some(link_cell) = link_cell {

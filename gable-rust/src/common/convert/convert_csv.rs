@@ -88,9 +88,9 @@ fn normal_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
     let mut type_row_item: Vec<String> = Vec::new();
     // 主键表头
     for (_, col_data) in valids_main.iter() {
-        let desc_cell: &&CellData = col_data.get(&constant::TABLE_DATA_ROW_DESC).unwrap();
+        let desc_cell: &&CellData = col_data.get(&constant::TABLE_NORMAL_ROW_DESC).unwrap();
         let field_cell: &CellData =
-            if let Some(field_cell) = col_data.get(&constant::TABLE_DATA_ROW_FIELD) {
+            if let Some(field_cell) = col_data.get(&constant::TABLE_NORMAL_ROW_FIELD) {
                 field_cell
             } else {
                 return items;
@@ -99,7 +99,7 @@ fn normal_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
             return items;
         };
         let type_cell: &CellData =
-            if let Some(type_cell) = col_data.get(&constant::TABLE_DATA_ROW_TYPE) {
+            if let Some(type_cell) = col_data.get(&constant::TABLE_NORMAL_ROW_TYPE) {
                 type_cell
             } else {
                 return items;
@@ -114,9 +114,9 @@ fn normal_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
     }
     // 表头
     for (_, col_data) in valids.iter() {
-        let desc_cell = col_data.get(&constant::TABLE_DATA_ROW_DESC).unwrap();
-        let field_cell: &&CellData = col_data.get(&constant::TABLE_DATA_ROW_FIELD).unwrap();
-        let type_cell: &&CellData = col_data.get(&constant::TABLE_DATA_ROW_TYPE).unwrap();
+        let desc_cell = col_data.get(&constant::TABLE_NORMAL_ROW_DESC).unwrap();
+        let field_cell: &&CellData = col_data.get(&constant::TABLE_NORMAL_ROW_FIELD).unwrap();
+        let type_cell: &&CellData = col_data.get(&constant::TABLE_NORMAL_ROW_TYPE).unwrap();
         desc_row_item.push(desc_cell.value.clone());
         field_row_item.push(field_cell.value.clone());
         type_row_item.push(type_cell.value.clone());
@@ -126,7 +126,7 @@ fn normal_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
     items.push(type_row_item);
 
     let max_row: u32 = tree_data.content.max_row + 1;
-    for row_index in constant::TABLE_DATA_ROW_TOTAL..=max_row {
+    for row_index in constant::TABLE_NORMAL_ROW_TOTAL..=max_row {
         let row_data: &BTreeMap<u16, CellData> =
             if let Some(row_data) = tree_data.content.cells.get(&row_index) {
                 row_data

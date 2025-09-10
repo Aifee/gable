@@ -53,7 +53,7 @@ impl TreeData {
         let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
         let mut items: Vec<Map<String, Value>> = Vec::new();
         let max_row: u32 = self.content.max_row + 1;
-        for row_index in constant::TABLE_DATA_ROW_TOTAL..=max_row {
+        for row_index in constant::TABLE_NORMAL_ROW_TOTAL..=max_row {
             let row_data: &BTreeMap<u16, CellData> =
                 if let Some(row_data) = self.content.cells.get(&row_index) {
                     row_data
@@ -75,13 +75,13 @@ impl TreeData {
                     continue;
                 };
                 let type_cell: &&CellData =
-                    if let Some(type_cell) = head_data.get(&constant::TABLE_DATA_ROW_TYPE) {
+                    if let Some(type_cell) = head_data.get(&constant::TABLE_NORMAL_ROW_TYPE) {
                         type_cell
                     } else {
                         continue;
                     };
                 let field_cell: &&CellData =
-                    if let Some(field_cell) = head_data.get(&constant::TABLE_DATA_ROW_FIELD) {
+                    if let Some(field_cell) = head_data.get(&constant::TABLE_NORMAL_ROW_FIELD) {
                         field_cell
                     } else {
                         continue;
@@ -105,13 +105,13 @@ impl TreeData {
                     continue;
                 };
                 let type_cell: &&CellData =
-                    if let Some(type_cell) = head_data.get(&constant::TABLE_DATA_ROW_TYPE) {
+                    if let Some(type_cell) = head_data.get(&constant::TABLE_NORMAL_ROW_TYPE) {
                         type_cell
                     } else {
                         continue;
                     };
                 let field_cell: &&CellData =
-                    if let Some(field_cell) = head_data.get(&constant::TABLE_DATA_ROW_FIELD) {
+                    if let Some(field_cell) = head_data.get(&constant::TABLE_NORMAL_ROW_FIELD) {
                         field_cell
                     } else {
                         continue;
@@ -208,14 +208,14 @@ impl TreeData {
         let mut row_valid: bool = true;
         for (_, head_data) in valids_main.iter() {
             let field_cell: &&CellData =
-                if let Some(field_cell) = head_data.get(&constant::TABLE_DATA_ROW_FIELD) {
+                if let Some(field_cell) = head_data.get(&constant::TABLE_NORMAL_ROW_FIELD) {
                     field_cell
                 } else {
                     row_valid = false;
                     continue;
                 };
             let type_cell: &&CellData =
-                if let Some(type_cell) = head_data.get(&constant::TABLE_DATA_ROW_TYPE) {
+                if let Some(type_cell) = head_data.get(&constant::TABLE_NORMAL_ROW_TYPE) {
                     type_cell
                 } else {
                     row_valid = false;
@@ -231,13 +231,13 @@ impl TreeData {
             };
             let field_value: String = field_cell.value.replace("*", "");
             let data_type: EDataType = EDataType::convert(&type_cell.value);
-            let desc_cell: Option<&&CellData> = head_data.get(&constant::TABLE_DATA_ROW_DESC);
+            let desc_cell: Option<&&CellData> = head_data.get(&constant::TABLE_NORMAL_ROW_DESC);
             let desc_value: String = if let Some(desc_cell) = desc_cell {
                 desc_cell.value.clone()
             } else {
                 String::new()
             };
-            let link_cell: Option<&&CellData> = head_data.get(&constant::TABLE_DATA_ROW_LINK);
+            let link_cell: Option<&&CellData> = head_data.get(&constant::TABLE_NORMAL_ROW_LINK);
             let link_value: String = if let Some(link_cell) = link_cell {
                 if let Some(pos) = link_cell.value.find("@") {
                     link_cell.value[pos + 1..].to_string()
@@ -266,13 +266,13 @@ impl TreeData {
 
         for (_, head_data) in valids.iter() {
             let field_cell: &&CellData =
-                if let Some(field_cell) = head_data.get(&constant::TABLE_DATA_ROW_FIELD) {
+                if let Some(field_cell) = head_data.get(&constant::TABLE_NORMAL_ROW_FIELD) {
                     field_cell
                 } else {
                     continue;
                 };
             let type_cell: &&CellData =
-                if let Some(type_cell) = head_data.get(&constant::TABLE_DATA_ROW_TYPE) {
+                if let Some(type_cell) = head_data.get(&constant::TABLE_NORMAL_ROW_TYPE) {
                     type_cell
                 } else {
                     continue;
@@ -284,13 +284,13 @@ impl TreeData {
                 continue;
             };
             let data_type: EDataType = EDataType::convert(&type_cell.value);
-            let desc_cell: Option<&&CellData> = head_data.get(&constant::TABLE_DATA_ROW_DESC);
+            let desc_cell: Option<&&CellData> = head_data.get(&constant::TABLE_NORMAL_ROW_DESC);
             let desc_value: String = if let Some(desc_cell) = desc_cell {
                 desc_cell.value.clone()
             } else {
                 String::new()
             };
-            let link_cell: Option<&&CellData> = head_data.get(&constant::TABLE_DATA_ROW_LINK);
+            let link_cell: Option<&&CellData> = head_data.get(&constant::TABLE_NORMAL_ROW_LINK);
             let link_value: String = if let Some(link_cell) = link_cell {
                 if let Some(pos) = link_cell.value.find("@") {
                     link_cell.value[pos + 1..].to_string()

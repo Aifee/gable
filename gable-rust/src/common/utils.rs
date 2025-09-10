@@ -36,6 +36,7 @@ pub fn determine_sheet_type(path: &Path) -> ESheetType {
             match parent_name.to_string_lossy().as_ref() {
                 "kvs" => return ESheetType::KV,
                 "enums" => return ESheetType::Enum,
+                "localizes" => return ESheetType::Localize,
                 _ => return ESheetType::Normal,
             }
         }

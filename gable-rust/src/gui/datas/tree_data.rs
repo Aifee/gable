@@ -33,6 +33,7 @@ impl TreeData {
     pub fn to_values(&self, keyword: &str) -> Vec<Map<String, Value>> {
         match self.gable_type {
             ESheetType::Normal => self.normal_data(keyword),
+            ESheetType::Localize => self.localize_data(keyword),
             ESheetType::KV => self.kv_data(keyword),
             _ => {
                 log::error!("The enumeration table does not export as JSON.");
@@ -44,6 +45,7 @@ impl TreeData {
     pub fn to_fields(&self, keyword: &str) -> Vec<FieldInfo> {
         match self.gable_type {
             ESheetType::Normal => self.normal_fields(keyword),
+            ESheetType::Localize => self.localize_fields(keyword),
             ESheetType::KV => self.kv_fields(keyword),
             ESheetType::Enum => self.enum_fields(),
         }
@@ -112,6 +114,81 @@ impl TreeData {
                     };
                 let field_cell: &&CellData =
                     if let Some(field_cell) = head_data.get(&constant::TABLE_NORMAL_ROW_FIELD) {
+                        field_cell
+                    } else {
+                        continue;
+                    };
+                let value: Value = Self::get_value(type_cell, value_cell);
+                item_data.insert(field_cell.value.clone(), value);
+            }
+            items.push(item_data);
+        }
+        return items;
+    }
+
+    fn localize_data(&self, keyword: &str) -> Vec<Map<String, Value>> {
+        let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
+        let mut items: Vec<Map<String, Value>> = Vec::new();
+        let max_row: u32 = self.content.max_row + 1;
+        for row_index in constant::TABLE_LOCALIZE_ROW_TOTAL..=max_row {
+            let row_data: &BTreeMap<u16, CellData> =
+                if let Some(row_data) = self.content.cells.get(&row_index) {
+                    row_data
+                } else {
+                    continue;
+                };
+            let mut row_valid: bool = true;
+            let mut item_data: Map<String, Value> = Map::new();
+            // 检测行数据是否有效，主键没有数据，行数据无效则跳过
+            for (col_index, head_data) in valids_main.iter() {
+                let value_cell: &CellData = if let Some(value_cell) = row_data.get(col_index) {
+                    value_cell
+                } else {
+                    row_valid = false;
+                    continue;
+                };
+                if value_cell.value.is_empty() {
+                    row_valid = false;
+                    continue;
+                };
+                let type_cell: &&CellData =
+                    if let Some(type_cell) = head_data.get(&constant::TABLE_LOCALIZE_ROW_TYPE) {
+                        type_cell
+                    } else {
+                        continue;
+                    };
+                let field_cell: &&CellData =
+                    if let Some(field_cell) = head_data.get(&constant::TABLE_LOCALIZE_ROW_FIELD) {
+                        field_cell
+                    } else {
+                        continue;
+                    };
+                let value: Value = Self::get_value(type_cell, value_cell);
+                let field_value: String = field_cell.value.replace("*", "");
+                item_data.insert(field_value, value);
+            }
+            // 行数据无效
+            if !row_valid {
+                continue;
+            }
+
+            for (col_index, head_data) in valids.iter() {
+                let value_cell: &CellData = if let Some(value_cell) = row_data.get(col_index) {
+                    value_cell
+                } else {
+                    continue;
+                };
+                if value_cell.value.is_empty() {
+                    continue;
+                };
+                let type_cell: &&CellData =
+                    if let Some(type_cell) = head_data.get(&constant::TABLE_LOCALIZE_ROW_TYPE) {
+                        type_cell
+                    } else {
+                        continue;
+                    };
+                let field_cell: &&CellData =
+                    if let Some(field_cell) = head_data.get(&constant::TABLE_LOCALIZE_ROW_FIELD) {
                         field_cell
                     } else {
                         continue;
@@ -313,6 +390,97 @@ impl TreeData {
         }
         return fields;
     }
+
+    fn localize_fields(&self, keyword: &str) -> Vec<FieldInfo> {
+        let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
+        let mut fields: Vec<FieldInfo> = Vec::new();
+        let mut field_index: i32 = 1;
+        let mut row_valid: bool = true;
+        for (_, head_data) in valids_main.iter() {
+            let field_cell: &&CellData =
+                if let Some(field_cell) = head_data.get(&constant::TABLE_LOCALIZE_ROW_FIELD) {
+                    field_cell
+                } else {
+                    row_valid = false;
+                    continue;
+                };
+            let type_cell: &&CellData =
+                if let Some(type_cell) = head_data.get(&constant::TABLE_LOCALIZE_ROW_TYPE) {
+                    type_cell
+                } else {
+                    row_valid = false;
+                    continue;
+                };
+            if !field_cell.verify_lawful() {
+                row_valid = false;
+                continue;
+            };
+            if !type_cell.verify_lawful() {
+                row_valid = false;
+                continue;
+            };
+            let field_value: String = field_cell.value.replace("*", "");
+            let desc_cell: Option<&&CellData> = head_data.get(&constant::TABLE_LOCALIZE_ROW_DESC);
+            let desc_value: String = if let Some(desc_cell) = desc_cell {
+                desc_cell.value.clone()
+            } else {
+                String::new()
+            };
+            let field_info: FieldInfo = FieldInfo {
+                is_key: true,
+                field_name: field_value,
+                field_type: EDataType::String,
+                field_desc: desc_value,
+                field_link: String::new(),
+                field_index,
+            };
+            fields.push(field_info);
+            field_index += 1;
+        }
+        // 列数据无效
+        if !row_valid {
+            return Vec::new();
+        }
+
+        for (_, head_data) in valids.iter() {
+            let field_cell: &&CellData =
+                if let Some(field_cell) = head_data.get(&constant::TABLE_LOCALIZE_ROW_FIELD) {
+                    field_cell
+                } else {
+                    continue;
+                };
+            let type_cell: &&CellData =
+                if let Some(type_cell) = head_data.get(&constant::TABLE_LOCALIZE_ROW_TYPE) {
+                    type_cell
+                } else {
+                    continue;
+                };
+            if !field_cell.verify_lawful() {
+                continue;
+            };
+            if !type_cell.verify_lawful() {
+                continue;
+            };
+            let desc_cell: Option<&&CellData> = head_data.get(&constant::TABLE_LOCALIZE_ROW_DESC);
+            let desc_value: String = if let Some(desc_cell) = desc_cell {
+                desc_cell.value.clone()
+            } else {
+                String::new()
+            };
+            let field_info: FieldInfo = FieldInfo {
+                is_key: false,
+                field_name: field_cell.value.clone(),
+                field_type: EDataType::String,
+                field_desc: desc_value,
+                field_link: String::new(),
+                field_index,
+            };
+            fields.push(field_info);
+            field_index += 1;
+        }
+        return fields;
+    }
+
     fn kv_fields(&self, keyword: &str) -> Vec<FieldInfo> {
         let mut fields: Vec<FieldInfo> = Vec::new();
         let mut field_index: i32 = 1;
@@ -384,6 +552,7 @@ impl TreeData {
 
         return fields;
     }
+
     fn enum_fields(&self) -> Vec<FieldInfo> {
         let mut fields: Vec<FieldInfo> = Vec::new();
         for (_, row_data) in self.content.cells.iter() {

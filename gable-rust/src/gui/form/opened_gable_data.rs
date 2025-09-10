@@ -39,6 +39,7 @@ impl OpenedGableData {
     ) -> BTreeMap<u32, BTreeMap<u16, String>> {
         match sheet_type {
             ESheetType::Normal => Self::pairs_items_normal(data),
+            ESheetType::Localize => Self::pairs_items_localize(data),
             ESheetType::KV => Self::pairs_items_kv(data),
             ESheetType::Enum => Self::pairs_items_enum(data),
         }
@@ -97,6 +98,27 @@ impl OpenedGableData {
         }
         items
     }
+
+    fn pairs_items_localize(data: &GableData) -> BTreeMap<u32, BTreeMap<u16, String>> {
+        let mut items: BTreeMap<u32, BTreeMap<u16, String>> = BTreeMap::new();
+        for (row, cols) in data.heads.iter() {
+            let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
+            for (col, cell) in cols.iter() {
+                cols_items.insert(*col, cell.value.clone());
+            }
+            items.insert(*row, cols_items);
+        }
+
+        for (row, cols) in data.cells.iter() {
+            let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
+            for (col, cell) in cols.iter() {
+                cols_items.insert(*col, cell.value.clone());
+            }
+            items.insert(*row, cols_items);
+        }
+        items
+    }
+
     fn pairs_items_kv(data: &GableData) -> BTreeMap<u32, BTreeMap<u16, String>> {
         let mut link_cells: HashMap<u16, &String> = HashMap::new();
         let mut items: BTreeMap<u32, BTreeMap<u16, String>> = BTreeMap::new();

@@ -36,7 +36,9 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     context.insert("CLASS_NAME", &tree_data.content.sheetname);
     context.insert("fields", &cs_fields);
     let rendered_result: Result<String, tera::Error> = match tree_data.gable_type {
-        ESheetType::Normal | ESheetType::KV => tera.render("template.temp", &context),
+        ESheetType::Normal | ESheetType::Localize | ESheetType::KV => {
+            tera.render("template.temp", &context)
+        }
         ESheetType::Enum => tera.render("enums.temp", &context),
     };
     if rendered_result.is_err() {

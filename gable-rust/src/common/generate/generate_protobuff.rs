@@ -40,7 +40,9 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     context.insert("fields", &proto_fields);
     context.insert("imports", &imports);
     let rendered_result: Result<String, tera::Error> = match tree_data.gable_type {
-        ESheetType::Normal | ESheetType::KV => tera.render("template.proto", &context),
+        ESheetType::Normal | ESheetType::Localize | ESheetType::KV => {
+            tera.render("template.proto", &context)
+        }
         ESheetType::Enum => tera.render("enums.proto", &context),
     };
     if rendered_result.is_err() {

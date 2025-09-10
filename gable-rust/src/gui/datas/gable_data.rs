@@ -33,19 +33,31 @@ impl GableData {
                 .get(&col_index);
             let field_celldata: &CellData =
                 if let Some(row_data) = self.heads.get(&constant::TABLE_NORMAL_ROW_FIELD) {
-                    row_data.get(&col_index).unwrap()
+                    if let Some(celldata) = row_data.get(&col_index) {
+                        celldata
+                    } else {
+                        continue;
+                    }
                 } else {
                     continue;
                 };
             let type_celldata: &CellData =
                 if let Some(row_data) = self.heads.get(&constant::TABLE_NORMAL_ROW_TYPE) {
-                    row_data.get(&col_index).unwrap()
+                    if let Some(celldata) = row_data.get(&col_index) {
+                        celldata
+                    } else {
+                        continue;
+                    }
                 } else {
                     continue;
                 };
             let keyword_celldata: &CellData =
                 if let Some(row_data) = self.heads.get(&constant::TABLE_NORMAL_ROW_KEYWORD) {
-                    row_data.get(&col_index).unwrap()
+                    if let Some(celldata) = row_data.get(&col_index) {
+                        celldata
+                    } else {
+                        continue;
+                    }
                 } else {
                     continue;
                 };

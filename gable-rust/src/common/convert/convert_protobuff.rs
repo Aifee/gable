@@ -26,7 +26,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
         .join(format!("{}.bin", tree_data.content.sheetname));
     match tree_data.gable_type {
-        ESheetType::Normal => {
+        ESheetType::Normal | ESheetType::Localize => {
             if let Ok(encoded) = encode_normal_data(&value_data, &proto_fields) {
                 if let Err(e) = std::fs::write(&target_path, &encoded) {
                     log::error!(

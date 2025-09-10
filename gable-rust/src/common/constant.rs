@@ -51,6 +51,19 @@ pub const TABLE_NORMAL_ROW_LINK: u32 = 5;
 /// [数据表单]有效数据起始行数
 pub const TABLE_NORMAL_ROW_TOTAL: u32 = 6;
 
+///[本地化表单]描述行
+pub const TABLE_LOCALIZE_ROW_DESC: u32 = 1;
+///[本地化表单]字段行
+pub const TABLE_LOCALIZE_ROW_FIELD: u32 = 2;
+///[本地化表单]类型行
+pub const TABLE_LOCALIZE_ROW_TYPE: u32 = 3;
+///[本地化表单]平台行
+pub const TABLE_LOCALIZE_ROW_KEYWORD: u32 = 4;
+///[本地化表单]关联信息行
+pub const TABLE_LOCALIZE_ROW_LINK: u32 = 5;
+/// [本地化表单]有效数据起始行数
+pub const TABLE_LOCALIZE_ROW_TOTAL: u32 = 6;
+
 ///[KV表单]字段行
 pub const TABLE_KV_COL_FIELD: u32 = 1;
 ///[KV表单]类型列

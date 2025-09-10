@@ -121,6 +121,7 @@ pub fn write_excel(
             }
             match sheet_type {
                 ESheetType::Normal => write_excel_normal(worksheet, &gable_data),
+                ESheetType::Localize => write_excel_localize(worksheet, &gable_data),
                 ESheetType::KV => write_excel_kv(worksheet, &gable_data),
                 ESheetType::Enum => write_excel_enum(worksheet, &gable_data),
             }
@@ -295,6 +296,41 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
                 }
             }
 
+            write_excel_cell_style(cell, &cell_data);
+        }
+    }
+}
+
+fn write_excel_localize(worksheet: &mut Worksheet, gable_data: &GableData) {
+    // 数据类型下拉框
+    let range: String = utils::cell_range(
+        constant::TABLE_LOCALIZE_ROW_TYPE,
+        1,
+        constant::TABLE_LOCALIZE_ROW_TYPE,
+        gable_data.max_col,
+    );
+    let mut data_validation: DataValidation = DataValidation::default();
+    data_validation.set_formula1(format!(
+        "\"{}\"",
+        vec![constant::DATA_TYPE_KEY_STRING].join(",")
+    ));
+    data_validation.set_type(DataValidationValues::List);
+    data_validation
+        .get_sequence_of_references_mut()
+        .set_sqref(range);
+    let mut data_validations = DataValidations::default();
+    data_validations.add_data_validation_list(data_validation);
+    // 数据验证填充
+    worksheet.set_data_validations(data_validations);
+
+    // 数据内容处理
+    for (row_index, row_data) in &gable_data.cells {
+        for (col_index, cell_data) in row_data {
+            if cell_data.is_empty() {
+                continue;
+            }
+            let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));
+            cell.set_value(&cell_data.value);
             write_excel_cell_style(cell, &cell_data);
         }
     }
@@ -549,6 +585,9 @@ pub fn write_gable(
         let max_col: u32 = max_col + 1;
         match sheet_type {
             ESheetType::Normal => write_gable_normal(worksheet, &mut gable_data, max_row, max_col),
+            ESheetType::Localize => {
+                write_gable_localize(worksheet, &mut gable_data, max_row, max_col)
+            }
             ESheetType::KV => write_gable_kv(worksheet, &mut gable_data, max_row, max_col),
             ESheetType::Enum => write_gable_enum(worksheet, &mut gable_data, max_row, max_col),
         }
@@ -674,6 +713,45 @@ fn write_gable_normal(
         }
     }
 }
+
+fn write_gable_localize(
+    worksheet: &Worksheet,
+    gable_data: &mut GableData,
+    max_row: u32,
+    max_col: u32,
+) {
+    for row_idx in 1..max_row {
+        let mut row_data: BTreeMap<u16, CellData> = BTreeMap::new();
+        for col_idx in 0..max_col {
+            if let Some(cell) = worksheet.get_cell((&col_idx, &row_idx)) {
+                let value: Cow<'static, str> = cell.get_value();
+                let style: &Style = cell.get_style();
+                let bc: Option<&Color> = style.get_background_color();
+                let fc: Option<&Color> = if let Some(font) = style.get_font() {
+                    Some(font.get_color())
+                } else {
+                    None
+                };
+                if !value.is_empty() {
+                    let cell_data: CellData =
+                        CellData::new(row_idx, col_idx as u16, value.to_string(), bc, fc);
+                    if cell_data.is_empty() {
+                        continue;
+                    }
+                    row_data.insert(col_idx as u16, cell_data);
+                }
+            }
+        }
+        if row_idx < constant::TABLE_LOCALIZE_ROW_TOTAL {
+            gable_data.heads.insert(row_idx, row_data);
+        } else {
+            if row_data.len() > 0 {
+                gable_data.cells.insert(row_idx, row_data);
+            }
+        }
+    }
+}
+
 fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u32, max_col: u32) {
     // 读取数据并填充到GableData中
     for row_idx in 1..max_row {

@@ -5,22 +5,21 @@ use crate::gui::datas::{
 };
 use lazy_static::lazy_static;
 use rayon::prelude::*;
+use std::sync::RwLock;
 use std::{
     cmp::Ordering, collections::HashMap, fs, io::Error, path::Path, path::PathBuf, sync::Arc,
-    sync::Mutex, sync::MutexGuard,
 };
 
 lazy_static! {
     /// 全局存储当前的目录树
-    pub static ref TREE_ITEMS: Arc<Mutex<Vec<TreeItem>>> = Arc::new(Mutex::new(Vec::new()));
+    pub static ref TREE_ITEMS: Arc<RwLock<Vec<TreeItem>>> = Arc::new(RwLock::new(Vec::new()));
     /// 正在编辑的文件列表
-    pub static ref EDITION_FILES: Arc<Mutex<HashMap<String, WatcherData>>> = Arc::new(Mutex::new(HashMap::new()));
+    pub static ref EDITION_FILES: Arc<RwLock<HashMap<String, WatcherData>>> = Arc::new(RwLock::new(HashMap::new()));
 }
 
 /// 添加编辑文件到编辑列表
 fn add_editor_file(file_path: String, targe_path: String, sheet_type: ESheetType) {
-    let mut editor_files: MutexGuard<'_, HashMap<String, WatcherData>> =
-        EDITION_FILES.lock().unwrap();
+    let mut editor_files = EDITION_FILES.write().unwrap();
     editor_files.insert(
         file_path,
         WatcherData {
@@ -32,14 +31,13 @@ fn add_editor_file(file_path: String, targe_path: String, sheet_type: ESheetType
 
 // 移除编辑文件
 pub fn remove_editor_file(file_path: &str) {
-    let mut editor_files: MutexGuard<'_, HashMap<String, WatcherData>> =
-        EDITION_FILES.lock().unwrap();
+    let mut editor_files = EDITION_FILES.write().unwrap();
     editor_files.remove(file_path);
 }
 
 // 判断是否是编辑文件
 fn has_eidtor_file(file_path: &str) -> (bool, Option<WatcherData>) {
-    let files: MutexGuard<'_, HashMap<String, WatcherData>> = EDITION_FILES.lock().unwrap();
+    let files = EDITION_FILES.read().unwrap();
     match files.get(file_path) {
         Some(data) => (true, Some(data.clone())),
         None => (false, None),
@@ -242,7 +240,7 @@ pub fn find_item_clone(path: &str, item_type: EItemType) -> Option<TreeItem> {
 
     fn find_parent_item(path: &str, target_type: EItemType) -> Option<TreeItem> {
         // 先找到当前项
-        let tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
+        let tree_items = TREE_ITEMS.read().unwrap();
         let item: &TreeItem = find_item_by_path_recursive(&tree_items, path)?;
         if item.item_type == target_type {
             return Some(item.clone());
@@ -256,7 +254,7 @@ pub fn find_item_clone(path: &str, item_type: EItemType) -> Option<TreeItem> {
         find_parent_item(&parent_path, target_type)
     }
 
-    let tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
+    let tree_items = TREE_ITEMS.read().unwrap();
     let item: &TreeItem = find_item_by_path_recursive(&tree_items, path)?;
 
     if item.item_type == item_type {
@@ -271,7 +269,7 @@ pub fn find_item_clone(path: &str, item_type: EItemType) -> Option<TreeItem> {
 
 // 根据路径查找树节点
 pub fn get_item_clone(path: &str) -> Option<TreeItem> {
-    let tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
+    let tree_items = TREE_ITEMS.read().unwrap();
     fn get_item_by_path<'a>(items: &'a [TreeItem], path: &str) -> Option<&'a TreeItem> {
         for item in items {
             if item.fullpath == path {
@@ -315,7 +313,7 @@ where
         None
     }
 
-    let tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
+    let tree_items = TREE_ITEMS.read().unwrap();
     for root_item in tree_items.iter() {
         if let Some(cells) = get_enum_cells_item(root_item, link_name) {
             return Some(f(cells));
@@ -348,7 +346,7 @@ where
         None
     }
 
-    let tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
+    let tree_items = TREE_ITEMS.read().unwrap();
     for root_item in tree_items.iter() {
         if let Some(cells) = get_loc_cells_item(root_item, link_name) {
             return Some(f(cells));
@@ -365,11 +363,11 @@ pub fn refresh_gables() {
         let children = build_tree_from_path(root_path);
         tree_items.extend(children);
     }
-    *TREE_ITEMS.lock().unwrap() = tree_items;
+    *TREE_ITEMS.write().unwrap() = tree_items;
 }
 
 pub fn add_new_item(new_path: &Path, new_item: EItemType) {
-    let mut tree_items = TREE_ITEMS.lock().unwrap();
+    let mut tree_items = TREE_ITEMS.write().unwrap();
     if let Some(file_name) = new_path.file_name() {
         let file_name: String = file_name.to_string_lossy().to_string();
         let parent_path = match new_path.parent() {
@@ -458,7 +456,7 @@ fn reload_gable(gable_file_paths: Option<Vec<String>>) -> bool {
 
     for file_path in file_paths {
         let new_data: Option<GableData> = excel_util::read_gable_file(&file_path);
-        let mut tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
+        let mut tree_items = TREE_ITEMS.write().unwrap();
         fn update_child_data(
             items: &mut [TreeItem],
             file_path: &str,
@@ -487,7 +485,7 @@ fn reload_gable(gable_file_paths: Option<Vec<String>>) -> bool {
 }
 
 pub fn update_item_display_name(fullpath: String, new_path: String, new_name: String) {
-    let mut tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
+    let mut tree_items = TREE_ITEMS.write().unwrap();
     update_item_display_name_recursive(&mut tree_items, &fullpath, new_path, new_name);
 }
 fn update_item_display_name_recursive(
@@ -593,7 +591,7 @@ pub fn request_remove_item_from_tree(fullpath: String) {
         std::thread::sleep(std::time::Duration::from_millis(100));
 
         // 然后执行删除
-        let mut tree_items = TREE_ITEMS.lock().unwrap();
+        let mut tree_items = TREE_ITEMS.write().unwrap();
         remove_item_from_tree_recursive(&mut tree_items, &fullpath);
     });
 }

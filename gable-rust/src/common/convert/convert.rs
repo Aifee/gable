@@ -8,7 +8,7 @@ use crate::{
 use std::{collections::HashMap, sync::MutexGuard};
 
 pub fn from_target(setting: &BuildSetting) {
-    let items: MutexGuard<'_, Vec<TreeItem>> = gables::TREE_ITEMS.lock().unwrap();
+    let items = gables::TREE_ITEMS.read().unwrap();
     let mut datas: HashMap<String, &TreeData> = HashMap::new();
     for item in items.iter() {
         let item_datas: HashMap<String, &TreeData> = item.get_datas();

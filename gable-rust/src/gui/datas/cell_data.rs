@@ -180,7 +180,12 @@ impl CellData {
         if self.value.is_empty() {
             return false;
         }
-        return self.value.parse::<bool>().unwrap_or(false);
+        let normalized = self.value.trim().to_lowercase();
+        match normalized.as_str() {
+            "true" | "1" | "yes" | "on" => true,
+            "false" | "0" | "no" | "off" => false,
+            _ => false, // 对于无法识别的值，返回false
+        }
     }
     pub fn parse_float(&self) -> f64 {
         if self.value.is_empty() {

@@ -108,6 +108,7 @@ pub const DATA_TYPE_KEY_PERMIAN: &str = "‱";
 pub const DATA_TYPE_KEY_TIME: &str = "time";
 pub const DATA_TYPE_KEY_DATE: &str = "date";
 pub const DATA_TYPE_KEY_ENUM: &str = "enum";
+pub const DATA_TYPE_KEY_LOC: &str = "loc";
 pub const DATA_TYPE_KEYS: &[&str] = &[
     DATA_TYPE_KEY_INT,
     DATA_TYPE_KEY_STRING,
@@ -129,4 +130,5 @@ pub const DATA_TYPE_KEYS: &[&str] = &[
     DATA_TYPE_KEY_TIME,
     DATA_TYPE_KEY_DATE,
     DATA_TYPE_KEY_ENUM,
+    DATA_TYPE_KEY_LOC,
 ];

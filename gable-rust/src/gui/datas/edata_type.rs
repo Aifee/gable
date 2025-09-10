@@ -44,6 +44,8 @@ pub enum EDataType {
     Date = 19,
     /// 枚举，配合链接使用
     Enum = 100,
+    // 本地化key
+    Loc = 101,
 }
 
 impl EDataType {
@@ -73,6 +75,7 @@ impl EDataType {
             constant::DATA_TYPE_KEY_TIME => EDataType::Time,
             constant::DATA_TYPE_KEY_DATE => EDataType::Date,
             constant::DATA_TYPE_KEY_ENUM => EDataType::Enum,
+            constant::DATA_TYPE_KEY_LOC => EDataType::Loc,
             _ => EDataType::Unknown,
         }
     }

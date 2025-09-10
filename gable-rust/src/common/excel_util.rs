@@ -160,6 +160,7 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
     data_validations.add_data_validation_list(data_validation);
 
     let mut enum_cells: BTreeMap<u16, &String> = BTreeMap::new();
+    let mut loc_cells: BTreeMap<u16, &String> = BTreeMap::new();
     // 数据类型数据
     for col_index in 1..max_col {
         let cell_type_data: Option<&CellData> = gable_data
@@ -177,6 +178,7 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
             && cell_type != EDataType::Time
             && cell_type != EDataType::Date
             && cell_type != EDataType::Enum
+            && cell_type != EDataType::Loc
         {
             continue;
         }
@@ -212,6 +214,17 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
                     data_validations.add_data_validation_list(enum_validation);
                 });
                 enum_cells.insert(col_index, &cell_link_data.value);
+            }
+        }
+
+        // 多语言单独设置
+        if cell_type == EDataType::Loc {
+            let cell_link_data: Option<&CellData> = gable_data
+                .heads
+                .get(&constant::TABLE_NORMAL_ROW_LINK)
+                .and_then(|row| row.get(&col_index));
+            if let Some(cell_link_data) = cell_link_data {
+                loc_cells.insert(col_index, &cell_link_data.value);
             }
         }
         for row_index in constant::TABLE_NORMAL_ROW_TOTAL..max_row {
@@ -291,6 +304,44 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
                             }
                             cell.set_value(cell_value)
                         }
+                        EDataType::Loc => {
+                            let mut cell_value = cell_data.value.clone();
+                            if let Some(loc_item_key) = loc_cells.get(&col_index) {
+                                gables::get_loc_cells(loc_item_key, |loc_item_cells| {
+                                    let mut link_key_index: &u16 = &0;
+                                    let mut link_value_index: &u16 = &0;
+                                    if let Some(link_key_cell) = loc_item_cells
+                                        .heads
+                                        .get(&constant::TABLE_LOCALIZE_ROW_FIELD)
+                                    {
+                                        for (col_index, col_cell) in link_key_cell.iter() {
+                                            if col_cell.value.contains("*") {
+                                                link_key_index = col_index;
+                                            }
+                                            if col_cell.value.contains("#") {
+                                                link_value_index = col_index;
+                                            }
+                                        }
+                                    }
+
+                                    for (_, loc_row_cell) in loc_item_cells.cells.iter() {
+                                        if let Some(loc_value_cell) =
+                                            loc_row_cell.get(link_key_index)
+                                        {
+                                            if loc_value_cell.value == cell_data.value {
+                                                if let Some(loc_desc_cell) =
+                                                    loc_row_cell.get(link_value_index)
+                                                {
+                                                    cell_value = loc_desc_cell.value.clone();
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                            cell.set_value(cell_value)
+                        }
                         _ => cell.set_value(&cell_data.value),
                     };
                 }
@@ -356,6 +407,7 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
     data_validations.add_data_validation_list(data_validation);
 
     let mut enum_cell_links: BTreeMap<u32, &String> = BTreeMap::new();
+    let mut loc_cell_links: BTreeMap<u32, &String> = BTreeMap::new();
     // 数据类型处理
     for row_index in constant::TABLE_KV_ROW_TOTAL..max_row {
         if let Some(cell_type_data) = gable_data
@@ -426,6 +478,15 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
                         enum_cell_links.insert(row_index, &cell_link_data.value);
                     }
                 }
+                EDataType::Loc => {
+                    let cell_link_data: Option<&CellData> = gable_data
+                        .cells
+                        .get(&row_index)
+                        .and_then(|row| row.get(&(constant::TABLE_KV_COL_LINK as u16)));
+                    if let Some(cell_link_data) = cell_link_data {
+                        loc_cell_links.insert(row_index, &cell_link_data.value);
+                    }
+                }
                 _ => {}
             }
         }
@@ -468,6 +529,44 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
                                                     .get(&constant::TABLE_ENUM_COL_DESC)
                                                 {
                                                     cell_value = enum_desc_cell.value.clone();
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                            cell.set_value(cell_value)
+                        }
+                        EDataType::Loc => {
+                            let mut cell_value = cell_data.value.clone();
+                            if let Some(link_name) = loc_cell_links.get(&row_index) {
+                                gables::get_loc_cells(link_name, |loc_item_cells| {
+                                    let mut link_key_index: &u16 = &0;
+                                    let mut link_value_index: &u16 = &0;
+                                    if let Some(link_key_cell) = loc_item_cells
+                                        .heads
+                                        .get(&constant::TABLE_LOCALIZE_ROW_FIELD)
+                                    {
+                                        for (col_index, col_cell) in link_key_cell.iter() {
+                                            if col_cell.value.contains("*") {
+                                                link_key_index = col_index;
+                                            }
+                                            if col_cell.value.contains("#") {
+                                                link_value_index = col_index;
+                                            }
+                                        }
+                                    }
+
+                                    for (_, loc_row_cell) in loc_item_cells.cells.iter() {
+                                        if let Some(loc_value_cell) =
+                                            loc_row_cell.get(link_key_index)
+                                        {
+                                            if loc_value_cell.value == cell_data.value {
+                                                if let Some(loc_desc_cell) =
+                                                    loc_row_cell.get(link_value_index)
+                                                {
+                                                    cell_value = loc_desc_cell.value.clone();
                                                 }
                                                 break;
                                             }
@@ -693,6 +792,44 @@ fn write_gable_normal(
                             };
                             cell_value
                         }
+                        EDataType::Loc => {
+                            let mut cell_value: String = value.to_string();
+                            if let Some(link_name) = links.get(&col_idx) {
+                                gables::get_loc_cells(link_name, |loc_item_cells| {
+                                    let mut link_key_index: &u16 = &0;
+                                    let mut link_value_index: &u16 = &0;
+                                    if let Some(link_key_cell) = loc_item_cells
+                                        .heads
+                                        .get(&constant::TABLE_LOCALIZE_ROW_FIELD)
+                                    {
+                                        for (col_index, col_cell) in link_key_cell.iter() {
+                                            if col_cell.value.contains("*") {
+                                                link_key_index = col_index;
+                                            }
+                                            if col_cell.value.contains("#") {
+                                                link_value_index = col_index;
+                                            }
+                                        }
+                                    }
+
+                                    for (_, loc_row_cell) in loc_item_cells.cells.iter() {
+                                        if let Some(loc_value_cell) =
+                                            loc_row_cell.get(link_key_index)
+                                        {
+                                            if loc_value_cell.value == value {
+                                                if let Some(loc_desc_cell) =
+                                                    loc_row_cell.get(link_value_index)
+                                                {
+                                                    cell_value = loc_desc_cell.value.clone();
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                });
+                            };
+                            cell_value
+                        }
                         _ => value.to_string(),
                     };
                     let cell_data: CellData =
@@ -825,6 +962,44 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
                                                     {
                                                         cell_value = value_data.value.clone();
                                                     }
+                                                }
+                                            }
+                                        }
+                                    });
+                                }
+                                cell_value
+                            }
+                            EDataType::Loc => {
+                                let mut cell_value: String = value.to_string();
+                                if let Some(link_name) = &link_name {
+                                    gables::get_loc_cells(link_name, |loc_item_cells| {
+                                        let mut link_key_index: &u16 = &0;
+                                        let mut link_value_index: &u16 = &0;
+                                        if let Some(link_key_cell) = loc_item_cells
+                                            .heads
+                                            .get(&constant::TABLE_LOCALIZE_ROW_FIELD)
+                                        {
+                                            for (col_index, col_cell) in link_key_cell.iter() {
+                                                if col_cell.value.contains("*") {
+                                                    link_key_index = col_index;
+                                                }
+                                                if col_cell.value.contains("#") {
+                                                    link_value_index = col_index;
+                                                }
+                                            }
+                                        }
+
+                                        for (_, loc_row_cell) in loc_item_cells.cells.iter() {
+                                            if let Some(loc_value_cell) =
+                                                loc_row_cell.get(link_key_index)
+                                            {
+                                                if loc_value_cell.value == value {
+                                                    if let Some(loc_desc_cell) =
+                                                        loc_row_cell.get(link_value_index)
+                                                    {
+                                                        cell_value = loc_desc_cell.value.clone();
+                                                    }
+                                                    break;
                                                 }
                                             }
                                         }

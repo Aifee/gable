@@ -81,7 +81,7 @@ pub fn transition_fields(
         let proto_type = match field.field_type {
             EDataType::Int | EDataType::Time => "int32",
             EDataType::Date => "int64",
-            EDataType::String => "string",
+            EDataType::String | EDataType::Loc => "string",
             EDataType::Boolean => "bool",
             EDataType::Float
             | EDataType::Percentage

@@ -59,7 +59,7 @@ impl OpenedGableData {
                     let type_cell = row_type_data.get(&col_index);
                     if let Some(type_cell) = type_cell {
                         let cell_type: EDataType = EDataType::convert(&type_cell.value);
-                        if cell_type == EDataType::Enum {
+                        if cell_type == EDataType::Enum || cell_type == EDataType::Loc {
                             let row_link_data: Option<&BTreeMap<u16, CellData>> =
                                 data.heads.get(&constant::TABLE_NORMAL_ROW_LINK);
                             if let Some(row_link_data) = row_link_data {
@@ -138,7 +138,9 @@ impl OpenedGableData {
                 if col == &(constant::TABLE_KV_COL_TYPE as u16) {
                     cell_type = EDataType::convert(&cell.value);
                 }
-                if col == &(constant::TABLE_KV_COL_LINK as u16) && cell_type == EDataType::Enum {
+                if col == &(constant::TABLE_KV_COL_LINK as u16)
+                    && (cell_type == EDataType::Enum || cell_type == EDataType::Loc)
+                {
                     let cell_link_value: Option<&String> = Some(&cell.value);
                     if let Some(link_value) = cell_link_value {
                         link_cells.insert(*row as u16, link_value);
@@ -219,6 +221,42 @@ impl OpenedGableData {
                     });
                 }
                 enum_value
+            }
+            EDataType::Loc => {
+                let mut loc_value: String = cell.value.clone();
+                let index: u16 = if iskv { cell.row as u16 } else { cell.column };
+                if let Some(link_name) = link_cells.get(&index) {
+                    gables::get_loc_cells(link_name, |loc_item_cells| {
+                        let mut link_key_index: &u16 = &0;
+                        let mut link_value_index: &u16 = &0;
+                        if let Some(link_key_cell) = loc_item_cells
+                            .heads
+                            .get(&constant::TABLE_LOCALIZE_ROW_FIELD)
+                        {
+                            for (col_index, col_cell) in link_key_cell.iter() {
+                                if col_cell.value.contains("*") {
+                                    link_key_index = col_index;
+                                }
+                                if col_cell.value.contains("#") {
+                                    link_value_index = col_index;
+                                }
+                            }
+                        }
+
+                        for (_, loc_row_cell) in loc_item_cells.cells.iter() {
+                            if let Some(loc_value_cell) = loc_row_cell.get(link_key_index) {
+                                if loc_value_cell.value == cell.value {
+                                    if let Some(loc_desc_cell) = loc_row_cell.get(link_value_index)
+                                    {
+                                        loc_value = loc_desc_cell.value.clone();
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    });
+                }
+                loc_value
             }
             _ => cell.value.clone(),
         }

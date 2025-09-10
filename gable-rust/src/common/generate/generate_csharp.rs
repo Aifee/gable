@@ -71,7 +71,7 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CsharpFieldInfo> {
         let cs_type = match field.field_type {
             EDataType::Int | EDataType::Time => "int",
             EDataType::Date => "long",
-            EDataType::String => "string",
+            EDataType::String | EDataType::Loc => "string",
             EDataType::Boolean => "bool",
             EDataType::Float
             | EDataType::Percentage

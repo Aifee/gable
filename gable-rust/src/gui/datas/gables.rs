@@ -315,9 +315,42 @@ where
         None
     }
 
-    let tree_items = TREE_ITEMS.lock().unwrap();
+    let tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
     for root_item in tree_items.iter() {
         if let Some(cells) = get_enum_cells_item(root_item, link_name) {
+            return Some(f(cells));
+        }
+    }
+    None
+}
+
+pub fn get_loc_cells<F, R>(link_name: &str, f: F) -> Option<R>
+where
+    F: FnOnce(&GableData) -> R,
+{
+    fn get_loc_cells_item<'a>(item: &'a TreeItem, link_name: &str) -> Option<&'a GableData> {
+        if let Some(ref item_link_name) = item.link_name {
+            if *item_link_name == link_name {
+                if let Some(ref tree_data) = item.data {
+                    if tree_data.gable_type == ESheetType::Localize {
+                        return Some(&tree_data.content);
+                    }
+                }
+            }
+        }
+
+        for child in &item.children {
+            if let Some(cells) = get_loc_cells_item(child, link_name) {
+                return Some(cells);
+            }
+        }
+
+        None
+    }
+
+    let tree_items: MutexGuard<'_, Vec<TreeItem>> = TREE_ITEMS.lock().unwrap();
+    for root_item in tree_items.iter() {
+        if let Some(cells) = get_loc_cells_item(root_item, link_name) {
             return Some(f(cells));
         }
     }

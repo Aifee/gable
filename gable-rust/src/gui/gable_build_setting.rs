@@ -24,7 +24,7 @@ pub struct GableBuildSetting {
 impl GableBuildSetting {
     pub fn new() -> Self {
         Self {
-            visible: true,
+            visible: false,
             add_selected: EDevelopType::Cpp,
             selected_index: 0,
         }

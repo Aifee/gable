@@ -117,7 +117,7 @@ pub fn transition_fields(
                 if !common_proto.contains(&&EDataType::Vector3) {
                     common_proto.push(&EDataType::Vector3);
                 }
-                "repeated Vector2"
+                "repeated Vector3"
             }
             EDataType::Vector4Arr => {
                 if !common_proto.contains(&&EDataType::Vector4) {

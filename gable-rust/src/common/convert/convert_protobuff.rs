@@ -68,47 +68,66 @@ fn encode_normal_data(
     items: &Vec<Map<String, Value>>,
     fields: &Vec<ProtoFieldInfo>,
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
+    let mut table_buffer = Vec::new();
+    let items_field_number = 1u32; // UnitTable中items字段的编号 (repeated Unit items = 1)
 
-    // 创建一个字段号为1的repeated字段，包含所有数据项
-    // 这对应于我们模板中的 {{CLASS_NAME}}Array 消息
-    let array_field_number = 1u32;
-
+    // 为每个数据项编码并作为repeated字段的元素添加
     for item in items.iter() {
-        let mut item_data: Vec<u8> = Vec::new();
+        let mut item_buffer = Vec::new();
+
+        // 编码Unit消息的所有字段
         for (index, field_info) in fields.iter().enumerate() {
             let field_number: u32 = (index + 1) as u32;
             if let Some(value) = item.get(&field_info.field_name) {
-                encode_field_value(field_number, value, &field_info.field_type, &mut item_data)?;
+                encode_field_value(
+                    field_number,
+                    value,
+                    &field_info.field_type,
+                    &mut item_buffer,
+                )?;
             }
         }
-        // 作为长度分隔的嵌套消息写入到repeated字段中
-        let key: u32 = (array_field_number << 3) | 2; // wire type 2 for length-delimited
-        encode_varint(key as u64, &mut buffer);
-        encode_varint(item_data.len() as u64, &mut buffer);
-        buffer.extend_from_slice(&item_data);
+
+        // 将编码后的Unit消息作为repeated字段的一个元素添加到UnitTable中
+        // 字段key = (field_number << 3) | wire_type
+        let field_key: u32 = (items_field_number << 3) | 2; // wire type 2 = length-delimited
+        encode_varint(field_key as u64, &mut table_buffer);
+        encode_varint(item_buffer.len() as u64, &mut table_buffer);
+        table_buffer.extend_from_slice(&item_buffer);
     }
-    Ok(buffer)
+
+    Ok(table_buffer)
 }
 
 fn encode_kv_data(
     item: &Map<String, Value>,
     field_infos: &Vec<ProtoFieldInfo>,
 ) -> Result<Vec<u8>, Box<dyn Error>> {
-    let mut buffer = Vec::new();
+    let mut table_buffer = Vec::new();
+    let items_field_number = 1u32; // UnitTable中items字段的编号 (repeated Unit items = 1)
 
-    // KV表使用字段索引作为字段号，而不是基于位置的索引
-    let mut item_data: Vec<u8> = Vec::new();
+    // 编码单个数据项
+    let mut item_buffer = Vec::new();
     for field_info in field_infos {
         let field_number: u32 = field_info.field_index as u32;
         if let Some(value) = item.get(&field_info.field_name) {
-            encode_field_value(field_number, value, &field_info.field_type, &mut item_data)?;
+            encode_field_value(
+                field_number,
+                value,
+                &field_info.field_type,
+                &mut item_buffer,
+            )?;
         }
     }
 
-    // KV数据直接写入，而不是包装在repeated字段中
-    buffer.extend_from_slice(&item_data);
-    Ok(buffer)
+    // 将编码后的Unit消息作为repeated字段的一个元素添加到UnitTable中
+    // 字段key = (field_number << 3) | wire_type
+    let field_key: u32 = (items_field_number << 3) | 2; // wire type 2 = length-delimited
+    encode_varint(field_key as u64, &mut table_buffer);
+    encode_varint(item_buffer.len() as u64, &mut table_buffer);
+    table_buffer.extend_from_slice(&item_buffer);
+
+    Ok(table_buffer)
 }
 
 fn encode_field_value(
@@ -177,6 +196,27 @@ fn encode_field_value(
                     }
                 }
             }
+            "Vector2" | "Vector3" | "Vector4" => {
+                // Vector类型作为嵌套消息处理
+                if let Some(arr) = value.as_array() {
+                    for val in arr {
+                        if let Some(s) = val.as_str() {
+                            let vector_data = parse_vector_data(s, inner_type)?;
+                            let key: u32 = (field_number << 3) | 2; // wire type 2 for length-delimited
+                            encode_varint(key as u64, buffer);
+                            encode_varint(vector_data.len() as u64, buffer);
+                            buffer.extend_from_slice(&vector_data);
+                        } else {
+                            let s: String = val.to_string();
+                            let vector_data = parse_vector_data(&s, inner_type)?;
+                            let key: u32 = (field_number << 3) | 2; // wire type 2 for length-delimited
+                            encode_varint(key as u64, buffer);
+                            encode_varint(vector_data.len() as u64, buffer);
+                            buffer.extend_from_slice(&vector_data);
+                        }
+                    }
+                }
+            }
             _ => {
                 // 对于其他 repeated 类型，作为字符串处理
                 if let Some(arr) = value.as_array() {
@@ -212,7 +252,7 @@ fn encode_field_value(
                 encode_varint(key as u64, buffer);
                 encode_varint(0u64, buffer);
             }
-            "string" | "vector2" | "vector3" | "vector4" => {
+            "string" => {
                 if let Some(s) = value.as_str() {
                     let key: u32 = (field_number << 3) | 2; // wire type 2 for length-delimited
                     encode_varint(key as u64, buffer);
@@ -220,6 +260,22 @@ fn encode_field_value(
                     buffer.extend_from_slice(s.as_bytes());
                 } else {
                     // 对于字符串类型，如果没有值则写入空字符串
+                    let key = (field_number << 3) | 2; // wire type 2 for length-delimited
+                    encode_varint(key as u64, buffer);
+                    encode_varint(0u64, buffer);
+                }
+            }
+            "Vector2" | "Vector3" | "Vector4" => {
+                // Vector类型需要特殊处理，它们是嵌套消息而不是字符串
+                if let Some(s) = value.as_str() {
+                    // 解析Vector字符串格式 "{x,y}" 或 "{x,y,z}" 或 "{x,y,z,w}"
+                    let vector_data = parse_vector_data(s, field_type)?;
+                    let key: u32 = (field_number << 3) | 2; // wire type 2 for length-delimited
+                    encode_varint(key as u64, buffer);
+                    encode_varint(vector_data.len() as u64, buffer);
+                    buffer.extend_from_slice(&vector_data);
+                } else {
+                    // 对于Vector类型，如果没有值则写入空消息
                     let key = (field_number << 3) | 2; // wire type 2 for length-delimited
                     encode_varint(key as u64, buffer);
                     encode_varint(0u64, buffer);
@@ -269,6 +325,83 @@ fn encode_field_value(
     }
 
     Ok(())
+}
+
+fn parse_vector_data(vector_str: &str, vector_type: &str) -> Result<Vec<u8>, Box<dyn Error>> {
+    let mut buffer = Vec::new();
+
+    // 移除大括号并分割值
+    let cleaned = vector_str.trim_matches(|c| c == '{' || c == '}');
+    let values: Vec<&str> = cleaned.split(',').collect();
+
+    match vector_type {
+        "Vector2" => {
+            if values.len() >= 2 {
+                // x字段编号为1，类型为float (wire type 5 = 32-bit)
+                let x_key: u32 = (1 << 3) | 5;
+                encode_varint(x_key as u64, &mut buffer);
+                let x_val: f32 = values[0].parse().unwrap_or(0.0);
+                buffer.extend_from_slice(&x_val.to_le_bytes());
+
+                // y字段编号为2，类型为float (wire type 5 = 32-bit)
+                let y_key: u32 = (2 << 3) | 5;
+                encode_varint(y_key as u64, &mut buffer);
+                let y_val: f32 = values[1].parse().unwrap_or(0.0);
+                buffer.extend_from_slice(&y_val.to_le_bytes());
+            }
+        }
+        "Vector3" => {
+            if values.len() >= 3 {
+                // x字段编号为1，类型为float (wire type 5 = 32-bit)
+                let x_key: u32 = (1 << 3) | 5;
+                encode_varint(x_key as u64, &mut buffer);
+                let x_val: f32 = values[0].parse().unwrap_or(0.0);
+                buffer.extend_from_slice(&x_val.to_le_bytes());
+
+                // y字段编号为2，类型为float (wire type 5 = 32-bit)
+                let y_key: u32 = (2 << 3) | 5;
+                encode_varint(y_key as u64, &mut buffer);
+                let y_val: f32 = values[1].parse().unwrap_or(0.0);
+                buffer.extend_from_slice(&y_val.to_le_bytes());
+
+                // z字段编号为3，类型为float (wire type 5 = 32-bit)
+                let z_key: u32 = (3 << 3) | 5;
+                encode_varint(z_key as u64, &mut buffer);
+                let z_val: f32 = values[2].parse().unwrap_or(0.0);
+                buffer.extend_from_slice(&z_val.to_le_bytes());
+            }
+        }
+        "Vector4" => {
+            if values.len() >= 4 {
+                // x字段编号为1，类型为float (wire type 5 = 32-bit)
+                let x_key: u32 = (1 << 3) | 5;
+                encode_varint(x_key as u64, &mut buffer);
+                let x_val: f32 = values[0].parse().unwrap_or(0.0);
+                buffer.extend_from_slice(&x_val.to_le_bytes());
+
+                // y字段编号为2，类型为float (wire type 5 = 32-bit)
+                let y_key: u32 = (2 << 3) | 5;
+                encode_varint(y_key as u64, &mut buffer);
+                let y_val: f32 = values[1].parse().unwrap_or(0.0);
+                buffer.extend_from_slice(&y_val.to_le_bytes());
+
+                // z字段编号为3，类型为float (wire type 5 = 32-bit)
+                let z_key: u32 = (3 << 3) | 5;
+                encode_varint(z_key as u64, &mut buffer);
+                let z_val: f32 = values[2].parse().unwrap_or(0.0);
+                buffer.extend_from_slice(&z_val.to_le_bytes());
+
+                // w字段编号为4，类型为float (wire type 5 = 32-bit)
+                let w_key: u32 = (4 << 3) | 5;
+                encode_varint(w_key as u64, &mut buffer);
+                let w_val: f32 = values[3].parse().unwrap_or(0.0);
+                buffer.extend_from_slice(&w_val.to_le_bytes());
+            }
+        }
+        _ => {}
+    }
+
+    Ok(buffer)
 }
 
 // Protocol Buffers 中的 varint 编码算法

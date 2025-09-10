@@ -31,16 +31,16 @@ fn add_editor_file(file_path: String, targe_path: String, sheet_type: ESheetType
 }
 
 // 移除编辑文件
-pub fn remove_editor_file(file_path: String) {
+pub fn remove_editor_file(file_path: &str) {
     let mut editor_files: MutexGuard<'_, HashMap<String, WatcherData>> =
         EDITION_FILES.lock().unwrap();
-    editor_files.remove(&file_path);
+    editor_files.remove(file_path);
 }
 
 // 判断是否是编辑文件
-fn has_eidtor_file(file_path: String) -> (bool, Option<WatcherData>) {
+fn has_eidtor_file(file_path: &str) -> (bool, Option<WatcherData>) {
     let files: MutexGuard<'_, HashMap<String, WatcherData>> = EDITION_FILES.lock().unwrap();
-    match files.get(&file_path) {
+    match files.get(file_path) {
         Some(data) => (true, Some(data.clone())),
         None => (false, None),
     }
@@ -424,13 +424,13 @@ fn add_item_to_parent(items: &mut [TreeItem], new_item: TreeItem, parent_path: &
 }
 
 // 文件编辑完成时触发
-pub fn editor_complete(excel_path: String) -> bool {
-    let (has, data) = has_eidtor_file(excel_path.clone());
+pub fn editor_complete(excel_path: &str) -> bool {
+    let (has, data) = has_eidtor_file(excel_path);
     if !has {
         return false;
     }
     let (result, gable_file_paths) = if let Some(data) = data {
-        match excel_util::write_gable(excel_path.clone(), data.target_path, data.sheet_type) {
+        match excel_util::write_gable(excel_path, data.target_path, data.sheet_type) {
             Ok(gable_file_paths) => (true, Some(gable_file_paths)),
             Err(_) => (false, None),
         }

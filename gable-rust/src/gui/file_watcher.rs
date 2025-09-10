@@ -1,3 +1,4 @@
+use eframe::egui::TextBuffer;
 use notify::{
     Config, Error, Event, EventKind, ReadDirectoryChangesWatcher, RecommendedWatcher,
     RecursiveMode, Result, Watcher,
@@ -89,9 +90,8 @@ impl FileWatcher {
                                                 {
                                                     if !file_name.starts_with("~$") {
                                                         // 使用标准库方法规范化路径
-                                                        let path_str: String =
-                                                            file_path.to_string_lossy().to_string();
-                                                        gables::editor_complete(path_str);
+                                                        let path_str = file_path.to_string_lossy();
+                                                        gables::editor_complete(path_str.as_str());
                                                     }
                                                 }
                                             }
@@ -104,29 +104,28 @@ impl FileWatcher {
                                                 {
                                                     if file_name.starts_with("~$") {
                                                         // 规范化路径并去除 ~$ 前缀
-                                                        let normalized_path: String =
-                                                            file_path.to_string_lossy().to_string();
+                                                        let normalized_path =
+                                                            file_path.to_string_lossy();
                                                         // 去除 ~$ 前缀得到原始文件名
                                                         let original_file_name: String =
                                                             file_name.replacen("~$", "", 1);
                                                         // 构造原始文件的路径
                                                         if let Some(parent_path) =
-                                                            Path::new(&normalized_path).parent()
+                                                            Path::new(normalized_path.as_str())
+                                                                .parent()
                                                         {
                                                             let original_file_path =
                                                                 PathBuf::from(parent_path)
                                                                     .join(original_file_name);
                                                             // 检查原始文件是否存在
                                                             if original_file_path.exists() {
-                                                                let path_str: String =
-                                                                    original_file_path
-                                                                        .to_string_lossy()
-                                                                        .to_string();
+                                                                let path_str = original_file_path
+                                                                    .to_string_lossy();
                                                                 gables::editor_complete(
-                                                                    path_str.clone(),
+                                                                    path_str.as_str(),
                                                                 );
                                                                 gables::remove_editor_file(
-                                                                    path_str,
+                                                                    path_str.as_str(),
                                                                 );
                                                             }
                                                         }

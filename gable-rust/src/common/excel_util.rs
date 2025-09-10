@@ -653,13 +653,13 @@ fn write_excel_cell_style(cell: &mut Cell, cell_data: &CellData) {
 
 // Excel数据写入gable文件
 pub fn write_gable(
-    excel_file: String,
+    excel_file: &str,
     target_path: String,
     sheet_type: ESheetType,
 ) -> Result<Vec<String>, Box<dyn Error>> {
-    let workbook: Spreadsheet = reader::xlsx::read(&excel_file).unwrap();
+    let workbook: Spreadsheet = reader::xlsx::read(excel_file).unwrap();
     let sheet_counts: usize = workbook.get_sheet_count();
-    let file_path: &Path = Path::new(&excel_file);
+    let file_path: &Path = Path::new(excel_file);
     let file_stem: &str = file_path.file_stem().unwrap().to_str().unwrap();
     let mut gable_file_paths: Vec<String> = Vec::new();
 

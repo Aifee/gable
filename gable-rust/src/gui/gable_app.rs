@@ -109,7 +109,7 @@ impl GableApp {
     fn init_style(cc: &CreationContext<'_>) {
         // 设置全局样式，调整字体大小
         let mut style: Style = (*cc.egui_ctx.style()).clone();
-        style.spacing.indent = 30.0;
+        style.spacing.indent = 22.0;
         style.text_styles = [
             (
                 TextStyle::Small,

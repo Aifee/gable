@@ -316,11 +316,7 @@ impl TreeData {
             };
             let link_cell: Option<&&CellData> = head_data.get(&constant::TABLE_NORMAL_ROW_LINK);
             let link_value: String = if let Some(link_cell) = link_cell {
-                if let Some(pos) = link_cell.value.find("@") {
-                    link_cell.value[pos + 1..].to_string()
-                } else {
-                    link_cell.value.to_string()
-                }
+                link_cell.value.clone()
             } else {
                 String::new()
             };
@@ -369,11 +365,7 @@ impl TreeData {
             };
             let link_cell: Option<&&CellData> = head_data.get(&constant::TABLE_NORMAL_ROW_LINK);
             let link_value: String = if let Some(link_cell) = link_cell {
-                if let Some(pos) = link_cell.value.find("@") {
-                    link_cell.value[pos + 1..].to_string()
-                } else {
-                    link_cell.value.to_string()
-                }
+                link_cell.value.clone()
             } else {
                 String::new()
             };
@@ -523,11 +515,7 @@ impl TreeData {
             let data_type: EDataType = EDataType::convert(&type_cell.value);
             let link_cell: Option<&CellData> = head_data.get(&(constant::TABLE_KV_COL_LINK as u16));
             let link_value: String = if let Some(link_cell) = link_cell {
-                if let Some(pos) = link_cell.value.find("@") {
-                    link_cell.value[pos + 1..].to_string()
-                } else {
-                    link_cell.value.to_string()
-                }
+                link_cell.value.clone()
             } else {
                 String::new()
             };

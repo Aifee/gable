@@ -88,11 +88,15 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CsharpFieldInfo> {
             EDataType::Vector3Arr => "Vector3[]",
             EDataType::Vector4Arr => "Vector4[]",
             EDataType::Enum => {
+                let mut enum_name = "int";
                 if !field.field_link.is_empty() {
-                    field.field_link.as_str()
-                } else {
-                    "int"
+                    if let Some(pos) = field.field_link.find("@") {
+                        enum_name = &field.field_link[pos + 1..];
+                    } else {
+                        enum_name = &field.field_link;
+                    };
                 }
+                enum_name
             }
             _ => "string",
         };

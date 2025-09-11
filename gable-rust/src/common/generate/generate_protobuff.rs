@@ -1,8 +1,9 @@
 use crate::{
-    common::{setting::BuildSetting, utils},
+    common::{constant, setting::BuildSetting, utils},
     gui::datas::{
         edata_type::EDataType,
         esheet_type::ESheetType,
+        gables,
         tree_data::{FieldInfo, TreeData},
     },
 };
@@ -21,6 +22,8 @@ pub struct ProtoFieldInfo {
     pub field_desc: String,
     // 字段序号
     pub field_index: i32,
+    // 扩展信息：枚举需要默认值
+    pub field_extend: String,
 }
 
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
@@ -78,6 +81,7 @@ pub fn transition_fields(
     let mut imports: Vec<String> = Vec::new();
     let mut proto_fields: Vec<ProtoFieldInfo> = Vec::new();
     for field in fields {
+        let mut field_extend: String = String::new();
         let proto_type = match field.field_type {
             EDataType::Int | EDataType::Time => "int32",
             EDataType::Date => "int64",
@@ -128,12 +132,28 @@ pub fn transition_fields(
                 "repeated Vector4"
             }
             EDataType::Enum => {
+                let mut enum_name = "int32";
                 if !field.field_link.is_empty() {
-                    imports.push(field.field_link.to_string());
-                    field.field_link.as_str()
-                } else {
-                    "int32"
+                    gables::get_enum_cells(&field.field_link, |enum_datas| {
+                        for (_, r_d) in enum_datas.cells.iter() {
+                            if let Some(r_c) = r_d.get(&(constant::TABLE_ENUM_COL_FIELD as u16)) {
+                                if !r_c.value.is_empty() {
+                                    field_extend = format!(" [default = {}]", r_c.value);
+                                    break;
+                                }
+                            }
+                        }
+                    });
+
+                    if let Some(pos) = field.field_link.find("@") {
+                        enum_name = &field.field_link[pos + 1..];
+                    } else {
+                        enum_name = &field.field_link;
+                    };
+
+                    imports.push(enum_name.to_string());
                 }
+                enum_name
             }
             _ => "string",
         };
@@ -143,6 +163,7 @@ pub fn transition_fields(
             field_type: proto_type.to_string(),
             field_desc: field.field_desc.clone(),
             field_index: field.field_index,
+            field_extend: field_extend,
         };
         proto_fields.push(proto_field);
     }
@@ -179,6 +200,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
                         field_index: 1,
+                        field_extend: String::new(),
                     },
                     ProtoFieldInfo {
                         is_key: false,
@@ -186,6 +208,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
                         field_index: 2,
+                        field_extend: String::new(),
                     },
                 ];
             }
@@ -198,6 +221,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
                         field_index: 1,
+                        field_extend: String::new(),
                     },
                     ProtoFieldInfo {
                         is_key: false,
@@ -205,6 +229,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
                         field_index: 2,
+                        field_extend: String::new(),
                     },
                     ProtoFieldInfo {
                         is_key: false,
@@ -212,6 +237,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
                         field_index: 3,
+                        field_extend: String::new(),
                     },
                 ];
             }
@@ -224,6 +250,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
                         field_index: 1,
+                        field_extend: String::new(),
                     },
                     ProtoFieldInfo {
                         is_key: false,
@@ -231,6 +258,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
                         field_index: 2,
+                        field_extend: String::new(),
                     },
                     ProtoFieldInfo {
                         is_key: false,
@@ -238,6 +266,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
                         field_index: 3,
+                        field_extend: String::new(),
                     },
                     ProtoFieldInfo {
                         is_key: false,
@@ -245,6 +274,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
                         field_index: 4,
+                        field_extend: String::new(),
                     },
                 ];
             }

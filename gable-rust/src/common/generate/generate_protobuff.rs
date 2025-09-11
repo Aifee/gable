@@ -24,6 +24,8 @@ pub struct ProtoFieldInfo {
     pub field_index: i32,
     // 扩展信息：枚举需要默认值
     pub field_extend: String,
+    // 数据类型
+    pub data_type: String,
 }
 
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
@@ -157,6 +159,11 @@ pub fn transition_fields(
             }
             _ => "string",
         };
+        let data_type = if field.field_type == EDataType::Enum {
+            "enum"
+        } else {
+            proto_type
+        };
         let proto_field: ProtoFieldInfo = ProtoFieldInfo {
             is_key: field.is_key,
             field_name: field.field_name.clone(),
@@ -164,6 +171,7 @@ pub fn transition_fields(
             field_desc: field.field_desc.clone(),
             field_index: field.field_index,
             field_extend: field_extend,
+            data_type: data_type.to_string(),
         };
         proto_fields.push(proto_field);
     }
@@ -201,6 +209,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_desc: "".to_string(),
                         field_index: 1,
                         field_extend: String::new(),
+                        data_type: String::new(),
                     },
                     ProtoFieldInfo {
                         is_key: false,
@@ -209,6 +218,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_desc: "".to_string(),
                         field_index: 2,
                         field_extend: String::new(),
+                        data_type: String::new(),
                     },
                 ];
             }
@@ -222,6 +232,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_desc: "".to_string(),
                         field_index: 1,
                         field_extend: String::new(),
+                        data_type: String::new(),
                     },
                     ProtoFieldInfo {
                         is_key: false,
@@ -230,6 +241,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_desc: "".to_string(),
                         field_index: 2,
                         field_extend: String::new(),
+                        data_type: String::new(),
                     },
                     ProtoFieldInfo {
                         is_key: false,
@@ -238,6 +250,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_desc: "".to_string(),
                         field_index: 3,
                         field_extend: String::new(),
+                        data_type: String::new(),
                     },
                 ];
             }
@@ -251,6 +264,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_desc: "".to_string(),
                         field_index: 1,
                         field_extend: String::new(),
+                        data_type: String::new(),
                     },
                     ProtoFieldInfo {
                         is_key: false,
@@ -259,6 +273,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_desc: "".to_string(),
                         field_index: 2,
                         field_extend: String::new(),
+                        data_type: String::new(),
                     },
                     ProtoFieldInfo {
                         is_key: false,
@@ -267,6 +282,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_desc: "".to_string(),
                         field_index: 3,
                         field_extend: String::new(),
+                        data_type: String::new(),
                     },
                     ProtoFieldInfo {
                         is_key: false,
@@ -275,6 +291,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
                         field_desc: "".to_string(),
                         field_index: 4,
                         field_extend: String::new(),
+                        data_type: String::new(),
                     },
                 ];
             }

@@ -79,12 +79,7 @@ fn encode_normal_data(
         for (index, field_info) in fields.iter().enumerate() {
             let field_number: u32 = (index + 1) as u32;
             if let Some(value) = item.get(&field_info.field_name) {
-                encode_field_value(
-                    field_number,
-                    value,
-                    &field_info.field_type,
-                    &mut item_buffer,
-                )?;
+                encode_field_value(field_number, value, &field_info.data_type, &mut item_buffer)?;
             }
         }
 
@@ -109,12 +104,7 @@ fn encode_kv_data(
     for field_info in field_infos {
         let field_number: u32 = field_info.field_index as u32;
         if let Some(value) = item.get(&field_info.field_name) {
-            encode_field_value(
-                field_number,
-                value,
-                &field_info.field_type,
-                &mut item_buffer,
-            )?;
+            encode_field_value(field_number, value, &field_info.data_type, &mut item_buffer)?;
         }
     }
 
@@ -124,11 +114,11 @@ fn encode_kv_data(
 fn encode_field_value(
     field_number: u32,
     value: &Value,
-    field_type: &str,
+    data_type: &str,
     buffer: &mut Vec<u8>,
 ) -> Result<(), Box<dyn Error>> {
-    if field_type.starts_with("repeated ") {
-        let inner_type: &str = &field_type[9..]; // 跳过 "repeated " 前缀
+    if data_type.starts_with("repeated ") {
+        let inner_type: &str = &data_type[9..]; // 跳过 "repeated " 前缀
         match inner_type {
             "int32" => {
                 if let Some(arr) = value.as_array() {
@@ -229,7 +219,7 @@ fn encode_field_value(
             }
         }
     } else {
-        match field_type {
+        match data_type {
             "int32" | "int64" | "time" => {
                 if let Some(n) = value.as_i64() {
                     // varint编码
@@ -241,7 +231,20 @@ fn encode_field_value(
             "enum" => {
                 let key: u32 = (field_number << 3) | 0; // wire type 0 for varint
                 encode_varint(key as u64, buffer);
-                encode_varint(0u64, buffer);
+                if let Some(n) = value.as_i64() {
+                    encode_varint(n as u64, buffer);
+                } else if let Some(s) = value.as_str() {
+                    // 尝试解析字符串为整数
+                    if let Ok(num) = s.parse::<i64>() {
+                        encode_varint(num as u64, buffer);
+                    } else {
+                        // 如果无法解析，则默认为0
+                        encode_varint(0u64, buffer);
+                    }
+                } else {
+                    // 默认值为0
+                    encode_varint(0u64, buffer);
+                }
             }
             "string" => {
                 if let Some(s) = value.as_str() {
@@ -260,7 +263,7 @@ fn encode_field_value(
                 // Vector类型需要特殊处理，它们是嵌套消息而不是字符串
                 if let Some(s) = value.as_str() {
                     // 解析Vector字符串格式 "{x,y}" 或 "{x,y,z}" 或 "{x,y,z,w}"
-                    let vector_data = parse_vector_data(s, field_type)?;
+                    let vector_data = parse_vector_data(s, data_type)?;
                     let key: u32 = (field_number << 3) | 2; // wire type 2 for length-delimited
                     encode_varint(key as u64, buffer);
                     encode_varint(vector_data.len() as u64, buffer);

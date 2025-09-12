@@ -1,9 +1,5 @@
 use crate::{
-    common::{
-        generate::generate_protobuff2::{self, ProtoFieldInfo},
-        setting::BuildSetting,
-        utils,
-    },
+    common::{generate::proto_field_info::ProtoFieldInfo, setting::BuildSetting, utils},
     gui::datas::{
         esheet_type::ESheetType,
         tree_data::{FieldInfo, TreeData},
@@ -22,7 +18,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
         return;
     }
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
-    let (_, proto_fields, _) = generate_protobuff2::transition_fields(&fields);
+    let (_, proto_fields, _) = ProtoFieldInfo::transition_fields_2(&fields, true);
     let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
         .join(format!("{}.bin", tree_data.content.sheetname));
     match tree_data.gable_type {

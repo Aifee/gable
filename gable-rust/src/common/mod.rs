@@ -14,4 +14,5 @@ pub mod generate {
     pub mod generate;
     pub mod generate_csharp;
     pub mod generate_protobuff2;
+    pub mod proto_field_info;
 }

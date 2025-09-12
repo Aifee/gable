@@ -1,6 +1,6 @@
 use crate::{
     common::{
-        convert::{convert_csv, convert_json, convert_protobuff},
+        convert::{convert_csv, convert_json, convert_protobuff2},
         setting::{self, BuildSetting},
     },
     gui::datas::{etarget_type::ETargetType, gables, tree_data::TreeData, tree_item::TreeItem},
@@ -24,7 +24,7 @@ pub fn from_target(setting: &BuildSetting) {
         match setting.target_type {
             ETargetType::Json => convert_json::to(setting, data),
             ETargetType::CSV => convert_csv::to(setting, data),
-            ETargetType::Protobuff => convert_protobuff::to(setting, data),
+            ETargetType::Protobuff => convert_protobuff2::to(setting, data),
         }
     }
 }
@@ -42,7 +42,7 @@ pub fn from_items(item: &TreeItem) {
             match setting.target_type {
                 ETargetType::Json => convert_json::to(setting, data),
                 ETargetType::CSV => convert_csv::to(setting, data),
-                ETargetType::Protobuff => convert_protobuff::to(setting, data),
+                ETargetType::Protobuff => convert_protobuff2::to(setting, data),
             }
         }
     }

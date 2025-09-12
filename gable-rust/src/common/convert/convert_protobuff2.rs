@@ -1,6 +1,6 @@
 use crate::{
     common::{
-        generate::generate_protobuff::{self, ProtoFieldInfo},
+        generate::generate_protobuff2::{self, ProtoFieldInfo},
         setting::BuildSetting,
         utils,
     },
@@ -22,7 +22,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
         return;
     }
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
-    let (_, proto_fields, _) = generate_protobuff::transition_fields(&fields);
+    let (_, proto_fields, _) = generate_protobuff2::transition_fields(&fields);
     let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
         .join(format!("{}.bin", tree_data.content.sheetname));
     match tree_data.gable_type {

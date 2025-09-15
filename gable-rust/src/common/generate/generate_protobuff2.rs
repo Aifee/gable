@@ -11,8 +11,14 @@ use tera::{Context, Tera};
 
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
-    let (imports, proto_fields, common_protos) = ProtoFieldInfo::transition_fields_2(&fields, true);
-    let tera_result: Result<Tera, tera::Error> = Tera::new("assets/templates/proto2/*");
+    let (imports, proto_fields, common_protos) =
+        ProtoFieldInfo::transition_fields_2(&fields, build_setting.is_proto_2);
+    let templat_path = if build_setting.is_proto_2 {
+        "assets/templates/proto2/*"
+    } else {
+        "assets/templates/proto3/*"
+    };
+    let tera_result: Result<Tera, tera::Error> = Tera::new(templat_path);
     if tera_result.is_err() {
         log::error!("创建Tera模板失败: {}", tera_result.unwrap_err());
         return;

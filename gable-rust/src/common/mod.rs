@@ -13,6 +13,7 @@ pub mod convert {
 pub mod generate {
     pub mod generate;
     pub mod generate_csharp;
+    pub mod generate_golang;
     pub mod generate_java;
     pub mod generate_protobuff;
     pub mod proto_field_info;

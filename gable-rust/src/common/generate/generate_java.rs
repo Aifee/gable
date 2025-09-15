@@ -43,9 +43,9 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
 
     let rendered_result: Result<String, tera::Error> = match tree_data.gable_type {
         ESheetType::Normal | ESheetType::Localize | ESheetType::KV => {
-            tera.render("template.java", &context)
+            tera.render("template.temp", &context)
         }
-        ESheetType::Enum => tera.render("enums.java", &context),
+        ESheetType::Enum => tera.render("enums.temp", &context),
     };
     if rendered_result.is_err() {
         log::error!("渲染模板错误: {}", rendered_result.unwrap_err());

@@ -1,6 +1,8 @@
 use crate::{
     common::{
-        generate::{generate_csharp, generate_golang, generate_java, generate_protobuff},
+        generate::{
+            generate_cpp, generate_csharp, generate_golang, generate_java, generate_protobuff,
+        },
         setting::{self, BuildSetting},
         utils,
     },
@@ -33,6 +35,7 @@ pub fn from_target(setting: &BuildSetting) {
             generate_protobuff::to(setting, data);
         } else {
             match setting.dev {
+                EDevelopType::Cpp => generate_cpp::to(setting, data),
                 EDevelopType::Golang => generate_golang::to(setting, data),
                 EDevelopType::Csharp => generate_csharp::to(setting, data),
                 EDevelopType::Java => generate_java::to(setting, data),

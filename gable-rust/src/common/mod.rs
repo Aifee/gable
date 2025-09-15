@@ -12,6 +12,7 @@ pub mod convert {
 
 pub mod generate {
     pub mod generate;
+    pub mod generate_cpp;
     pub mod generate_csharp;
     pub mod generate_golang;
     pub mod generate_java;

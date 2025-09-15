@@ -1,0 +1,13 @@
+// {{CLASS_NAME}}.js
+
+/**
+ * {{CLASS_NAME}}
+ */
+export const {{CLASS_NAME}} = {
+    {% for field in fields %}
+    /**
+     * {{field.field_desc}}
+     */
+    {{ field.field_name }}: {{ field.field_index }}{% if not loop.last %},{% endif %}
+    {% endfor %}
+};

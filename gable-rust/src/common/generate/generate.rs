@@ -1,6 +1,6 @@
 use crate::{
     common::{
-        generate::{generate_csharp, generate_protobuff2},
+        generate::{generate_csharp, generate_protobuff},
         setting::{self, BuildSetting},
         utils,
     },
@@ -30,7 +30,7 @@ pub fn from_target(setting: &BuildSetting) {
     }
     for (_, data) in datas.iter() {
         if setting.target_type == ETargetType::Protobuff {
-            generate_protobuff2::to(setting, data);
+            generate_protobuff::to(setting, data);
         } else {
             match setting.dev {
                 EDevelopType::Csharp => generate_csharp::to(setting, data),
@@ -60,7 +60,7 @@ pub fn from_items(item: &TreeItem) {
         }
         for (_, data) in datas.iter() {
             if setting.target_type == ETargetType::Protobuff {
-                generate_protobuff2::to(setting, data);
+                generate_protobuff::to(setting, data);
             } else {
                 match setting.dev {
                     EDevelopType::Csharp => generate_csharp::to(setting, data),

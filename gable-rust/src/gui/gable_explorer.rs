@@ -416,7 +416,8 @@ impl GableExplorer {
                     GableApp::convert_item_command(item.fullpath.clone());
                     ui.close();
                 }
-                if ui.button("生成脚本").clicked() {
+                if ui.button("生成代码").clicked() {
+                    GableApp::generate_item_command(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
@@ -451,7 +452,8 @@ impl GableExplorer {
                     GableApp::convert_item_command(item.fullpath.clone());
                     ui.close();
                 }
-                if ui.button("生成脚本").clicked() {
+                if ui.button("生成代码").clicked() {
+                    GableApp::generate_item_command(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();

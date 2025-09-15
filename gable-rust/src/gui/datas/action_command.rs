@@ -6,6 +6,8 @@ pub enum ECommandType {
     Open,
     // 根据表单导出数据
     ConvertItem,
+    // 根据源表单生成代码
+    GenerateItem,
     // 根据目标表单导出数据
     ConvertTarget,
 }

@@ -75,10 +75,18 @@ pub fn from_items(item: &TreeItem) {
                 generate_protobuff::to(setting, data);
             } else {
                 match setting.dev {
+                    EDevelopType::Cpp => generate_cpp::to(setting, data),
                     EDevelopType::Csharp => generate_csharp::to(setting, data),
-                    _ => {
-                        log::error!("当前开发环境不支持导出配置:{:?}", setting.dev);
-                    }
+                    EDevelopType::Cangjie => generate_cangjie::to(setting, data),
+                    EDevelopType::Golang => generate_golang::to(setting, data),
+                    EDevelopType::Java => generate_java::to(setting, data),
+                    EDevelopType::JavaScript => generate_javascript::to(setting, data),
+                    EDevelopType::Lua => generate_lua::to(setting, data),
+                    EDevelopType::Python => generate_python::to(setting, data),
+                    EDevelopType::TypeScript => generate_typescript::to(setting, data),
+                    // _ => {
+                    //     log::error!("当前开发环境不支持导出配置:{:?}", setting.dev);
+                    // }
                 }
             }
         }

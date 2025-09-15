@@ -199,6 +199,12 @@ impl GableApp {
         let action: ActionCommand = ActionCommand::new(ECommandType::ConvertItem, Some(full_path));
         commands.push_back(action);
     }
+    /// 生成代码（根据节点导出）
+    pub fn generate_item_command(full_path: String) {
+        let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
+        let action: ActionCommand = ActionCommand::new(ECommandType::GenerateItem, Some(full_path));
+        commands.push_back(action);
+    }
     // 导出配置（根据设置导出）
     pub fn convert_target_command(display_name: String) {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
@@ -229,6 +235,12 @@ impl GableApp {
                     if let Some(param) = command.param {
                         if let Some(tree_item) = gables::get_item_clone(&param) {
                             convert::from_items(&tree_item);
+                        }
+                    }
+                }
+                ECommandType::GenerateItem => {
+                    if let Some(param) = command.param {
+                        if let Some(tree_item) = gables::get_item_clone(&param) {
                             generate::from_items(&tree_item);
                         }
                     }

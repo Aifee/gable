@@ -1,6 +1,6 @@
 use crate::{
     common::{
-        generate::{generate_csharp, generate_protobuff},
+        generate::{generate_csharp, generate_java, generate_protobuff},
         setting::{self, BuildSetting},
         utils,
     },
@@ -34,6 +34,7 @@ pub fn from_target(setting: &BuildSetting) {
         } else {
             match setting.dev {
                 EDevelopType::Csharp => generate_csharp::to(setting, data),
+                EDevelopType::Java => generate_java::to(setting, data),
                 _ => {
                     log::error!("当前开发环境不支持导出配置:{:?}", setting.dev);
                 }

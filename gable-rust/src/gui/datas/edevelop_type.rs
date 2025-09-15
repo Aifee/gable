@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 pub enum EDevelopType {
     // C或C++语言
     Cpp = 0,
-    // C//语言
+    // C#语言
     Csharp = 1,
     // Cangjie语言
     Cangjie = 2,

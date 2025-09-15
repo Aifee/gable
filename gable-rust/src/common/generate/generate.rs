@@ -3,6 +3,7 @@ use crate::{
         generate::{
             generate_cangjie, generate_cpp, generate_csharp, generate_golang, generate_java,
             generate_javascript, generate_lua, generate_protobuff, generate_python,
+            generate_typescript,
         },
         setting::{self, BuildSetting},
         utils,
@@ -44,9 +45,10 @@ pub fn from_target(setting: &BuildSetting) {
                 EDevelopType::JavaScript => generate_javascript::to(setting, data),
                 EDevelopType::Lua => generate_lua::to(setting, data),
                 EDevelopType::Python => generate_python::to(setting, data),
-                _ => {
-                    log::error!("当前开发环境不支持导出配置:{:?}", setting.dev);
-                }
+                EDevelopType::TypeScript => generate_typescript::to(setting, data),
+                // _ => {
+                //     log::error!("当前开发环境不支持导出配置:{:?}", setting.dev);
+                // }
             }
         }
     }

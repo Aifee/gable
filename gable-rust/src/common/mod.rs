@@ -21,5 +21,6 @@ pub mod generate {
     pub mod generate_lua;
     pub mod generate_protobuff;
     pub mod generate_python;
+    pub mod generate_typescript;
     pub mod proto_field_info;
 }

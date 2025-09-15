@@ -1,0 +1,12 @@
+# {{CLASS_NAME}}.py
+
+from enum import IntEnum
+
+class {{CLASS_NAME}}(IntEnum):
+    """
+    {{CLASS_NAME}}
+    """
+    {% for field in fields %}
+    # {{field.field_desc}}
+    {{ field.field_name }} = {{ field.field_index }}{% if not loop.last %}
+    {% endif %}{% endfor %}

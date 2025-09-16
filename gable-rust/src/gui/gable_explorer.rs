@@ -234,9 +234,10 @@ impl GableExplorer {
                 }
                 ui.separator();
                 if ui.button("删除").clicked() {
-                    if gables::remove_item_file(&item.fullpath, &item.item_type) {
-                        gables::remove_tree_item(item.fullpath.clone());
-                    }
+                    // if gables::remove_item_file(&item.fullpath, &item.item_type) {
+                    //     gables::remove_tree_item(item.fullpath.clone());
+                    // }
+                    GableApp::delete_comand(item.fullpath.clone());
                     ui.close();
                 }
                 if ui.button("在资源管理器中显示").clicked() {
@@ -271,9 +272,10 @@ impl GableExplorer {
                     ui.close();
                 }
                 if ui.button("删除").clicked() {
-                    if gables::remove_item_file(&item.fullpath, &item.item_type) {
-                        gables::remove_tree_item(item.fullpath.clone());
-                    }
+                    // if gables::remove_item_file(&item.fullpath, &item.item_type) {
+                    //     gables::remove_tree_item(item.fullpath.clone());
+                    // }
+                    GableApp::delete_comand(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
@@ -307,9 +309,10 @@ impl GableExplorer {
                     ui.close();
                 }
                 if ui.button("删除").clicked() {
-                    if gables::remove_item_file(&item.fullpath, &item.item_type) {
-                        gables::remove_tree_item(item.fullpath.clone());
-                    }
+                    // if gables::remove_item_file(&item.fullpath, &item.item_type) {
+                    //     gables::remove_tree_item(item.fullpath.clone());
+                    // }
+                    GableApp::delete_comand(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();

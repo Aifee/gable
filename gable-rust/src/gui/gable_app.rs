@@ -242,6 +242,12 @@ impl GableApp {
             ActionCommand::new(ECommandType::Rename, Some(full_path), Some(new_name));
         commands.push_back(action);
     }
+
+    pub fn delete_comand(full_path: String) {
+        let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
+        let action: ActionCommand = ActionCommand::new(ECommandType::Delete, Some(full_path), None);
+        commands.push_back(action);
+    }
     /// 更新指令
     pub fn update_command(&mut self) {
         let mut commands = COMMANDS.lock().unwrap();
@@ -302,6 +308,13 @@ impl GableApp {
                     if let Some(full_path) = command.param1 {
                         if let Some(new_name) = command.param2 {
                             self.gable_explorer.rename(full_path, new_name);
+                        }
+                    }
+                }
+                ECommandType::Delete => {
+                    if let Some(full_path) = command.param1 {
+                        if gables::remove_item_file(&full_path) {
+                            gables::remove_tree_item(&full_path);
                         }
                     }
                 }

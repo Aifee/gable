@@ -18,6 +18,8 @@ pub enum ECommandType {
     CreateSheet,
     // 重命名
     Rename,
+    // 删除
+    Delete,
 }
 
 #[derive(Debug, Clone)]

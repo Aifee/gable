@@ -532,31 +532,31 @@ fn reload_gable(gable_file_paths: Option<Vec<String>>) -> bool {
 }
 
 pub fn update_item_display_name(fullpath: String, new_path: String, new_name: String) {
+    fn update_item_display_name_recursive(
+        items: &mut [TreeItem],
+        target_fullpath: &str,
+        new_path: String,
+        new_name: String,
+    ) -> bool {
+        for item in items.iter_mut() {
+            if item.fullpath == target_fullpath {
+                item.fullpath = new_path;
+                item.display_name = new_name.clone();
+                return true;
+            }
+            if update_item_display_name_recursive(
+                &mut item.children,
+                target_fullpath,
+                new_path.clone(),
+                new_name.clone(),
+            ) {
+                return true;
+            }
+        }
+        false
+    }
     let mut tree_items = TREE_ITEMS.write().unwrap();
     update_item_display_name_recursive(&mut tree_items, &fullpath, new_path, new_name);
-}
-fn update_item_display_name_recursive(
-    items: &mut [TreeItem],
-    target_fullpath: &str,
-    new_path: String,
-    new_name: String,
-) -> bool {
-    for item in items.iter_mut() {
-        if item.fullpath == target_fullpath {
-            item.fullpath = new_path;
-            item.display_name = new_name.clone();
-            return true;
-        }
-        if update_item_display_name_recursive(
-            &mut item.children,
-            target_fullpath,
-            new_path.clone(),
-            new_name.clone(),
-        ) {
-            return true;
-        }
-    }
-    false
 }
 
 // 删除tree_item对应的文件

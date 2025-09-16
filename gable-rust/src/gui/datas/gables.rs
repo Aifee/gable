@@ -565,8 +565,14 @@ pub fn remove_item(fullpath: &str, item_type: &EItemType) -> bool {
     let result = match item_type {
         // 文件夹不需要处理
         EItemType::Folder => {
-            log::info!("文件夹项目不需要删除操作: {}", fullpath);
-            true
+            // 删除整个文件夹及其内容
+            if let Err(e) = std::fs::remove_dir_all(fullpath) {
+                log::error!("删除文件夹失败: {} - {}", fullpath, e);
+                false
+            } else {
+                log::info!("成功删除文件夹: {}", fullpath);
+                true
+            }
         }
         // 删除sheet文件
         EItemType::Sheet => {

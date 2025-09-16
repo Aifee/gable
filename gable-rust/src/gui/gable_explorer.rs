@@ -233,6 +233,12 @@ impl GableExplorer {
                     ui.close();
                 }
                 ui.separator();
+                if ui.button("删除").clicked() {
+                    if gables::remove_item(&item.fullpath, &item.item_type) {
+                        gables::request_remove_item_from_tree(item.fullpath.clone());
+                    }
+                    ui.close();
+                }
                 if ui.button("在资源管理器中显示").clicked() {
                     if let Err(e) = utils::open_in_explorer(&item.fullpath) {
                         log::error!("无法打开资源管理器: {}", e);

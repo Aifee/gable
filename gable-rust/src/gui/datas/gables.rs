@@ -343,15 +343,14 @@ pub fn refresh_gables() {
     }
     *TREE_ITEMS.write().unwrap() = tree_items;
 }
-
-pub fn add_new_item(new_path: &Path, new_item: EItemType) {
+pub fn add_new_item(new_path: &Path, new_item: EItemType) -> bool {
     let mut tree_items = TREE_ITEMS.write().unwrap();
     if let Some(file_name) = new_path.file_name() {
         let file_name: String = file_name.to_string_lossy().to_string();
         let parent_path: String = match new_item {
             EItemType::Excel | EItemType::Folder => match new_path.parent() {
                 Some(parent) => parent.to_string_lossy().to_string(),
-                None => return,
+                None => return false,
             },
             EItemType::Sheet => {
                 if let Some(parent) = new_path.parent() {
@@ -362,27 +361,44 @@ pub fn add_new_item(new_path: &Path, new_item: EItemType) {
                         parent_dir
                     }
                 } else {
-                    return;
+                    return false;
                 }
             }
         };
+        let mut display_name: String = file_name.clone();
+        let mut fullpath: String = new_path.to_string_lossy().to_string();
         let mut tree_data: Option<TreeData> = None;
-        if new_item == EItemType::Sheet {
-            if let Some(gable_data) = excel_util::read_gable_file(&new_path.to_string_lossy()) {
-                let sheet_type: ESheetType = utils::determine_sheet_type(Path::new(&new_path));
-                tree_data = Some(TreeData {
-                    gable_type: sheet_type,
-                    file_name: file_name.clone(),
-                    content: gable_data,
-                });
+        match new_item {
+            EItemType::Excel => {
+                if let Some((e_n, _)) = utils::parse_gable_filename(&file_name) {
+                    display_name = e_n;
+                    // 修改Excel项的fullpath，使其与build_tree_from_path中的一致
+                    fullpath = format!("{}/{}", parent_path, display_name);
+                };
             }
+            EItemType::Sheet => {
+                if let Some((_, s_n)) = utils::parse_gable_filename(&file_name) {
+                    if let Some(s_n) = s_n {
+                        display_name = s_n;
+                    }
+                };
+                if let Some(gable_data) = excel_util::read_gable_file(&new_path.to_string_lossy()) {
+                    let sheet_type: ESheetType = utils::determine_sheet_type(Path::new(&new_path));
+                    tree_data = Some(TreeData {
+                        gable_type: sheet_type,
+                        file_name: display_name.clone(),
+                        content: gable_data,
+                    });
+                }
+            }
+            _ => {}
         }
         let new_item: TreeItem = TreeItem {
             item_type: new_item,
-            display_name: file_name.clone(),
+            display_name,
             link_name: Some(file_name),
             is_open: true,
-            fullpath: new_path.to_string_lossy().to_string(),
+            fullpath,
             parent: Some(parent_path.clone()),
             children: vec![],
             data: tree_data,
@@ -395,11 +411,17 @@ pub fn add_new_item(new_path: &Path, new_item: EItemType) {
                 (_, EItemType::Folder) => Ordering::Greater,
                 _ => a.display_name.cmp(&b.display_name),
             });
+            true
         } else {
-            if !add_item_to_parent(&mut tree_items, new_item, &parent_path) {
+            if add_item_to_parent(&mut tree_items, new_item, &parent_path) {
+                true
+            } else {
                 log::warn!("无法将新项添加到父项中: {}", parent_path);
+                false
             }
         }
+    } else {
+        false
     }
 }
 

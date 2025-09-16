@@ -538,28 +538,27 @@ impl GableExplorer {
     ) {
         parent_item.is_open = true;
         let parent_path: PathBuf = PathBuf::from(&parent_item.fullpath);
-
-        // 创建新的Excel文件路径
         let mut counter: i32 = 1;
-        let mut new_excel_path: PathBuf = parent_path.join("新建Excel.gable");
+        let mut new_excel_path: PathBuf = parent_path.join("新建Excel@新建Sheet.gable");
         while new_excel_path.exists() {
-            let new_name: String = format!("新建Excel({}).gable", counter);
+            let new_name: String = format!("新建Excel_{}@新建Sheet.gable", counter);
             new_excel_path = parent_path.join(new_name);
             counter += 1;
         }
-
-        // 创建空的Excel文件
-        match fs::File::create(&new_excel_path) {
+        match excel_util::write_gable_new(&new_excel_path) {
             Ok(_) => {
-                // 设置重命名状态，使新建的Excel文件进入编辑模式
                 *renaming_item = Some(new_excel_path.to_string_lossy().to_string());
                 *renaming_text = "新建Excel".to_string();
 
-                let new_path_clone = new_excel_path.clone();
-                // 延迟刷新，在下一次update中执行
+                let new_path_clone: PathBuf = new_excel_path.clone();
                 thread::spawn(move || {
                     thread::sleep(Duration::from_millis(100));
-                    gables::add_new_item(&new_path_clone, EItemType::Excel);
+                    if gables::add_new_item(&new_path_clone, EItemType::Excel) {
+                        // Excel项添加成功后再添加Sheet项
+                        gables::add_new_item(&new_path_clone, EItemType::Sheet);
+                    } else {
+                        log::error!("添加Excel项失败，无法继续添加Sheet项");
+                    }
                 });
             }
             Err(e) => {
@@ -585,7 +584,7 @@ impl GableExplorer {
             ));
             while new_sheet_path.exists() {
                 let new_name: String = format!(
-                    "{}@新建Sheet({}){}",
+                    "{}@新建Sheet_{}{}",
                     excel_name,
                     counter,
                     constant::GABLE_FILE_TYPE

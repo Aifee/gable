@@ -184,50 +184,62 @@ impl GableApp {
     /// 编辑指令
     pub fn editor_command(full_path: String) {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
-        let action: ActionCommand = ActionCommand::new(ECommandType::Edit, Some(full_path));
+        let action: ActionCommand = ActionCommand::new(ECommandType::Edit, Some(full_path), None);
         commands.push_back(action);
     }
     /// 打开指令
     pub fn open_command(full_path: String) {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
-        let action: ActionCommand = ActionCommand::new(ECommandType::Open, Some(full_path));
+        let action: ActionCommand = ActionCommand::new(ECommandType::Open, Some(full_path), None);
         commands.push_back(action);
     }
     /// 导出配置（根据节点导出）
     pub fn convert_item_command(full_path: String) {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
-        let action: ActionCommand = ActionCommand::new(ECommandType::ConvertItem, Some(full_path));
+        let action: ActionCommand =
+            ActionCommand::new(ECommandType::ConvertItem, Some(full_path), None);
         commands.push_back(action);
     }
     /// 生成代码（根据节点导出）
     pub fn generate_item_command(full_path: String) {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
-        let action: ActionCommand = ActionCommand::new(ECommandType::GenerateItem, Some(full_path));
+        let action: ActionCommand =
+            ActionCommand::new(ECommandType::GenerateItem, Some(full_path), None);
         commands.push_back(action);
     }
     // 导出配置（根据设置导出）
     pub fn convert_target_command(display_name: String) {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
         let action: ActionCommand =
-            ActionCommand::new(ECommandType::ConvertTarget, Some(display_name));
+            ActionCommand::new(ECommandType::ConvertTarget, Some(display_name), None);
         commands.push_back(action);
     }
 
     pub fn create_folder_command(full_path: String) {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
-        let action: ActionCommand = ActionCommand::new(ECommandType::CreateFolder, Some(full_path));
+        let action: ActionCommand =
+            ActionCommand::new(ECommandType::CreateFolder, Some(full_path), None);
         commands.push_back(action);
     }
 
     pub fn create_excel_command(full_path: String) {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
-        let action: ActionCommand = ActionCommand::new(ECommandType::CreateExcel, Some(full_path));
+        let action: ActionCommand =
+            ActionCommand::new(ECommandType::CreateExcel, Some(full_path), None);
         commands.push_back(action);
     }
 
     pub fn create_sheet_command(full_path: String) {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
-        let action: ActionCommand = ActionCommand::new(ECommandType::CreateSheet, Some(full_path));
+        let action: ActionCommand =
+            ActionCommand::new(ECommandType::CreateSheet, Some(full_path), None);
+        commands.push_back(action);
+    }
+
+    pub fn rename_command(full_path: String, new_name: String) {
+        let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
+        let action: ActionCommand =
+            ActionCommand::new(ECommandType::Rename, Some(full_path), Some(new_name));
         commands.push_back(action);
     }
     /// 更新指令
@@ -272,18 +284,25 @@ impl GableApp {
                     }
                 }
                 ECommandType::CreateFolder => {
-                    if let Some(param) = command.param1 {
-                        self.gable_explorer.create_folder(param);
+                    if let Some(full_path) = command.param1 {
+                        self.gable_explorer.create_folder(full_path);
                     }
                 }
                 ECommandType::CreateExcel => {
-                    if let Some(param) = command.param1 {
-                        self.gable_explorer.create_excel(param);
+                    if let Some(full_path) = command.param1 {
+                        self.gable_explorer.create_excel(full_path);
                     }
                 }
                 ECommandType::CreateSheet => {
-                    if let Some(param) = command.param1 {
-                        self.gable_explorer.create_sheet(param);
+                    if let Some(full_path) = command.param1 {
+                        self.gable_explorer.create_sheet(full_path);
+                    }
+                }
+                ECommandType::Rename => {
+                    if let Some(full_path) = command.param1 {
+                        if let Some(new_name) = command.param2 {
+                            self.gable_explorer.rename(full_path, new_name);
+                        }
                     }
                 }
             }

@@ -16,19 +16,23 @@ pub enum ECommandType {
     CreateExcel,
     // 创建Sheet
     CreateSheet,
+    // 重命名
+    Rename,
 }
 
 #[derive(Debug, Clone)]
 pub struct ActionCommand {
     pub com_type: ECommandType,
     pub param1: Option<String>,
+    pub param2: Option<String>,
 }
 
 impl ActionCommand {
-    pub fn new(com: ECommandType, arg1: Option<String>) -> Self {
+    pub fn new(com: ECommandType, arg1: Option<String>, arg2: Option<String>) -> Self {
         Self {
             com_type: com,
             param1: arg1,
+            param2: arg2,
         }
     }
 }

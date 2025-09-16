@@ -593,25 +593,18 @@ impl GableExplorer {
                 new_sheet_path = parent_path.join(new_name);
                 counter += 1;
             }
-            let file_name: String = new_sheet_path
-                .file_name()
-                .unwrap()
-                .to_string_lossy()
-                .to_string();
-            if let Some((_, sheet_name)) = utils::parse_gable_filename(&file_name) {
-                match excel_util::write_gable_new(&new_sheet_path, sheet_name.unwrap_or_default()) {
-                    Ok(_) => {
-                        *renaming_item = Some(new_sheet_path.to_string_lossy().to_string());
-                        *renaming_text = "新建Sheet".to_string();
-                        let new_path_clone: PathBuf = new_sheet_path.clone();
-                        thread::spawn(move || {
-                            thread::sleep(Duration::from_millis(100));
-                            gables::add_new_item(&new_path_clone, EItemType::Sheet);
-                        });
-                    }
-                    Err(e) => {
-                        log::error!("创建Sheet文件失败: {}", e);
-                    }
+            match excel_util::write_gable_new(&new_sheet_path) {
+                Ok(_) => {
+                    *renaming_item = Some(new_sheet_path.to_string_lossy().to_string());
+                    *renaming_text = "新建Sheet".to_string();
+                    let new_path_clone: PathBuf = new_sheet_path.clone();
+                    thread::spawn(move || {
+                        thread::sleep(Duration::from_millis(100));
+                        gables::add_new_item(&new_path_clone, EItemType::Sheet);
+                    });
+                }
+                Err(e) => {
+                    log::error!("创建Sheet文件失败: {}", e);
                 }
             }
         }

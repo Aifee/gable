@@ -28,7 +28,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
         create_common_proto(&tera, &common_protos, &build_setting.proto_target_path)
     }
     let mut context: Context = Context::new();
-    context.insert("CLASS_NAME", &tree_data.content.sheetname);
+    context.insert("CLASS_NAME", &tree_data.file_name);
     context.insert("fields", &proto_fields);
     context.insert("imports", &imports);
     let rendered_result: Result<String, tera::Error> = match tree_data.gable_type {
@@ -45,7 +45,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
 
     // 写入文件
     let target_path: PathBuf = utils::get_absolute_path(&build_setting.proto_target_path)
-        .join(format!("{}.proto", tree_data.content.sheetname));
+        .join(format!("{}.proto", tree_data.file_name));
 
     let result: Result<(), Error> = std::fs::write(&target_path, rendered);
     if result.is_err() {

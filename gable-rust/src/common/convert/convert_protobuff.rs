@@ -20,16 +20,12 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
     let (_, proto_fields, _) = ProtoFieldInfo::transition_fields_2(&fields, true);
     let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
-        .join(format!("{}.bin", tree_data.content.sheetname));
+        .join(format!("{}.bin", tree_data.file_name));
     match tree_data.gable_type {
         ESheetType::Normal | ESheetType::Localize => {
             if let Ok(encoded) = encode_normal_data(&value_data, &proto_fields) {
                 if let Err(e) = std::fs::write(&target_path, &encoded) {
-                    log::error!(
-                        "Normal表{}，写入二进制文件失败: {}",
-                        tree_data.content.sheetname,
-                        e
-                    );
+                    log::error!("Normal表{}，写入二进制文件失败: {}", tree_data.file_name, e);
                 } else {
                     log::info!(
                         "导出【{}】Protobuf二进制数据成功:{}",
@@ -42,11 +38,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
         ESheetType::KV => {
             if let Ok(encoded) = encode_kv_data(&value_data[0], &proto_fields) {
                 if let Err(e) = std::fs::write(&target_path, &encoded) {
-                    log::error!(
-                        "KV表【{}】写入二进制文件失败: {}",
-                        tree_data.content.sheetname,
-                        e
-                    );
+                    log::error!("KV表【{}】写入二进制文件失败: {}", tree_data.file_name, e);
                 } else {
                     log::info!(
                         "导出【{}】Protobuf二进制数据成功:{}",

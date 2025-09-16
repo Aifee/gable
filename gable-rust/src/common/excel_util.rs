@@ -75,7 +75,19 @@ pub fn write_excel(
     }
     for file_path in gable_files.iter() {
         if let Some(gable_data) = read_gable_file(file_path) {
-            let worksheet: &mut Worksheet = match workbook.new_sheet(&gable_data.sheetname) {
+            let filename = Path::new(file_path)
+                .file_name()
+                .unwrap_or_default()
+                .to_str()
+                .unwrap_or_default();
+            let (_, sheet_name) =
+                if let Some((excel_name, sheet_name)) = utils::parse_gable_filename(filename) {
+                    (excel_name, sheet_name.unwrap_or_default())
+                } else {
+                    log::error!("无法解析文件名: {}", filename);
+                    continue;
+                };
+            let worksheet: &mut Worksheet = match workbook.new_sheet(&sheet_name) {
                 Ok(sheet) => sheet,
                 Err(e) => {
                     log::error!("无法添加工作表到Excel文件: {}", e);
@@ -651,12 +663,12 @@ fn write_excel_cell_style(cell: &mut Cell, cell_data: &CellData) {
     }
 }
 
-pub fn write_gable_new(gable_path: &PathBuf, sheetname: String) -> Result<(), Box<dyn Error>> {
+pub fn write_gable_new(gable_path: &PathBuf) -> Result<(), Box<dyn Error>> {
     if gable_path.exists() {
         return Err("gable文件已存在".into());
     }
     let sheet_type: ESheetType = utils::determine_sheet_type(Path::new(&gable_path));
-    let gable_data: GableData = GableData::new(sheetname, sheet_type);
+    let gable_data: GableData = GableData::new(sheet_type);
     let json_data: String = serde_json::to_string_pretty(&gable_data)?;
     fs::write(&gable_path, json_data)?;
     Ok(())
@@ -684,7 +696,6 @@ pub fn write_gable(
         let sheet_name: String = worksheet.get_name().to_string();
         let (max_col, max_row) = worksheet.get_highest_column_and_row();
         let mut gable_data: GableData = GableData {
-            sheetname: sheet_name.clone(),
             max_row: max_row,
             max_col: max_col as u16,
             heads: BTreeMap::new(),

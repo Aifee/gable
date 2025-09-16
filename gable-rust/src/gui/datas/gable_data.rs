@@ -7,7 +7,6 @@ use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct GableData {
-    pub sheetname: String,
     pub max_row: u32,
     pub max_col: u16,
     pub heads: BTreeMap<u32, BTreeMap<u16, CellData>>,
@@ -15,16 +14,16 @@ pub struct GableData {
 }
 
 impl GableData {
-    pub fn new(sheetname: String, sheet_type: ESheetType) -> Self {
+    pub fn new(sheet_type: ESheetType) -> Self {
         match sheet_type {
-            ESheetType::Normal => Self::normal_template(sheetname),
-            ESheetType::KV => Self::kv_template(sheetname),
-            ESheetType::Enum => Self::enum_template(sheetname),
-            ESheetType::Localize => Self::localize_template(sheetname),
+            ESheetType::Normal => Self::normal_template(),
+            ESheetType::KV => Self::kv_template(),
+            ESheetType::Enum => Self::enum_template(),
+            ESheetType::Localize => Self::localize_template(),
         }
     }
 
-    fn normal_template(sheetname: String) -> GableData {
+    fn normal_template() -> GableData {
         let mut heads: BTreeMap<u32, BTreeMap<u16, CellData>> = BTreeMap::new();
         let mut desc_cols: BTreeMap<u16, CellData> = BTreeMap::new();
         desc_cols.insert(
@@ -77,7 +76,6 @@ impl GableData {
         );
         cells.insert(constant::TABLE_NORMAL_ROW_TOTAL, value_cols);
         GableData {
-            sheetname,
             max_row: constant::TABLE_NORMAL_ROW_TOTAL + 1,
             max_col: 1,
             heads: heads,
@@ -85,7 +83,7 @@ impl GableData {
         }
     }
 
-    fn kv_template(sheetname: String) -> GableData {
+    fn kv_template() -> GableData {
         let mut heads: BTreeMap<u32, BTreeMap<u16, CellData>> = BTreeMap::new();
         let mut cols: BTreeMap<u16, CellData> = BTreeMap::new();
         cols.insert(
@@ -150,7 +148,6 @@ impl GableData {
         );
         heads.insert(1, cols);
         GableData {
-            sheetname,
             max_row: constant::TABLE_KV_ROW_TOTAL,
             max_col: (constant::TABLE_KV_COL_DESC + 1) as u16,
             heads: heads,
@@ -158,7 +155,7 @@ impl GableData {
         }
     }
 
-    fn enum_template(sheetname: String) -> GableData {
+    fn enum_template() -> GableData {
         let mut heads: BTreeMap<u32, BTreeMap<u16, CellData>> = BTreeMap::new();
         let mut cols: BTreeMap<u16, CellData> = BTreeMap::new();
         cols.insert(
@@ -193,7 +190,6 @@ impl GableData {
         );
         heads.insert(1, cols);
         GableData {
-            sheetname,
             max_row: constant::TABLE_ENUM_ROW_TOTAL,
             max_col: (constant::TABLE_ENUM_COL_DESC + 1) as u16,
             heads: heads,
@@ -201,7 +197,7 @@ impl GableData {
         }
     }
 
-    fn localize_template(sheetname: String) -> GableData {
+    fn localize_template() -> GableData {
         let mut heads: BTreeMap<u32, BTreeMap<u16, CellData>> = BTreeMap::new();
         let mut desc_cols: BTreeMap<u16, CellData> = BTreeMap::new();
         desc_cols.insert(
@@ -240,7 +236,6 @@ impl GableData {
         );
         heads.insert(constant::TABLE_LOCALIZE_ROW_TYPE, type_cols);
         GableData {
-            sheetname,
             max_row: constant::TABLE_LOCALIZE_ROW_TOTAL,
             max_col: 1,
             heads: heads,

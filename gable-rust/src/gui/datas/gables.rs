@@ -121,23 +121,24 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     // 处理 .gable 文件
     for (excel_name, sheets) in gable_files {
         if sheets.len() == 1 && sheets[0].1.is_empty() {
-            let gable_content: Option<GableData> =
-                file_contents.get(&sheets[0].0).cloned().unwrap_or(None);
-            let sheet_type: ESheetType = utils::determine_sheet_type(Path::new(&sheets[0].0));
-            let tree_data: Option<TreeData> = gable_content.map(|content| TreeData {
-                gable_type: sheet_type,
-                content,
-            });
-            items.push(TreeItem {
-                item_type: EItemType::Excel,
-                display_name: excel_name.clone(),
-                link_name: Some(excel_name),
-                is_open: false,
-                fullpath: sheets[0].0.clone(),
-                parent: Some(path.to_string_lossy().to_string()),
-                children: vec![],
-                data: tree_data,
-            });
+            // let gable_content: Option<GableData> =
+            //     file_contents.get(&sheets[0].0).cloned().unwrap_or(None);
+            // let sheet_type: ESheetType = utils::determine_sheet_type(Path::new(&sheets[0].0));
+            // let tree_data: Option<TreeData> = gable_content.map(|content| TreeData {
+            //     gable_type: sheet_type,
+            //     content,
+            // });
+            // items.push(TreeItem {
+            //     item_type: EItemType::Excel,
+            //     display_name: excel_name.clone(),
+            //     link_name: Some(excel_name),
+            //     is_open: false,
+            //     fullpath: sheets[0].0.clone(),
+            //     parent: Some(path.to_string_lossy().to_string()),
+            //     children: vec![],
+            //     data: tree_data,
+            // });
+            log::warn!("不应该存在空sheet的excel{}", excel_name);
         } else {
             let excel_fullpath: String = format!("{}/{}", path.to_string_lossy(), excel_name);
             let mut children: Vec<TreeItem> = Vec::new();
@@ -152,6 +153,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                 let sheet_type: ESheetType = utils::determine_sheet_type(Path::new(&full_path));
                 let tree_data: Option<TreeData> = gable_content.map(|content| TreeData {
                     gable_type: sheet_type,
+                    file_name: sheet_name.clone(),
                     content,
                 });
 
@@ -370,6 +372,7 @@ pub fn add_new_item(new_path: &Path, new_item: EItemType) {
                 let sheet_type: ESheetType = utils::determine_sheet_type(Path::new(&new_path));
                 tree_data = Some(TreeData {
                     gable_type: sheet_type,
+                    file_name: file_name.clone(),
                     content: gable_data,
                 });
             }
@@ -465,8 +468,29 @@ fn reload_gable(gable_file_paths: Option<Vec<String>>) -> bool {
         ) -> bool {
             for item in items.iter_mut() {
                 if item.fullpath == file_path {
+                    let path: &Path = Path::new(&file_path);
+                    let gable_type = utils::determine_sheet_type(path);
+                    let file_name = if let Some(file_name) = path.file_name() {
+                        file_name.to_string_lossy().to_string()
+                    } else {
+                        log::error!("无法解析Excel文件名: {}", file_path);
+                        return false;
+                    };
+                    let sheet_name: String;
+                    if let Some((_, s_n)) = utils::parse_gable_filename(&file_name) {
+                        if let Some(s_n) = s_n {
+                            sheet_name = s_n;
+                        } else {
+                            log::error!("无法解析Sheet文件名: {}", file_name);
+                            return false;
+                        }
+                    } else {
+                        log::error!("无法解析Sheet文件名: {}", file_name);
+                        return false;
+                    };
                     item.data = new_data.map(|data: GableData| TreeData {
-                        gable_type: utils::determine_sheet_type(Path::new(&file_path)),
+                        gable_type,
+                        file_name: sheet_name,
                         content: data,
                     });
                     return true;
@@ -499,9 +523,6 @@ fn update_item_display_name_recursive(
         if item.fullpath == target_fullpath {
             item.fullpath = new_path;
             item.display_name = new_name.clone();
-            // if let Some(ref mut tree_data) = item.data {
-            //     tree_data.content.sheetname = new_name;
-            // }
             return true;
         }
         if update_item_display_name_recursive(

@@ -34,7 +34,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
     let tera: Tera = tera_result.unwrap();
     let mut context: Context = Context::new();
-    context.insert("CLASS_NAME", &tree_data.content.sheetname);
+    context.insert("CLASS_NAME", &tree_data.file_name);
     context.insert("fields", &cangjie_fields);
 
     // 收集导入的模块
@@ -53,7 +53,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
     let rendered: String = rendered_result.unwrap();
     let target_path: PathBuf = utils::get_absolute_path(&build_setting.script_path)
-        .join(format!("{}.cj", tree_data.content.sheetname));
+        .join(format!("{}.cj", tree_data.file_name));
 
     let result: Result<(), Error> = fs::write(&target_path, rendered);
     if result.is_err() {

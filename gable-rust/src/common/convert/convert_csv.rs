@@ -16,7 +16,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
 
     let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
-        .join(format!("{}.csv", tree_data.content.sheetname));
+        .join(format!("{}.csv", tree_data.file_name));
     let csv_data: Vec<Vec<String>> = to_csv_data(tree_data, &build_setting.keyword);
     // 创建CSV文件
     let file: Result<File, Error> = File::create(&target_path);

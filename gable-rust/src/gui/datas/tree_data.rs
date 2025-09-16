@@ -26,6 +26,7 @@ pub struct FieldInfo {
 #[derive(Debug, Clone)]
 pub struct TreeData {
     pub gable_type: ESheetType,
+    pub file_name: String,
     pub content: GableData,
 }
 

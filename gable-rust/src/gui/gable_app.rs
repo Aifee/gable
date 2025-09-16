@@ -212,45 +212,78 @@ impl GableApp {
             ActionCommand::new(ECommandType::ConvertTarget, Some(display_name));
         commands.push_back(action);
     }
+
+    pub fn create_folder_command(full_path: String) {
+        let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
+        let action: ActionCommand = ActionCommand::new(ECommandType::CreateFolder, Some(full_path));
+        commands.push_back(action);
+    }
+
+    pub fn create_excel_command(full_path: String) {
+        let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
+        let action: ActionCommand = ActionCommand::new(ECommandType::CreateExcel, Some(full_path));
+        commands.push_back(action);
+    }
+
+    pub fn create_sheet_command(full_path: String) {
+        let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
+        let action: ActionCommand = ActionCommand::new(ECommandType::CreateSheet, Some(full_path));
+        commands.push_back(action);
+    }
     /// 更新指令
     pub fn update_command(&mut self) {
         let mut commands = COMMANDS.lock().unwrap();
         while let Some(command) = commands.pop_front() {
             match command.com_type {
                 ECommandType::Edit => {
-                    if let Some(param) = command.param {
+                    if let Some(param) = command.param1 {
                         if let Some(tree_item) = gables::get_item_clone(&param) {
                             gables::command_edit_gable(&tree_item);
                         }
                     }
                 }
                 ECommandType::Open => {
-                    if let Some(param) = command.param {
+                    if let Some(param) = command.param1 {
                         if let Some(tree_item) = gables::find_item_clone(&param, EItemType::Excel) {
                             self.gable_form.open(&tree_item);
                         }
                     }
                 }
                 ECommandType::ConvertItem => {
-                    if let Some(param) = command.param {
+                    if let Some(param) = command.param1 {
                         if let Some(tree_item) = gables::get_item_clone(&param) {
                             convert::from_items(&tree_item);
                         }
                     }
                 }
                 ECommandType::GenerateItem => {
-                    if let Some(param) = command.param {
+                    if let Some(param) = command.param1 {
                         if let Some(tree_item) = gables::get_item_clone(&param) {
                             generate::from_items(&tree_item);
                         }
                     }
                 }
                 ECommandType::ConvertTarget => {
-                    if let Some(param) = command.param {
+                    if let Some(param) = command.param1 {
                         if let Some(setting) = setting::get_build_setting_with_name(&param) {
                             convert::from_target(&setting);
                             generate::from_target(&setting);
                         }
+                    }
+                }
+                ECommandType::CreateFolder => {
+                    if let Some(param) = command.param1 {
+                        self.gable_explorer.create_folder(param);
+                    }
+                }
+                ECommandType::CreateExcel => {
+                    if let Some(param) = command.param1 {
+                        self.gable_explorer.create_excel(param);
+                    }
+                }
+                ECommandType::CreateSheet => {
+                    if let Some(param) = command.param1 {
+                        self.gable_explorer.create_sheet(param);
                     }
                 }
             }

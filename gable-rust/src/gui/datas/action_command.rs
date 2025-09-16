@@ -10,19 +10,25 @@ pub enum ECommandType {
     GenerateItem,
     // 根据目标表单导出数据
     ConvertTarget,
+    // 创建文件夹
+    CreateFolder,
+    // 创建Excel
+    CreateExcel,
+    // 创建Sheet
+    CreateSheet,
 }
 
 #[derive(Debug, Clone)]
 pub struct ActionCommand {
     pub com_type: ECommandType,
-    pub param: Option<String>,
+    pub param1: Option<String>,
 }
 
 impl ActionCommand {
-    pub fn new(com: ECommandType, args: Option<String>) -> Self {
+    pub fn new(com: ECommandType, arg1: Option<String>) -> Self {
         Self {
             com_type: com,
-            param: args,
+            param1: arg1,
         }
     }
 }

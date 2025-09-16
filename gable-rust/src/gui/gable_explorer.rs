@@ -15,8 +15,7 @@ use std::{
     io::{Error, ErrorKind},
     mem,
     path::{Path, PathBuf},
-    thread,
-    time::{self, Duration},
+    thread, time,
 };
 
 pub struct GableExplorer {
@@ -64,11 +63,15 @@ impl GableExplorer {
                             eframe::egui::Sense::click_and_drag(),
                         )
                         .context_menu(|ui| {
+                            if ui.button("新建文件").clicked() {
+                                GableApp::create_excel_command(
+                                    setting::get_workspace().to_string_lossy().to_string(),
+                                );
+                                ui.close();
+                            }
                             if ui.button("新建文件夹").clicked() {
-                                Self::create_new_root_folder(
-                                    setting::get_workspace(),
-                                    &mut self.renaming_item,
-                                    &mut self.renaming_text,
+                                GableApp::create_folder_command(
+                                    setting::get_workspace().to_string_lossy().to_string(),
                                 );
                                 ui.close();
                             }
@@ -387,11 +390,11 @@ impl GableExplorer {
         match item.item_type {
             EItemType::Folder => {
                 if ui.button("新建文件").clicked() {
-                    Self::create_new_excel(item, renaming_item, renaming_text);
+                    GableApp::create_excel_command(item.fullpath.clone());
                     ui.close();
                 }
                 if ui.button("新建文件夹").clicked() {
-                    Self::create_new_folder_and_edit(item, renaming_item, renaming_text);
+                    GableApp::create_folder_command(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
@@ -404,7 +407,7 @@ impl GableExplorer {
             }
             EItemType::Excel => {
                 if ui.button("新建文件").clicked() {
-                    Self::create_new_sheet(item, renaming_item, renaming_text);
+                    GableApp::create_sheet_command(item.fullpath.clone());
                     ui.close();
                 }
                 if ui.button("编辑").clicked() {
@@ -479,104 +482,133 @@ impl GableExplorer {
         }
     }
 
-    /// 创建新文件夹并进入编辑状态
-    fn create_new_folder_and_edit(
-        parent_item: &mut TreeItem,
-        renaming_item: &mut Option<String>,
-        renaming_text: &mut String,
-    ) {
-        // 确保只在文件夹类型上创建
-        if parent_item.item_type != EItemType::Folder {
-            return;
-        }
-        parent_item.is_open = true;
-        let root_path: PathBuf = PathBuf::from(&parent_item.fullpath);
-        Self::create_new_root_folder(root_path, renaming_item, renaming_text);
-    }
-    /// 在根目录创建新文件夹
-    fn create_new_root_folder(
-        root_path: PathBuf,
-        renaming_item: &mut Option<String>,
-        renaming_text: &mut String,
-    ) {
-        let new_folder_path: PathBuf = Path::new(&root_path).join("新建文件夹");
-        let mut new_path: PathBuf = new_folder_path.clone();
-        let mut counter: i32 = 1;
-        while new_path.exists() {
-            let new_name: String = format!("新建文件夹({})", counter);
-            new_path = Path::new(&root_path).join(new_name);
-            counter += 1;
-        }
+    pub fn create_folder(&mut self, full_path: String) {
+        let tree_items = gables::TREE_ITEMS.read().unwrap();
+        let (is_folder, target_path) =
+            if let Some(parent_item) = gables::find_item_by_path(&tree_items, &full_path) {
+                if parent_item.item_type == EItemType::Folder {
+                    (true, Some(parent_item.fullpath.clone()))
+                } else {
+                    (false, None)
+                }
+            } else {
+                // 当找不到路径时，表示在根目录创建
+                (
+                    true,
+                    Some(setting::get_workspace().to_string_lossy().to_string()),
+                )
+            };
 
-        // 创建文件夹
-        match fs::create_dir_all(&new_path) {
-            Ok(_) => {
-                // 设置重命名状态，使新建的文件夹进入编辑模式
-                if let Some(file_name) = new_path.file_name() {
-                    *renaming_item = Some(new_path.to_string_lossy().to_string());
-                    *renaming_text = file_name.to_string_lossy().to_string();
+        // 释放读锁后再获取写锁
+        drop(tree_items);
 
-                    let new_path_clone = new_path.clone();
-                    // 延迟刷新，在下一次update中执行
-                    thread::spawn(move || {
-                        thread::sleep(Duration::from_millis(100));
-                        gables::add_new_item(&new_path_clone, EItemType::Folder);
-                    });
+        if is_folder {
+            let root_path: PathBuf = PathBuf::from(&target_path.unwrap());
+            let new_folder_path: PathBuf = Path::new(&root_path).join("新建文件夹");
+            let mut new_path: PathBuf = new_folder_path.clone();
+            let mut counter: i32 = 1;
+            while new_path.exists() {
+                let new_name: String = format!("新建文件夹({})", counter);
+                new_path = Path::new(&root_path).join(new_name);
+                counter += 1;
+            }
+
+            match fs::create_dir_all(&new_path) {
+                Ok(_) => {
+                    if let Some(file_name) = new_path.file_name() {
+                        gables::add_new_item(&new_path, EItemType::Folder);
+                        self.renaming_item = Some(new_path.to_string_lossy().to_string());
+                        self.renaming_text = file_name.to_string_lossy().to_string();
+                    }
+                }
+                Err(e) => {
+                    log::error!("创建文件夹失败:{}", e);
                 }
             }
-            Err(e) => {
-                log::error!("创建文件夹失败:{}", e);
-            }
         }
     }
+    pub fn create_excel(&mut self, full_path: String) {
+        let tree_items = gables::TREE_ITEMS.read().unwrap();
+        let (is_folder, target_path) =
+            if let Some(parent_item) = gables::find_item_by_path(&tree_items, &full_path) {
+                if parent_item.item_type == EItemType::Folder {
+                    (true, Some(parent_item.fullpath.clone()))
+                } else {
+                    (false, None)
+                }
+            } else {
+                // 当找不到路径时，表示在根目录创建
+                (
+                    true,
+                    Some(setting::get_workspace().to_string_lossy().to_string()),
+                )
+            };
 
-    /// 在文件夹下创建新的Excel文件
-    fn create_new_excel(
-        parent_item: &mut TreeItem,
-        renaming_item: &mut Option<String>,
-        renaming_text: &mut String,
-    ) {
-        parent_item.is_open = true;
-        let parent_path: PathBuf = PathBuf::from(&parent_item.fullpath);
-        let mut counter: i32 = 1;
-        let mut new_excel_path: PathBuf = parent_path.join("新建Excel@新建Sheet.gable");
-        while new_excel_path.exists() {
-            let new_name: String = format!("新建Excel_{}@新建Sheet.gable", counter);
-            new_excel_path = parent_path.join(new_name);
-            counter += 1;
-        }
-        match excel_util::write_gable_new(&new_excel_path) {
-            Ok(_) => {
-                *renaming_item = Some(new_excel_path.to_string_lossy().to_string());
-                *renaming_text = "新建Excel".to_string();
+        // 释放读锁后再获取写锁
+        drop(tree_items);
 
-                let new_path_clone: PathBuf = new_excel_path.clone();
-                thread::spawn(move || {
-                    thread::sleep(Duration::from_millis(100));
-                    if gables::add_new_item(&new_path_clone, EItemType::Excel) {
-                        // Excel项添加成功后再添加Sheet项
-                        gables::add_new_item(&new_path_clone, EItemType::Sheet);
-                    } else {
-                        log::error!("添加Excel项失败，无法继续添加Sheet项");
-                    }
-                });
-            }
-            Err(e) => {
-                log::error!("创建Excel文件失败: {}", e);
-            }
-        }
-    }
-
-    /// 在Excel文件下创建新的Sheet
-    fn create_new_sheet(
-        parent_item: &mut TreeItem,
-        renaming_item: &mut Option<String>,
-        renaming_text: &mut String,
-    ) {
-        parent_item.is_open = true;
-        if let Some(parent_path) = Path::new(&parent_item.fullpath).parent() {
+        if is_folder {
+            let parent_path: PathBuf = PathBuf::from(&target_path.unwrap());
             let mut counter: i32 = 1;
-            let excel_name: &String = &parent_item.display_name;
+            let mut new_excel_path: PathBuf = parent_path.join("新建Excel@新建Sheet.gable");
+            while new_excel_path.exists() {
+                let new_name: String = format!("新建Excel_{}@新建Sheet.gable", counter);
+                new_excel_path = parent_path.join(new_name);
+                counter += 1;
+            }
+
+            match excel_util::write_gable_new(&new_excel_path) {
+                Ok(_) => {
+                    gables::add_new_item(&new_excel_path, EItemType::Excel);
+                    gables::add_new_item(&new_excel_path, EItemType::Sheet);
+                    let file_name_str = new_excel_path
+                        .file_name()
+                        .unwrap_or_default()
+                        .to_string_lossy()
+                        .to_string();
+                    let excel_name = if let Some((excel_name, _)) =
+                        utils::parse_gable_filename(&file_name_str)
+                    {
+                        excel_name
+                    } else {
+                        "新建Excel".to_string()
+                    };
+                    let excel_virtual_path = Path::new(&parent_path)
+                        .join(&excel_name)
+                        .to_string_lossy()
+                        .to_string();
+                    self.renaming_item = Some(excel_virtual_path);
+                    self.renaming_text = excel_name;
+                }
+                Err(e) => {
+                    log::error!("创建Excel文件失败: {}", e);
+                }
+            }
+        }
+    }
+
+    pub fn create_sheet(&mut self, full_path: String) {
+        let tree_items = gables::TREE_ITEMS.read().unwrap();
+        let is_excel = if let Some(parent_item) = gables::find_item_by_path(&tree_items, &full_path)
+        {
+            parent_item.item_type == EItemType::Excel
+        } else {
+            false
+        };
+
+        // 释放读锁后再获取写锁
+        drop(tree_items);
+
+        if is_excel {
+            let parent_path: PathBuf = PathBuf::from(&full_path).parent().unwrap().to_path_buf();
+            let tree_items = gables::TREE_ITEMS.read().unwrap();
+            let excel_name = gables::find_item_by_path(&tree_items, &full_path)
+                .unwrap()
+                .display_name
+                .clone();
+            drop(tree_items);
+
+            let mut counter: i32 = 1;
             let mut new_sheet_path: PathBuf = parent_path.join(format!(
                 "{}@新建Sheet{}",
                 excel_name,
@@ -592,15 +624,12 @@ impl GableExplorer {
                 new_sheet_path = parent_path.join(new_name);
                 counter += 1;
             }
+
             match excel_util::write_gable_new(&new_sheet_path) {
                 Ok(_) => {
-                    *renaming_item = Some(new_sheet_path.to_string_lossy().to_string());
-                    *renaming_text = "新建Sheet".to_string();
-                    let new_path_clone: PathBuf = new_sheet_path.clone();
-                    thread::spawn(move || {
-                        thread::sleep(Duration::from_millis(100));
-                        gables::add_new_item(&new_path_clone, EItemType::Sheet);
-                    });
+                    gables::add_new_item(&new_sheet_path, EItemType::Sheet);
+                    self.renaming_item = Some(new_sheet_path.to_string_lossy().to_string());
+                    self.renaming_text = "新建Sheet".to_string();
                 }
                 Err(e) => {
                     log::error!("创建Sheet文件失败: {}", e);

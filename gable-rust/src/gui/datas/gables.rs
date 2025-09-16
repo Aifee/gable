@@ -202,25 +202,25 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     items
 }
 
+pub fn find_item_by_path<'a>(items: &'a [TreeItem], path: &str) -> Option<&'a TreeItem> {
+    for item in items {
+        if item.fullpath == path {
+            return Some(item);
+        }
+
+        if let Some(found) = find_item_by_path(&item.children, path) {
+            return Some(found);
+        }
+    }
+    None
+}
+
 // 根据路径查找树节点，当节点和item_type不匹配时，往父节点查找
 pub fn find_item_clone(path: &str, item_type: EItemType) -> Option<TreeItem> {
-    fn find_item_by_path_recursive<'a>(items: &'a [TreeItem], path: &str) -> Option<&'a TreeItem> {
-        for item in items {
-            if item.fullpath == path {
-                return Some(item);
-            }
-
-            if let Some(found) = find_item_by_path_recursive(&item.children, path) {
-                return Some(found);
-            }
-        }
-        None
-    }
-
     fn find_parent_item(path: &str, target_type: EItemType) -> Option<TreeItem> {
         // 先找到当前项
         let tree_items = TREE_ITEMS.read().unwrap();
-        let item: &TreeItem = find_item_by_path_recursive(&tree_items, path)?;
+        let item: &TreeItem = find_item_by_path(&tree_items, path)?;
         if item.item_type == target_type {
             return Some(item.clone());
         }
@@ -234,7 +234,7 @@ pub fn find_item_clone(path: &str, item_type: EItemType) -> Option<TreeItem> {
     }
 
     let tree_items = TREE_ITEMS.read().unwrap();
-    let item: &TreeItem = find_item_by_path_recursive(&tree_items, path)?;
+    let item: &TreeItem = find_item_by_path(&tree_items, path)?;
 
     if item.item_type == item_type {
         Some(item.clone())

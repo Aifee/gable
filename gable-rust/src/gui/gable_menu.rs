@@ -1,3 +1,5 @@
+use crate::common::convert::convert;
+use crate::common::generate::generate;
 use crate::gui::datas::gables;
 use crate::{common::setting, gui::gable_popup};
 use eframe::egui::{Color32, Context, MenuBar, TopBottomPanel, ViewportCommand, Visuals};
@@ -82,7 +84,10 @@ impl GableMenu {
                     if ui.button("编译设置").clicked() {
                         gable_popup::open_window(gable_popup::WINDOW_BUILD_SETTING);
                     }
-                    if ui.button("快速编译").clicked() {}
+                    if ui.button("快速编译").clicked() {
+                        convert::from_all();
+                        generate::from_all();
+                    }
                 });
                 ui.menu_button("选择", |ui| if ui.button("导入Excel").clicked() {});
                 ui.menu_button("帮助", |ui| {

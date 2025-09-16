@@ -7,6 +7,13 @@ use crate::{
 };
 use std::collections::HashMap;
 
+pub fn from_all() {
+    let settings = setting::APP_SETTINGS.read().unwrap();
+    for setting in settings.build_settings.iter() {
+        from_target(setting);
+    }
+}
+
 pub fn from_target(setting: &BuildSetting) {
     let items = gables::TREE_ITEMS.read().unwrap();
     let mut datas: HashMap<String, &TreeData> = HashMap::new();

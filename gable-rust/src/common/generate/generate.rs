@@ -16,6 +16,13 @@ use crate::{
 use std::process::Command;
 use std::{collections::HashMap, path::PathBuf};
 
+pub fn from_all() {
+    let settings = setting::APP_SETTINGS.read().unwrap();
+    for setting in settings.build_settings.iter() {
+        from_target(setting);
+    }
+}
+
 pub fn from_target(setting: &BuildSetting) {
     if !setting.generate_script {
         return;

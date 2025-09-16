@@ -559,9 +559,7 @@ fn update_item_display_name_recursive(
     false
 }
 
-pub fn remove_item(fullpath: &str, item_type: &EItemType) -> bool {
-    log::info!("删除条目: {:?} {:?}", item_type, fullpath);
-
+pub fn remove_item_file(fullpath: &str, item_type: &EItemType) -> bool {
     let result = match item_type {
         // 文件夹不需要处理
         EItemType::Folder => {
@@ -637,34 +635,30 @@ pub fn remove_item(fullpath: &str, item_type: &EItemType) -> bool {
 }
 
 /// 使用通道或其他机制在下一帧更新，避免锁冲突
-pub fn request_remove_item_from_tree(fullpath: String) {
+pub fn remove_tree_item(fullpath: String) {
+    fn remove_item_from_tree_recursive(items: &mut Vec<TreeItem>, fullpath: &str) -> bool {
+        // 先尝试直接在当前层级找到并移除
+        if let Some(pos) = items.iter().position(|item| item.fullpath == fullpath) {
+            items.remove(pos);
+            return true;
+        }
+
+        // 否则在子项中递归查找
+        for item in items.iter_mut() {
+            if remove_item_from_tree_recursive(&mut item.children, fullpath) {
+                return true;
+            }
+        }
+        false
+    }
     // 使用线程来延迟执行删除操作，避免当前上下文中的锁冲突
     std::thread::spawn(move || {
         // 等待一小段时间，让当前操作完成
         std::thread::sleep(std::time::Duration::from_millis(100));
-
         // 然后执行删除
         let mut tree_items = TREE_ITEMS.write().unwrap();
         remove_item_from_tree_recursive(&mut tree_items, &fullpath);
     });
-}
-
-/// 递归地从树结构中移除条目
-fn remove_item_from_tree_recursive(items: &mut Vec<TreeItem>, fullpath: &str) -> bool {
-    // 先尝试直接在当前层级找到并移除
-    if let Some(pos) = items.iter().position(|item| item.fullpath == fullpath) {
-        items.remove(pos);
-        return true;
-    }
-
-    // 否则在子项中递归查找
-    for item in items.iter_mut() {
-        if remove_item_from_tree_recursive(&mut item.children, fullpath) {
-            return true;
-        }
-    }
-
-    false
 }
 
 /// 编辑gable文件

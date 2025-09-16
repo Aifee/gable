@@ -234,8 +234,8 @@ impl GableExplorer {
                 }
                 ui.separator();
                 if ui.button("删除").clicked() {
-                    if gables::remove_item(&item.fullpath, &item.item_type) {
-                        gables::request_remove_item_from_tree(item.fullpath.clone());
+                    if gables::remove_item_file(&item.fullpath, &item.item_type) {
+                        gables::remove_tree_item(item.fullpath.clone());
                     }
                     ui.close();
                 }
@@ -271,8 +271,8 @@ impl GableExplorer {
                     ui.close();
                 }
                 if ui.button("删除").clicked() {
-                    if gables::remove_item(&item.fullpath, &item.item_type) {
-                        gables::request_remove_item_from_tree(item.fullpath.clone());
+                    if gables::remove_item_file(&item.fullpath, &item.item_type) {
+                        gables::remove_tree_item(item.fullpath.clone());
                     }
                     ui.close();
                 }
@@ -307,8 +307,8 @@ impl GableExplorer {
                     ui.close();
                 }
                 if ui.button("删除").clicked() {
-                    if gables::remove_item(&item.fullpath, &item.item_type) {
-                        gables::request_remove_item_from_tree(item.fullpath.clone());
+                    if gables::remove_item_file(&item.fullpath, &item.item_type) {
+                        gables::remove_tree_item(item.fullpath.clone());
                     }
                     ui.close();
                 }

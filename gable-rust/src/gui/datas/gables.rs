@@ -360,7 +360,7 @@ pub fn refresh_gables() {
     let root_path: &Path = &setting::get_workspace();
     let mut tree_items: Vec<TreeItem> = Vec::new();
     if root_path.exists() && root_path.is_dir() {
-        let children = build_tree_from_path(root_path);
+        let children: Vec<TreeItem> = build_tree_from_path(root_path);
         tree_items.extend(children);
     }
     *TREE_ITEMS.write().unwrap() = tree_items;
@@ -368,14 +368,29 @@ pub fn refresh_gables() {
 
 pub fn add_new_item(new_path: &Path, new_item: EItemType) {
     let mut tree_items = TREE_ITEMS.write().unwrap();
+    log::info!("new_path: {}", new_path.to_string_lossy().to_string());
     if let Some(file_name) = new_path.file_name() {
         let file_name: String = file_name.to_string_lossy().to_string();
-        let parent_path = match new_path.parent() {
-            Some(parent) => parent.to_string_lossy().to_string(),
-            None => return,
+        let parent_path: String = match new_item {
+            EItemType::Excel | EItemType::Folder => match new_path.parent() {
+                Some(parent) => parent.to_string_lossy().to_string(),
+                None => return,
+            },
+            EItemType::Sheet => {
+                if let Some(parent) = new_path.parent() {
+                    let parent_dir: String = parent.to_string_lossy().to_string();
+                    if let Some((excel_name, _)) = parse_gable_filename(&file_name) {
+                        format!("{}/{}", parent_dir, excel_name)
+                    } else {
+                        parent_dir
+                    }
+                } else {
+                    return;
+                }
+            }
         };
 
-        let new_item = TreeItem {
+        let new_item: TreeItem = TreeItem {
             item_type: new_item,
             display_name: file_name.clone(),
             link_name: Some(file_name),
@@ -394,7 +409,9 @@ pub fn add_new_item(new_path: &Path, new_item: EItemType) {
                 _ => a.display_name.cmp(&b.display_name),
             });
         } else {
-            add_item_to_parent(&mut tree_items, new_item, &parent_path);
+            if !add_item_to_parent(&mut tree_items, new_item, &parent_path) {
+                log::warn!("无法将新项添加到父项中: {}", parent_path);
+            }
         }
     }
 }

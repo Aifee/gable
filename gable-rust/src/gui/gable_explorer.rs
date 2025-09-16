@@ -387,7 +387,7 @@ impl GableExplorer {
         match item.item_type {
             EItemType::Folder => {
                 if ui.button("新建文件").clicked() {
-                    // TODO: 实现新建文件逻辑
+                    Self::create_new_excel(item, renaming_item, renaming_text);
                     ui.close();
                 }
                 if ui.button("新建文件夹").clicked() {
@@ -404,7 +404,7 @@ impl GableExplorer {
             }
             EItemType::Excel => {
                 if ui.button("新建文件").clicked() {
-                    // TODO: 实现新建文件逻辑
+                    Self::create_new_sheet(item, renaming_item, renaming_text);
                     ui.close();
                 }
                 if ui.button("编辑").clicked() {
@@ -526,6 +526,88 @@ impl GableExplorer {
             }
             Err(e) => {
                 log::error!("创建文件夹失败:{}", e);
+            }
+        }
+    }
+
+    /// 在文件夹下创建新的Excel文件
+    fn create_new_excel(
+        parent_item: &mut TreeItem,
+        renaming_item: &mut Option<String>,
+        renaming_text: &mut String,
+    ) {
+        parent_item.is_open = true;
+        let parent_path: PathBuf = PathBuf::from(&parent_item.fullpath);
+
+        // 创建新的Excel文件路径
+        let mut counter: i32 = 1;
+        let mut new_excel_path: PathBuf = parent_path.join("新建Excel.gable");
+        while new_excel_path.exists() {
+            let new_name: String = format!("新建Excel({}).gable", counter);
+            new_excel_path = parent_path.join(new_name);
+            counter += 1;
+        }
+
+        // 创建空的Excel文件
+        match fs::File::create(&new_excel_path) {
+            Ok(_) => {
+                // 设置重命名状态，使新建的Excel文件进入编辑模式
+                *renaming_item = Some(new_excel_path.to_string_lossy().to_string());
+                *renaming_text = "新建Excel".to_string();
+
+                let new_path_clone = new_excel_path.clone();
+                // 延迟刷新，在下一次update中执行
+                thread::spawn(move || {
+                    thread::sleep(Duration::from_millis(100));
+                    gables::add_new_item(&new_path_clone, EItemType::Excel);
+                });
+            }
+            Err(e) => {
+                log::error!("创建Excel文件失败: {}", e);
+            }
+        }
+    }
+
+    /// 在Excel文件下创建新的Sheet
+    fn create_new_sheet(
+        parent_item: &mut TreeItem,
+        renaming_item: &mut Option<String>,
+        renaming_text: &mut String,
+    ) {
+        parent_item.is_open = true;
+        if let Some(parent_path) = Path::new(&parent_item.fullpath).parent() {
+            let mut counter: i32 = 1;
+            let excel_name: &String = &parent_item.display_name;
+            let mut new_sheet_path: PathBuf = parent_path.join(format!(
+                "{}@新建Sheet{}",
+                excel_name,
+                constant::GABLE_FILE_TYPE
+            ));
+            while new_sheet_path.exists() {
+                let new_name: String = format!(
+                    "{}@新建Sheet({}){}",
+                    excel_name,
+                    counter,
+                    constant::GABLE_FILE_TYPE
+                );
+                new_sheet_path = parent_path.join(new_name);
+                counter += 1;
+            }
+            match fs::File::create(&new_sheet_path) {
+                Ok(_) => {
+                    // 设置重命名状态，使新建的Sheet文件进入编辑模式
+                    *renaming_item = Some(new_sheet_path.to_string_lossy().to_string());
+                    *renaming_text = "新建Sheet".to_string();
+
+                    let new_path_clone: PathBuf = new_sheet_path.clone();
+                    thread::spawn(move || {
+                        thread::sleep(Duration::from_millis(100));
+                        gables::add_new_item(&new_path_clone, EItemType::Sheet);
+                    });
+                }
+                Err(e) => {
+                    log::error!("创建Sheet文件失败: {}", e);
+                }
             }
         }
     }

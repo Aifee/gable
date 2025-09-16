@@ -62,12 +62,26 @@ impl GableData {
             ),
         );
         heads.insert(constant::TABLE_NORMAL_ROW_TYPE, type_cols);
+
+        let mut cells: BTreeMap<u32, BTreeMap<u16, CellData>> = BTreeMap::new();
+        let mut value_cols: BTreeMap<u16, CellData> = BTreeMap::new();
+        value_cols.insert(
+            1,
+            CellData::new(
+                constant::TABLE_NORMAL_ROW_TOTAL,
+                1,
+                "1".to_string(),
+                None,
+                None,
+            ),
+        );
+        cells.insert(constant::TABLE_NORMAL_ROW_TOTAL, value_cols);
         GableData {
             sheetname,
-            max_row: constant::TABLE_NORMAL_ROW_TOTAL,
+            max_row: constant::TABLE_NORMAL_ROW_TOTAL + 1,
             max_col: 1,
             heads: heads,
-            cells: BTreeMap::new(),
+            cells: cells,
         }
     }
 

@@ -367,7 +367,7 @@ pub fn add_new_item(new_path: &Path, new_item: EItemType) {
         let mut tree_data: Option<TreeData> = None;
         if new_item == EItemType::Sheet {
             if let Some(gable_data) = excel_util::read_gable_file(&new_path.to_string_lossy()) {
-                let sheet_type = utils::determine_sheet_type(Path::new(&new_path));
+                let sheet_type: ESheetType = utils::determine_sheet_type(Path::new(&new_path));
                 tree_data = Some(TreeData {
                     gable_type: sheet_type,
                     content: gable_data,
@@ -498,7 +498,10 @@ fn update_item_display_name_recursive(
     for item in items.iter_mut() {
         if item.fullpath == target_fullpath {
             item.fullpath = new_path;
-            item.display_name = new_name;
+            item.display_name = new_name.clone();
+            // if let Some(ref mut tree_data) = item.data {
+            //     tree_data.content.sheetname = new_name;
+            // }
             return true;
         }
         if update_item_display_name_recursive(

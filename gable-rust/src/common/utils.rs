@@ -171,6 +171,26 @@ pub fn is_name_exists(full_path: &str, new_name: &str) -> bool {
         false
     }
 }
+
+/// 解析 .gable 文件名，返回 (excel_name, sheet_name) 或仅 excel_name
+pub fn parse_gable_filename(filename: &str) -> Option<(String, Option<String>)> {
+    if !filename.ends_with(constant::GABLE_FILE_TYPE) {
+        return None;
+    }
+
+    let name_without_ext: &str = &filename[..filename.len() - constant::GABLE_FILE_TYPE.len()];
+
+    if let Some(pos) = name_without_ext.find('@') {
+        // 格式为 excelname@sheetname
+        let excel_name: String = name_without_ext[..pos].to_string();
+        let sheet_name: String = name_without_ext[pos + 1..].to_string();
+        Some((excel_name, Some(sheet_name)))
+    } else {
+        // 格式为 excelname
+        Some((name_without_ext.to_string(), None))
+    }
+}
+
 pub fn open_in_explorer(path: &str) -> std::io::Result<()> {
     let path_obj = Path::new(path);
     let (explorer_path, select_path) = if path_obj.is_file() {

@@ -651,6 +651,17 @@ fn write_excel_cell_style(cell: &mut Cell, cell_data: &CellData) {
     }
 }
 
+pub fn write_gable_new(gable_path: &PathBuf, sheetname: String) -> Result<(), Box<dyn Error>> {
+    if gable_path.exists() {
+        return Err("gable文件已存在".into());
+    }
+    let sheet_type: ESheetType = utils::determine_sheet_type(Path::new(&gable_path));
+    let gable_data: GableData = GableData::new(sheetname, sheet_type);
+    let json_data: String = serde_json::to_string_pretty(&gable_data)?;
+    fs::write(&gable_path, json_data)?;
+    Ok(())
+}
+
 // Excel数据写入gable文件
 pub fn write_gable(
     excel_file: &str,

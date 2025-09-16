@@ -1,4 +1,7 @@
-use crate::{common::constant, gui::datas::cell_data::CellData};
+use crate::{
+    common::constant,
+    gui::datas::{cell_data::CellData, esheet_type::ESheetType},
+};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -12,6 +15,225 @@ pub struct GableData {
 }
 
 impl GableData {
+    pub fn new(sheetname: String, sheet_type: ESheetType) -> Self {
+        match sheet_type {
+            ESheetType::Normal => Self::normal_template(sheetname),
+            ESheetType::KV => Self::kv_template(sheetname),
+            ESheetType::Enum => Self::enum_template(sheetname),
+            ESheetType::Localize => Self::localize_template(sheetname),
+        }
+    }
+
+    fn normal_template(sheetname: String) -> GableData {
+        let mut heads: BTreeMap<u32, BTreeMap<u16, CellData>> = BTreeMap::new();
+        let mut desc_cols: BTreeMap<u16, CellData> = BTreeMap::new();
+        desc_cols.insert(
+            1,
+            CellData::new(
+                constant::TABLE_NORMAL_ROW_DESC,
+                1,
+                "编号".to_string(),
+                None,
+                None,
+            ),
+        );
+        heads.insert(constant::TABLE_NORMAL_ROW_DESC, desc_cols);
+        let mut field_cols: BTreeMap<u16, CellData> = BTreeMap::new();
+        field_cols.insert(
+            1,
+            CellData::new(
+                constant::TABLE_NORMAL_ROW_FIELD,
+                1,
+                "id".to_string(),
+                None,
+                None,
+            ),
+        );
+        heads.insert(constant::TABLE_NORMAL_ROW_FIELD, field_cols);
+        let mut type_cols: BTreeMap<u16, CellData> = BTreeMap::new();
+        type_cols.insert(
+            1,
+            CellData::new(
+                constant::TABLE_NORMAL_ROW_TYPE,
+                1,
+                "int".to_string(),
+                None,
+                None,
+            ),
+        );
+        heads.insert(constant::TABLE_NORMAL_ROW_TYPE, type_cols);
+        GableData {
+            sheetname,
+            max_row: constant::TABLE_NORMAL_ROW_TOTAL,
+            max_col: 1,
+            heads: heads,
+            cells: BTreeMap::new(),
+        }
+    }
+
+    fn kv_template(sheetname: String) -> GableData {
+        let mut heads: BTreeMap<u32, BTreeMap<u16, CellData>> = BTreeMap::new();
+        let mut cols: BTreeMap<u16, CellData> = BTreeMap::new();
+        cols.insert(
+            constant::TABLE_KV_COL_FIELD as u16,
+            CellData::new(
+                1,
+                constant::TABLE_KV_COL_FIELD as u16,
+                "key".to_string(),
+                None,
+                None,
+            ),
+        );
+        cols.insert(
+            constant::TABLE_KV_COL_TYPE as u16,
+            CellData::new(
+                1,
+                constant::TABLE_KV_COL_TYPE as u16,
+                "数据类型".to_string(),
+                None,
+                None,
+            ),
+        );
+        cols.insert(
+            constant::TABLE_KV_COL_KEYWORD as u16,
+            CellData::new(
+                1,
+                constant::TABLE_KV_COL_KEYWORD as u16,
+                "导出目标".to_string(),
+                None,
+                None,
+            ),
+        );
+        cols.insert(
+            constant::TABLE_KV_COL_LINK as u16,
+            CellData::new(
+                1,
+                constant::TABLE_KV_COL_LINK as u16,
+                "关联信息".to_string(),
+                None,
+                None,
+            ),
+        );
+        cols.insert(
+            constant::TABLE_KV_COL_VALUE as u16,
+            CellData::new(
+                1,
+                constant::TABLE_KV_COL_VALUE as u16,
+                "值".to_string(),
+                None,
+                None,
+            ),
+        );
+        cols.insert(
+            constant::TABLE_KV_COL_DESC as u16,
+            CellData::new(
+                1,
+                constant::TABLE_KV_COL_DESC as u16,
+                "描述".to_string(),
+                None,
+                None,
+            ),
+        );
+        heads.insert(1, cols);
+        GableData {
+            sheetname,
+            max_row: constant::TABLE_KV_ROW_TOTAL,
+            max_col: (constant::TABLE_KV_COL_DESC + 1) as u16,
+            heads: heads,
+            cells: BTreeMap::new(),
+        }
+    }
+
+    fn enum_template(sheetname: String) -> GableData {
+        let mut heads: BTreeMap<u32, BTreeMap<u16, CellData>> = BTreeMap::new();
+        let mut cols: BTreeMap<u16, CellData> = BTreeMap::new();
+        cols.insert(
+            constant::TABLE_ENUM_COL_FIELD as u16,
+            CellData::new(
+                1,
+                constant::TABLE_ENUM_COL_FIELD as u16,
+                "字段名".to_string(),
+                None,
+                None,
+            ),
+        );
+        cols.insert(
+            constant::TABLE_ENUM_COL_VALUE as u16,
+            CellData::new(
+                1,
+                constant::TABLE_ENUM_COL_VALUE as u16,
+                "值".to_string(),
+                None,
+                None,
+            ),
+        );
+        cols.insert(
+            constant::TABLE_ENUM_COL_DESC as u16,
+            CellData::new(
+                1,
+                constant::TABLE_ENUM_COL_DESC as u16,
+                "描述".to_string(),
+                None,
+                None,
+            ),
+        );
+        heads.insert(1, cols);
+        GableData {
+            sheetname,
+            max_row: constant::TABLE_ENUM_ROW_TOTAL,
+            max_col: (constant::TABLE_ENUM_COL_DESC + 1) as u16,
+            heads: heads,
+            cells: BTreeMap::new(),
+        }
+    }
+
+    fn localize_template(sheetname: String) -> GableData {
+        let mut heads: BTreeMap<u32, BTreeMap<u16, CellData>> = BTreeMap::new();
+        let mut desc_cols: BTreeMap<u16, CellData> = BTreeMap::new();
+        desc_cols.insert(
+            1,
+            CellData::new(
+                constant::TABLE_LOCALIZE_ROW_DESC,
+                1,
+                "唯一标识".to_string(),
+                None,
+                None,
+            ),
+        );
+        heads.insert(constant::TABLE_LOCALIZE_ROW_DESC, desc_cols);
+        let mut field_cols: BTreeMap<u16, CellData> = BTreeMap::new();
+        field_cols.insert(
+            1,
+            CellData::new(
+                constant::TABLE_LOCALIZE_ROW_FIELD,
+                1,
+                "key".to_string(),
+                None,
+                None,
+            ),
+        );
+        heads.insert(constant::TABLE_LOCALIZE_ROW_FIELD, field_cols);
+        let mut type_cols: BTreeMap<u16, CellData> = BTreeMap::new();
+        type_cols.insert(
+            1,
+            CellData::new(
+                constant::TABLE_LOCALIZE_ROW_TYPE,
+                1,
+                "string".to_string(),
+                None,
+                None,
+            ),
+        );
+        heads.insert(constant::TABLE_LOCALIZE_ROW_TYPE, type_cols);
+        GableData {
+            sheetname,
+            max_row: constant::TABLE_LOCALIZE_ROW_TOTAL,
+            max_col: 1,
+            heads: heads,
+            cells: BTreeMap::new(),
+        }
+    }
+
     /// 获取普通表的有效的数据头,列，行
     pub fn get_valid_normal_heads(
         &self,

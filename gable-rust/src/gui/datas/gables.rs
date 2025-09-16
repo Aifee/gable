@@ -44,25 +44,6 @@ fn has_eidtor_file(file_path: &str) -> (bool, Option<WatcherData>) {
     }
 }
 
-/// 解析 .gable 文件名，返回 (excel_name, sheet_name) 或仅 excel_name
-pub fn parse_gable_filename(filename: &str) -> Option<(String, Option<String>)> {
-    if !filename.ends_with(constant::GABLE_FILE_TYPE) {
-        return None;
-    }
-
-    let name_without_ext: &str = &filename[..filename.len() - constant::GABLE_FILE_TYPE.len()];
-
-    if let Some(pos) = name_without_ext.find('@') {
-        // 格式为 excelname@sheetname
-        let excel_name: String = name_without_ext[..pos].to_string();
-        let sheet_name: String = name_without_ext[pos + 1..].to_string();
-        Some((excel_name, Some(sheet_name)))
-    } else {
-        // 格式为 excelname
-        Some((name_without_ext.to_string(), None))
-    }
-}
-
 /// 并行读取所有gable文件
 fn read_all_gable_files_parallel(
     gable_files: &HashMap<String, Vec<(String, String)>>,
@@ -104,7 +85,8 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                 if !constant::IGNORED_DIRS.contains(&entry_name.as_str()) {
                     directories.push((entry_path, entry_name));
                 }
-            } else if let Some((excel_name, sheet_name)) = parse_gable_filename(&entry_name) {
+            } else if let Some((excel_name, sheet_name)) = utils::parse_gable_filename(&entry_name)
+            {
                 gable_files
                     .entry(excel_name)
                     .or_insert_with(Vec::new)
@@ -139,10 +121,8 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     // 处理 .gable 文件
     for (excel_name, sheets) in gable_files {
         if sheets.len() == 1 && sheets[0].1.is_empty() {
-            // 读取文件内容
             let gable_content: Option<GableData> =
                 file_contents.get(&sheets[0].0).cloned().unwrap_or(None);
-            // 确定文件类型
             let sheet_type: ESheetType = utils::determine_sheet_type(Path::new(&sheets[0].0));
             let tree_data: Option<TreeData> = gable_content.map(|content| TreeData {
                 gable_type: sheet_type,
@@ -159,10 +139,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                 data: tree_data,
             });
         } else {
-            // 有多个 sheet 或有 sheet 部分
             let excel_fullpath: String = format!("{}/{}", path.to_string_lossy(), excel_name);
-
-            // 创建子项
             let mut children: Vec<TreeItem> = Vec::new();
             let mut excel_gable_content: Option<TreeData> = None;
             let sheets_len: usize = sheets.len();
@@ -260,8 +237,7 @@ pub fn find_item_clone(path: &str, item_type: EItemType) -> Option<TreeItem> {
     if item.item_type == item_type {
         Some(item.clone())
     } else {
-        // 类型不匹配，需要查找父节点
-        let parent_path = item.parent.as_ref()?.clone();
+        let parent_path: String = item.parent.as_ref()?.clone();
         drop(tree_items); // 释放锁
         find_parent_item(&parent_path, item_type)
     }
@@ -368,7 +344,6 @@ pub fn refresh_gables() {
 
 pub fn add_new_item(new_path: &Path, new_item: EItemType) {
     let mut tree_items = TREE_ITEMS.write().unwrap();
-    log::info!("new_path: {}", new_path.to_string_lossy().to_string());
     if let Some(file_name) = new_path.file_name() {
         let file_name: String = file_name.to_string_lossy().to_string();
         let parent_path: String = match new_item {
@@ -379,7 +354,7 @@ pub fn add_new_item(new_path: &Path, new_item: EItemType) {
             EItemType::Sheet => {
                 if let Some(parent) = new_path.parent() {
                     let parent_dir: String = parent.to_string_lossy().to_string();
-                    if let Some((excel_name, _)) = parse_gable_filename(&file_name) {
+                    if let Some((excel_name, _)) = utils::parse_gable_filename(&file_name) {
                         format!("{}/{}", parent_dir, excel_name)
                     } else {
                         parent_dir
@@ -389,7 +364,16 @@ pub fn add_new_item(new_path: &Path, new_item: EItemType) {
                 }
             }
         };
-
+        let mut tree_data: Option<TreeData> = None;
+        if new_item == EItemType::Sheet {
+            if let Some(gable_data) = excel_util::read_gable_file(&new_path.to_string_lossy()) {
+                let sheet_type = utils::determine_sheet_type(Path::new(&new_path));
+                tree_data = Some(TreeData {
+                    gable_type: sheet_type,
+                    content: gable_data,
+                });
+            }
+        }
         let new_item: TreeItem = TreeItem {
             item_type: new_item,
             display_name: file_name.clone(),
@@ -398,7 +382,7 @@ pub fn add_new_item(new_path: &Path, new_item: EItemType) {
             fullpath: new_path.to_string_lossy().to_string(),
             parent: Some(parent_path.clone()),
             children: vec![],
-            data: None,
+            data: tree_data,
         };
         if parent_path == setting::get_workspace().to_string_lossy() {
             tree_items.push(new_item);
@@ -572,7 +556,7 @@ pub fn remove_item(fullpath: &str, item_type: &EItemType) -> bool {
                 for entry in entries.filter_map(|e| e.ok()) {
                     let entry_name = entry.file_name().to_string_lossy().to_string();
                     // 检查是否为.gable文件且excel名称匹配
-                    if let Some((parsed_excel_name, _)) = parse_gable_filename(&entry_name) {
+                    if let Some((parsed_excel_name, _)) = utils::parse_gable_filename(&entry_name) {
                         if parsed_excel_name == excel_name {
                             let entry_path = entry.path();
                             if let Err(e) = std::fs::remove_file(&entry_path) {
@@ -672,7 +656,7 @@ pub fn command_edit_gable(item: &TreeItem) {
             let entry_name: String = entry.file_name().to_string_lossy().to_string();
 
             // 检查是否为.gable文件且excel名称匹配
-            if let Some((parsed_excel_name, _)) = parse_gable_filename(&entry_name) {
+            if let Some((parsed_excel_name, _)) = utils::parse_gable_filename(&entry_name) {
                 if parsed_excel_name == excel_name {
                     related_files.push(entry.path().to_string_lossy().to_string());
                 }

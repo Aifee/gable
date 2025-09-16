@@ -1,5 +1,5 @@
 use crate::{
-    common::{constant, setting, utils},
+    common::{constant, excel_util, setting, utils},
     gui::{
         datas::{eitem_type::EItemType, gables, tree_item::TreeItem},
         gable_app::GableApp,
@@ -297,7 +297,7 @@ impl GableExplorer {
                         if file_name.ends_with(constant::GABLE_FILE_TYPE) {
                             // 解析文件名
                             if let Some((excel_name, sheet_name)) =
-                                gables::parse_gable_filename(&file_name)
+                                utils::parse_gable_filename(&file_name)
                             {
                                 // 如果excel名称匹配当前重命名的excel
                                 if excel_name == item.display_name {
@@ -351,7 +351,7 @@ impl GableExplorer {
                 let file_name_str: Cow<'_, str> = file_name.to_string_lossy();
 
                 // 解析原始文件名
-                if let Some((excel_name, _)) = gables::parse_gable_filename(&file_name_str) {
+                if let Some((excel_name, _)) = utils::parse_gable_filename(&file_name_str) {
                     // 构造新的文件名: excelname@new_sheetname.gable
                     let new_file_name: String = format!(
                         "{}@{}{}",
@@ -593,20 +593,25 @@ impl GableExplorer {
                 new_sheet_path = parent_path.join(new_name);
                 counter += 1;
             }
-            match fs::File::create(&new_sheet_path) {
-                Ok(_) => {
-                    // 设置重命名状态，使新建的Sheet文件进入编辑模式
-                    *renaming_item = Some(new_sheet_path.to_string_lossy().to_string());
-                    *renaming_text = "新建Sheet".to_string();
-
-                    let new_path_clone: PathBuf = new_sheet_path.clone();
-                    thread::spawn(move || {
-                        thread::sleep(Duration::from_millis(100));
-                        gables::add_new_item(&new_path_clone, EItemType::Sheet);
-                    });
-                }
-                Err(e) => {
-                    log::error!("创建Sheet文件失败: {}", e);
+            let file_name: String = new_sheet_path
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+                .to_string();
+            if let Some((_, sheet_name)) = utils::parse_gable_filename(&file_name) {
+                match excel_util::write_gable_new(&new_sheet_path, sheet_name.unwrap_or_default()) {
+                    Ok(_) => {
+                        *renaming_item = Some(new_sheet_path.to_string_lossy().to_string());
+                        *renaming_text = "新建Sheet".to_string();
+                        let new_path_clone: PathBuf = new_sheet_path.clone();
+                        thread::spawn(move || {
+                            thread::sleep(Duration::from_millis(100));
+                            gables::add_new_item(&new_path_clone, EItemType::Sheet);
+                        });
+                    }
+                    Err(e) => {
+                        log::error!("创建Sheet文件失败: {}", e);
+                    }
                 }
             }
         }

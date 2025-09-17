@@ -210,18 +210,13 @@ impl GableExplorer {
             header_response.context_menu(|ui| {
                 // 为上下文菜单创建一个可变的副本
                 let mut item_clone = item.clone();
-                Self::show_context_menu(ui, &mut item_clone, renaming_item, renaming_text);
+                Self::show_context_menu(ui, &mut item_clone);
             });
         }
     }
 
     /// 显示右键菜单
-    fn show_context_menu(
-        ui: &mut Ui,
-        item: &mut TreeItem,
-        renaming_item: &mut Option<String>,
-        renaming_text: &mut String,
-    ) {
+    fn show_context_menu(ui: &mut Ui, item: &mut TreeItem) {
         match item.item_type {
             EItemType::Folder => {
                 if ui.button("新建文件").clicked() {
@@ -264,8 +259,9 @@ impl GableExplorer {
                 }
                 ui.separator();
                 if ui.button("重命名").clicked() {
-                    *renaming_item = Some(item.fullpath.clone());
-                    *renaming_text = item.display_name.clone();
+                    // *renaming_item = Some(item.fullpath.clone());
+                    // *renaming_text = item.display_name.clone();
+                    GableApp::editname_command(item.fullpath.clone());
                     ui.close();
                 }
                 if ui.button("删除").clicked() {
@@ -298,8 +294,9 @@ impl GableExplorer {
                 }
                 ui.separator();
                 if ui.button("重命名").clicked() {
-                    *renaming_item = Some(item.fullpath.clone());
-                    *renaming_text = item.display_name.clone();
+                    // *renaming_item = Some(item.fullpath.clone());
+                    // *renaming_text = item.display_name.clone();
+                    GableApp::editname_command(item.fullpath.clone());
                     ui.close();
                 }
                 if ui.button("删除").clicked() {
@@ -473,6 +470,20 @@ impl GableExplorer {
             }
         }
     }
+
+    pub fn edit_name(&mut self, full_path: String) {
+        let item_info = {
+            let tree_items = gables::TREE_ITEMS.read().unwrap();
+            gables::find_item_by_path(&tree_items, &full_path)
+                .map(|item| Some(item.clone()))
+                .unwrap_or(None)
+        };
+        if let Some(item) = item_info {
+            self.renaming_item = Some(item.fullpath);
+            self.renaming_text = item.display_name;
+        }
+    }
+
     /// 重命名
     pub fn rename(&mut self, full_path: String, new_name: String) {
         if new_name.is_empty() {

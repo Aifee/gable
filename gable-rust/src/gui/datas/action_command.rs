@@ -16,6 +16,8 @@ pub enum ECommandType {
     CreateExcel,
     // 创建Sheet
     CreateSheet,
+    // 编辑名称
+    Editname,
     // 重命名
     Rename,
     // 删除

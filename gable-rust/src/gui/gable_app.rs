@@ -236,6 +236,13 @@ impl GableApp {
         commands.push_back(action);
     }
 
+    pub fn editname_command(full_path: String) {
+        let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
+        let action: ActionCommand =
+            ActionCommand::new(ECommandType::Editname, Some(full_path), None);
+        commands.push_back(action);
+    }
+
     pub fn rename_command(full_path: String, new_name: String) {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
         let action: ActionCommand =
@@ -302,6 +309,11 @@ impl GableApp {
                 ECommandType::CreateSheet => {
                     if let Some(full_path) = command.param1 {
                         self.gable_explorer.create_sheet(full_path);
+                    }
+                }
+                ECommandType::Editname => {
+                    if let Some(full_path) = command.param1 {
+                        self.gable_explorer.edit_name(full_path);
                     }
                 }
                 ECommandType::Rename => {

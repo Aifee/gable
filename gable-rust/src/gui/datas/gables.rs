@@ -140,7 +140,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
             // });
             log::warn!("不应该存在空sheet的excel{}", excel_name);
         } else {
-            let excel_fullpath: String = format!("{}/{}", path.to_string_lossy(), excel_name);
+            let excel_fullpath: String = path.join(&excel_name).to_string_lossy().to_string();
             let mut children: Vec<TreeItem> = Vec::new();
             let mut excel_gable_content: Option<TreeData> = None;
             let sheets_len: usize = sheets.len();
@@ -203,7 +203,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
 }
 
 /**
- * 构建树形结构
+ * 构建树形某个节点结构
  */
 fn build_item_from_path(path: &str, item_type: EItemType) -> Option<TreeItem> {
     let path_buf = Path::new(path);
@@ -337,38 +337,39 @@ fn build_item_from_path(path: &str, item_type: EItemType) -> Option<TreeItem> {
         EItemType::Sheet => {
             // 对于Sheet文件，直接构建单个Sheet节点
             if path_buf.exists() && path_buf.is_file() {
-                if let Some(parent_path) = path_buf.parent() {
-                    let file_name = path_buf
-                        .file_name()
-                        .map(|name| name.to_string_lossy().to_string())
-                        .unwrap_or_default();
+                let file_name = path_buf
+                    .file_name()
+                    .map(|name| name.to_string_lossy().to_string())
+                    .unwrap_or_default();
 
-                    if let Some((_, sheet_name)) = utils::parse_gable_filename(&file_name) {
-                        if let Some(sheet_name) = sheet_name {
-                            // 读取文件内容
-                            let gable_content: Option<GableData> =
-                                excel_util::read_gable_file(path);
-                            let sheet_type: ESheetType = utils::determine_sheet_type(path_buf);
-                            let tree_data: Option<TreeData> =
-                                gable_content.map(|content| TreeData {
-                                    gable_type: sheet_type,
-                                    file_name: sheet_name.clone(),
-                                    content,
-                                });
+                if let Some((excel_name, sheet_name)) = utils::parse_gable_filename(&file_name) {
+                    if let Some(sheet_name) = sheet_name {
+                        // 读取文件内容
+                        let gable_content: Option<GableData> = excel_util::read_gable_file(path);
+                        let sheet_type: ESheetType = utils::determine_sheet_type(path_buf);
+                        let tree_data: Option<TreeData> = gable_content.map(|content| TreeData {
+                            gable_type: sheet_type,
+                            file_name: sheet_name.clone(),
+                            content,
+                        });
 
-                            Some(TreeItem {
-                                item_type: EItemType::Sheet,
-                                display_name: sheet_name,
-                                link_name: Some(file_name),
-                                is_open: false,
-                                fullpath: path.to_string(),
-                                parent: Some(parent_path.to_string_lossy().to_string()),
-                                children: vec![],
-                                data: tree_data,
-                            })
+                        // 计算Excel的虚拟路径
+                        let excel_virtual_path = if let Some(parent_path) = path_buf.parent() {
+                            parent_path.join(excel_name).to_string_lossy().to_string()
                         } else {
-                            None
-                        }
+                            excel_name.clone()
+                        };
+
+                        Some(TreeItem {
+                            item_type: EItemType::Sheet,
+                            display_name: sheet_name,
+                            link_name: Some(file_name),
+                            is_open: false,
+                            fullpath: path.to_string(),
+                            parent: Some(excel_virtual_path), // 使用Excel的虚拟路径作为父路径
+                            children: vec![],
+                            data: tree_data,
+                        })
                     } else {
                         None
                     }
@@ -381,7 +382,6 @@ fn build_item_from_path(path: &str, item_type: EItemType) -> Option<TreeItem> {
         }
     }
 }
-
 pub fn find_item_by_path<'a>(items: &'a [TreeItem], path: &str) -> Option<&'a TreeItem> {
     for item in items {
         if item.fullpath == path {
@@ -534,11 +534,10 @@ pub fn add_new_item(new_path: &Path, new_item: EItemType) -> bool {
             },
             EItemType::Sheet => {
                 if let Some(parent) = new_path.parent() {
-                    let parent_dir: String = parent.to_string_lossy().to_string();
                     if let Some((excel_name, _)) = utils::parse_gable_filename(&file_name) {
-                        format!("{}/{}", parent_dir, excel_name)
+                        parent.join(excel_name).to_string_lossy().to_string()
                     } else {
-                        parent_dir
+                        parent.to_string_lossy().to_string()
                     }
                 } else {
                     return false;
@@ -552,8 +551,10 @@ pub fn add_new_item(new_path: &Path, new_item: EItemType) -> bool {
             EItemType::Excel => {
                 if let Some((e_n, _)) = utils::parse_gable_filename(&file_name) {
                     display_name = e_n;
-                    // 修改Excel项的fullpath，使其与build_tree_from_path中的一致
-                    fullpath = format!("{}/{}", parent_path, display_name);
+                    fullpath = Path::new(&parent_path)
+                        .join(&display_name)
+                        .to_string_lossy()
+                        .to_string();
                 };
             }
             EItemType::Sheet => {

@@ -24,6 +24,8 @@ pub struct GableExplorer {
     renaming_item: Option<String>,
     /// 重命名时的临时名称
     renaming_text: String,
+    // 自动获取焦点
+    auto_focus: bool,
 }
 
 impl GableExplorer {
@@ -32,6 +34,7 @@ impl GableExplorer {
             selected_tree_item: None,
             renaming_item: None,
             renaming_text: String::new(),
+            auto_focus: false,
         }
     }
 
@@ -96,26 +99,23 @@ impl GableExplorer {
             .map_or(false, |id| id == &item.fullpath);
 
         if is_renaming {
-            // 显示重命名输入框
             let response: Response = ui.text_edit_singleline(&mut self.renaming_text);
-            // response.request_focus();
+            if self.auto_focus {
+                response.request_focus();
+                self.auto_focus = false;
+            }
             // 处理回车确认重命名
             if response.lost_focus() && ui.input(|i: &InputState| i.key_pressed(Key::Enter)) {
-                // 注意：这里需要创建一个可变版本的item用于重命名
-                // 但由于我们使用的是引用，这里只是传递信息给重命名函数
-                // 实际的重命名逻辑不会修改当前引用的item
                 if !self.renaming_text.is_empty() && *self.renaming_text != item.display_name {
-                    // 这里我们不直接修改item，而是触发重命名操作
                     let new_name = mem::take(&mut self.renaming_text);
                     self.renaming_item = None;
-                    // 执行重命名逻辑
                     GableApp::rename_command(item.fullpath.clone(), new_name);
                 } else {
                     self.renaming_item = None;
                     self.renaming_text.clear();
                 }
             }
-            // 新增：处理失去焦点时完成重命名（不是通过ESC键）
+            // 失去焦点
             else if response.lost_focus()
                 && !ui.input(|i: &InputState| i.key_pressed(Key::Escape))
             {
@@ -136,7 +136,6 @@ impl GableExplorer {
             }
         } else {
             let header_text: String = format!("{} {}", icon, item.display_name);
-            // 检查当前项是否被选中
             let is_selected: bool = self
                 .selected_tree_item
                 .as_ref()
@@ -153,7 +152,6 @@ impl GableExplorer {
                         .header_response
                 }
                 _ => {
-                    // 其他类型使用CollapsingHeader
                     CollapsingHeader::new(&header_text)
                         .default_open(item.is_open)
                         .id_salt(format!(
@@ -190,9 +188,7 @@ impl GableExplorer {
                 );
             }
 
-            // 为header添加右键菜单
             header_response.context_menu(|ui| {
-                // 为上下文菜单创建一个可变的副本
                 let mut item_clone = item.clone();
                 Self::show_context_menu(ui, &mut item_clone);
             });
@@ -465,6 +461,7 @@ impl GableExplorer {
         if let Some(item) = item_info {
             self.renaming_item = Some(item.fullpath);
             self.renaming_text = item.display_name;
+            self.auto_focus = true;
         }
     }
 

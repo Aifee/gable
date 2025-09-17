@@ -202,6 +202,184 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     items
 }
 
+/// 根据节点类型和路径构建特定的TreeItem
+fn build_item_from_path(path: &str, item_type: EItemType) -> Option<TreeItem> {
+    let path_buf = Path::new(path);
+
+    match item_type {
+        EItemType::Folder => {
+            // 对于文件夹，使用原有的构建方法
+            if path_buf.exists() && path_buf.is_dir() {
+                let parent_path = path_buf
+                    .parent()
+                    .map(|p| p.to_string_lossy().to_string())
+                    .unwrap_or_else(|| setting::get_workspace().to_string_lossy().to_string());
+
+                let dir_name = path_buf
+                    .file_name()
+                    .map(|name| name.to_string_lossy().to_string())
+                    .unwrap_or_else(|| "Unknown".to_string());
+
+                let children = build_tree_from_path(path_buf);
+
+                Some(TreeItem {
+                    item_type: EItemType::Folder,
+                    display_name: dir_name,
+                    link_name: None,
+                    is_open: false,
+                    fullpath: path.to_string(),
+                    parent: Some(parent_path),
+                    children,
+                    data: None,
+                })
+            } else {
+                None
+            }
+        }
+        EItemType::Excel => {
+            // 对于Excel文件，我们需要查找同名的所有sheet文件
+            if let Some(parent_path) = path_buf.parent() {
+                let excel_name = path_buf
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .unwrap_or("");
+
+                // 收集所有相关的sheet文件
+                let mut gable_files: HashMap<String, Vec<(String, String)>> = HashMap::new();
+
+                if let Ok(entries) = fs::read_dir(parent_path) {
+                    for entry in entries.filter_map(|e: Result<fs::DirEntry, Error>| e.ok()) {
+                        let entry_path: PathBuf = entry.path();
+                        let entry_name: String = entry.file_name().to_string_lossy().to_string();
+
+                        if entry_path.is_file() && entry_name.ends_with(constant::GABLE_FILE_TYPE) {
+                            if let Some((parsed_excel_name, sheet_name)) =
+                                utils::parse_gable_filename(&entry_name)
+                            {
+                                // 如果excel名称匹配
+                                if parsed_excel_name == excel_name {
+                                    gable_files
+                                        .entry(parsed_excel_name)
+                                        .or_insert_with(Vec::new)
+                                        .push((
+                                            entry_path.to_string_lossy().to_string(),
+                                            sheet_name.unwrap_or_default(),
+                                        ));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 构建Excel节点
+                if let Some(sheets) = gable_files.get(excel_name) {
+                    let mut children: Vec<TreeItem> = Vec::new();
+                    let mut excel_gable_content: Option<TreeData> = None;
+                    let sheets_len: usize = sheets.len();
+
+                    // 并行读取所有gable文件内容
+                    let file_contents: HashMap<String, Option<GableData>> =
+                        read_all_gable_files_parallel(&gable_files);
+
+                    for (full_path, sheet_name) in sheets {
+                        // 读取每个sheet文件的内容
+                        let gable_content: Option<GableData> =
+                            file_contents.get(full_path).cloned().unwrap_or(None);
+                        // 确定文件类型
+                        let sheet_type: ESheetType =
+                            utils::determine_sheet_type(Path::new(full_path));
+                        let tree_data: Option<TreeData> = gable_content.map(|content| TreeData {
+                            gable_type: sheet_type,
+                            file_name: sheet_name.clone(),
+                            content,
+                        });
+
+                        if sheets_len == 1 && sheet_name.is_empty() {
+                            excel_gable_content = tree_data.clone();
+                        }
+
+                        if !sheet_name.is_empty() {
+                            children.push(TreeItem {
+                                item_type: EItemType::Sheet,
+                                display_name: sheet_name.clone(),
+                                link_name: Some(format!("{}@{}", excel_name, &sheet_name)),
+                                is_open: false,
+                                fullpath: full_path.clone(),
+                                parent: Some(path.to_string()),
+                                children: vec![],
+                                data: tree_data,
+                            });
+                        }
+                    }
+
+                    // 对子项进行排序
+                    children.sort_by(|a, b| a.display_name.cmp(&b.display_name));
+
+                    Some(TreeItem {
+                        item_type: EItemType::Excel,
+                        display_name: excel_name.to_string(),
+                        link_name: Some(excel_name.to_string()),
+                        is_open: false,
+                        fullpath: path.to_string(),
+                        parent: Some(parent_path.to_string_lossy().to_string()),
+                        children,
+                        data: excel_gable_content,
+                    })
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        }
+        EItemType::Sheet => {
+            // 对于Sheet文件，直接构建单个Sheet节点
+            if path_buf.exists() && path_buf.is_file() {
+                if let Some(parent_path) = path_buf.parent() {
+                    let file_name = path_buf
+                        .file_name()
+                        .map(|name| name.to_string_lossy().to_string())
+                        .unwrap_or_default();
+
+                    if let Some((_, sheet_name)) = utils::parse_gable_filename(&file_name) {
+                        if let Some(sheet_name) = sheet_name {
+                            // 读取文件内容
+                            let gable_content: Option<GableData> =
+                                excel_util::read_gable_file(path);
+                            let sheet_type: ESheetType = utils::determine_sheet_type(path_buf);
+                            let tree_data: Option<TreeData> =
+                                gable_content.map(|content| TreeData {
+                                    gable_type: sheet_type,
+                                    file_name: sheet_name.clone(),
+                                    content,
+                                });
+
+                            Some(TreeItem {
+                                item_type: EItemType::Sheet,
+                                display_name: sheet_name,
+                                link_name: Some(file_name),
+                                is_open: false,
+                                fullpath: path.to_string(),
+                                parent: Some(parent_path.to_string_lossy().to_string()),
+                                children: vec![],
+                                data: tree_data,
+                            })
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        }
+    }
+}
+
 pub fn find_item_by_path<'a>(items: &'a [TreeItem], path: &str) -> Option<&'a TreeItem> {
     for item in items {
         if item.fullpath == path {
@@ -531,32 +709,143 @@ fn reload_gable(gable_file_paths: Option<Vec<String>>) -> bool {
     true
 }
 
-pub fn update_item_display_name(fullpath: String, new_path: String, new_name: String) {
-    fn update_item_display_name_recursive(
-        items: &mut [TreeItem],
-        target_fullpath: &str,
-        new_path: String,
-        new_name: String,
-    ) -> bool {
-        for item in items.iter_mut() {
-            if item.fullpath == target_fullpath {
-                item.fullpath = new_path;
-                item.display_name = new_name.clone();
-                return true;
-            }
-            if update_item_display_name_recursive(
-                &mut item.children,
-                target_fullpath,
-                new_path.clone(),
-                new_name.clone(),
-            ) {
-                return true;
-            }
+/// 刷新指定路径的节点，使用新的路径替换旧的路径
+pub fn refresh_item(old_path: &str, new_path: &str) -> bool {
+    let (parent_path, item_type): (String, Option<EItemType>) = {
+        let tree_items = TREE_ITEMS.read().unwrap();
+        if let Some(item) = find_item_by_path(&tree_items, old_path) {
+            let parent = if let Some(ref parent) = item.parent {
+                parent.clone()
+            } else {
+                setting::get_workspace().to_string_lossy().to_string()
+            };
+            (parent, Some(item.item_type.clone()))
+        } else {
+            // 如果找不到旧节点，使用工作空间路径作为默认父路径
+            (setting::get_workspace().to_string_lossy().to_string(), None)
         }
-        false
-    }
+    };
+    // 构建新节点
+    let new_items: Vec<TreeItem> = if let Some(item_type) = item_type {
+        if let Some(new_item) = build_item_from_path(new_path, item_type) {
+            vec![new_item]
+        } else {
+            vec![]
+        }
+    } else {
+        // 如果找不到类型信息，回退到原来的构建方法
+        let build_path = if Path::new(new_path).is_file() {
+            // 如果是文件路径，获取其父目录
+            if let Some(parent) = Path::new(new_path).parent() {
+                parent.to_path_buf()
+            } else {
+                Path::new(new_path).to_path_buf()
+            }
+        } else {
+            // 如果是目录路径，直接使用
+            Path::new(new_path).to_path_buf()
+        };
+        build_tree_from_path(&build_path)
+    };
+    log::warn!("new_items count: {}", new_items.len());
+
+    // 更新TREE_ITEMS
     let mut tree_items = TREE_ITEMS.write().unwrap();
-    update_item_display_name_recursive(&mut tree_items, &fullpath, new_path, new_name);
+
+    // 查找父节点并更新
+    if parent_path == setting::get_workspace().to_string_lossy() {
+        log::warn!("Updating item in root directory");
+        // 如果是根节点下的项目，直接在根节点中查找并替换
+        if let Some(pos) = tree_items.iter().position(|item| item.fullpath == old_path) {
+            log::warn!("Found item at position {}", pos);
+            // 移除旧节点
+            tree_items.remove(pos);
+            // 添加新节点
+            for new_item in new_items {
+                log::warn!("Adding new item with path: {}", new_item.fullpath);
+                tree_items.push(new_item);
+            }
+            // 重新排序
+            tree_items.sort_by(|a, b| match (&a.item_type, &b.item_type) {
+                (EItemType::Folder, EItemType::Folder) => a.display_name.cmp(&b.display_name),
+                (EItemType::Folder, _) => Ordering::Less,
+                (_, EItemType::Folder) => Ordering::Greater,
+                _ => a.display_name.cmp(&b.display_name),
+            });
+            true
+        } else {
+            log::warn!("Item not found in root, adding as new item");
+            // 如果在根节点找不到旧节点，可能是因为它是一个新节点
+            for new_item in new_items {
+                tree_items.push(new_item);
+            }
+            tree_items.sort_by(|a, b| match (&a.item_type, &b.item_type) {
+                (EItemType::Folder, EItemType::Folder) => a.display_name.cmp(&b.display_name),
+                (EItemType::Folder, _) => Ordering::Less,
+                (_, EItemType::Folder) => Ordering::Greater,
+                _ => a.display_name.cmp(&b.display_name),
+            });
+            true
+        }
+    } else {
+        log::warn!("Updating item in subdirectory");
+        // 如果不是根节点下的项目，在父节点的children中查找并替换
+        fn update_children(
+            items: &mut [TreeItem],
+            parent_path: &str,
+            old_path: &str,
+            new_items: Vec<TreeItem>,
+        ) -> bool {
+            for item in items.iter_mut() {
+                if item.fullpath == parent_path {
+                    // 在父节点的children中查找并替换
+                    if let Some(pos) = item
+                        .children
+                        .iter()
+                        .position(|child| child.fullpath == old_path)
+                    {
+                        log::warn!("Found item at position {} in parent's children", pos);
+                        item.children.remove(pos);
+                        for new_item in new_items {
+                            log::warn!("Adding new child item with path: {}", new_item.fullpath);
+                            item.children.push(new_item);
+                        }
+                        item.children
+                            .sort_by(|a, b| match (&a.item_type, &b.item_type) {
+                                (EItemType::Folder, EItemType::Folder) => {
+                                    a.display_name.cmp(&b.display_name)
+                                }
+                                (EItemType::Folder, _) => Ordering::Less,
+                                (_, EItemType::Folder) => Ordering::Greater,
+                                _ => a.display_name.cmp(&b.display_name),
+                            });
+                        return true;
+                    } else {
+                        log::warn!("Item not found in parent's children, adding as new item");
+                        // 如果找不到旧节点，直接添加新节点
+                        for new_item in new_items {
+                            item.children.push(new_item);
+                        }
+                        item.children
+                            .sort_by(|a, b| match (&a.item_type, &b.item_type) {
+                                (EItemType::Folder, EItemType::Folder) => {
+                                    a.display_name.cmp(&b.display_name)
+                                }
+                                (EItemType::Folder, _) => Ordering::Less,
+                                (_, EItemType::Folder) => Ordering::Greater,
+                                _ => a.display_name.cmp(&b.display_name),
+                            });
+                        return true;
+                    }
+                }
+                if update_children(&mut item.children, parent_path, old_path, new_items.clone()) {
+                    return true;
+                }
+            }
+            false
+        }
+        update_children(&mut tree_items, &parent_path, old_path, new_items)
+    }
 }
 
 // 删除tree_item对应的文件

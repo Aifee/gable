@@ -107,7 +107,7 @@ impl GableExplorer {
             // 处理回车确认重命名
             if response.lost_focus() && ui.input(|i: &InputState| i.key_pressed(Key::Enter)) {
                 if !self.renaming_text.is_empty() && *self.renaming_text != item.display_name {
-                    let new_name = mem::take(&mut self.renaming_text);
+                    let new_name: String = mem::take(&mut self.renaming_text);
                     self.renaming_item = None;
                     GableApp::rename_command(item.fullpath.clone(), new_name);
                 } else {
@@ -120,7 +120,7 @@ impl GableExplorer {
                 && !ui.input(|i: &InputState| i.key_pressed(Key::Escape))
             {
                 if !self.renaming_text.is_empty() && *self.renaming_text != item.display_name {
-                    let new_name = mem::take(&mut self.renaming_text);
+                    let new_name: String = mem::take(&mut self.renaming_text);
                     self.renaming_item = None;
                     GableApp::rename_command(item.fullpath.clone(), new_name);
                 } else {
@@ -160,7 +160,6 @@ impl GableExplorer {
                             if item.is_open { "_open" } else { "" }
                         ))
                         .show(ui, |ui| {
-                            // 显示子项（如果有的话）
                             for child in &item.children {
                                 self.gui_tree_item(ui, child);
                             }

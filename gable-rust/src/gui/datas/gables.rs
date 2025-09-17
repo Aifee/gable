@@ -202,7 +202,9 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     items
 }
 
-/// 根据节点类型和路径构建特定的TreeItem
+/**
+ * 构建树形结构
+ */
 fn build_item_from_path(path: &str, item_type: EItemType) -> Option<TreeItem> {
     let path_buf = Path::new(path);
 
@@ -709,7 +711,10 @@ fn reload_gable(gable_file_paths: Option<Vec<String>>) -> bool {
     true
 }
 
-/// 刷新指定路径的节点，使用新的路径替换旧的路径
+/**
+ * 刷新节点，重命名后如果去遍历ITEM_TREE去重置full_path比较费劲
+ * 这里是把旧的节点删除，然后再重建新的节点方式来实现重命名的刷新操作
+*/
 pub fn refresh_item(old_path: &str, new_path: &str) -> bool {
     let (parent_path, item_type): (String, Option<EItemType>) = {
         let tree_items = TREE_ITEMS.read().unwrap();
@@ -725,7 +730,6 @@ pub fn refresh_item(old_path: &str, new_path: &str) -> bool {
             (setting::get_workspace().to_string_lossy().to_string(), None)
         }
     };
-    // 构建新节点
     let new_items: Vec<TreeItem> = if let Some(item_type) = item_type {
         if let Some(new_item) = build_item_from_path(new_path, item_type) {
             vec![new_item]
@@ -733,39 +737,25 @@ pub fn refresh_item(old_path: &str, new_path: &str) -> bool {
             vec![]
         }
     } else {
-        // 如果找不到类型信息，回退到原来的构建方法
         let build_path = if Path::new(new_path).is_file() {
-            // 如果是文件路径，获取其父目录
             if let Some(parent) = Path::new(new_path).parent() {
                 parent.to_path_buf()
             } else {
                 Path::new(new_path).to_path_buf()
             }
         } else {
-            // 如果是目录路径，直接使用
             Path::new(new_path).to_path_buf()
         };
         build_tree_from_path(&build_path)
     };
-    log::warn!("new_items count: {}", new_items.len());
-
-    // 更新TREE_ITEMS
     let mut tree_items = TREE_ITEMS.write().unwrap();
-
-    // 查找父节点并更新
     if parent_path == setting::get_workspace().to_string_lossy() {
-        log::warn!("Updating item in root directory");
-        // 如果是根节点下的项目，直接在根节点中查找并替换
+        // 根节点处理
         if let Some(pos) = tree_items.iter().position(|item| item.fullpath == old_path) {
-            log::warn!("Found item at position {}", pos);
-            // 移除旧节点
             tree_items.remove(pos);
-            // 添加新节点
             for new_item in new_items {
-                log::warn!("Adding new item with path: {}", new_item.fullpath);
                 tree_items.push(new_item);
             }
-            // 重新排序
             tree_items.sort_by(|a, b| match (&a.item_type, &b.item_type) {
                 (EItemType::Folder, EItemType::Folder) => a.display_name.cmp(&b.display_name),
                 (EItemType::Folder, _) => Ordering::Less,
@@ -774,8 +764,6 @@ pub fn refresh_item(old_path: &str, new_path: &str) -> bool {
             });
             true
         } else {
-            log::warn!("Item not found in root, adding as new item");
-            // 如果在根节点找不到旧节点，可能是因为它是一个新节点
             for new_item in new_items {
                 tree_items.push(new_item);
             }
@@ -788,8 +776,7 @@ pub fn refresh_item(old_path: &str, new_path: &str) -> bool {
             true
         }
     } else {
-        log::warn!("Updating item in subdirectory");
-        // 如果不是根节点下的项目，在父节点的children中查找并替换
+        // 子节点处理
         fn update_children(
             items: &mut [TreeItem],
             parent_path: &str,
@@ -798,16 +785,13 @@ pub fn refresh_item(old_path: &str, new_path: &str) -> bool {
         ) -> bool {
             for item in items.iter_mut() {
                 if item.fullpath == parent_path {
-                    // 在父节点的children中查找并替换
                     if let Some(pos) = item
                         .children
                         .iter()
                         .position(|child| child.fullpath == old_path)
                     {
-                        log::warn!("Found item at position {} in parent's children", pos);
                         item.children.remove(pos);
                         for new_item in new_items {
-                            log::warn!("Adding new child item with path: {}", new_item.fullpath);
                             item.children.push(new_item);
                         }
                         item.children
@@ -821,7 +805,6 @@ pub fn refresh_item(old_path: &str, new_path: &str) -> bool {
                             });
                         return true;
                     } else {
-                        log::warn!("Item not found in parent's children, adding as new item");
                         // 如果找不到旧节点，直接添加新节点
                         for new_item in new_items {
                             item.children.push(new_item);

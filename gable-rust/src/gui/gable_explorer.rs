@@ -206,6 +206,11 @@ impl GableExplorer {
                     GableApp::create_folder_command(item.fullpath.clone());
                     ui.close();
                 }
+                if ui.button("导入").clicked() {
+                    let sheet_type = setting::determine_sheet_type(Path::new(&item.fullpath));
+                    log::warn!("sheet_type: {:?}", sheet_type);
+                    ui.close();
+                }
                 ui.separator();
                 if ui.button("删除").clicked() {
                     GableApp::delete_comand(item.fullpath.clone());

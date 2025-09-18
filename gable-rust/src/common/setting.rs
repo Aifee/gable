@@ -1,4 +1,5 @@
 use crate::common::{constant, utils};
+use crate::gui::datas::esheet_type::ESheetType;
 use crate::gui::datas::{edevelop_type::EDevelopType, etarget_type::ETargetType};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
@@ -219,4 +220,25 @@ fn save_build_settings_to_file(settings: &AppSettings) -> io::Result<()> {
     let json: String = serde_json::to_string_pretty(settings)?;
     let path: PathBuf = get_data_path().join(constant::SETTING_PREFS);
     fs::write(path, json)
+}
+
+/**
+ * 根据文件路径确定ESheetType
+ * 以根目录为起点（workspace）下一级的文件夹名字来判断
+ * @param path 文件路径
+ * @return ESheetType
+ */
+pub fn determine_sheet_type(path: &Path) -> ESheetType {
+    let workspace = get_workspace();
+    if let Ok(relative_path) = path.strip_prefix(&workspace) {
+        if let Some(first_component) = relative_path.components().next() {
+            match first_component.as_os_str().to_string_lossy().as_ref() {
+                "kvs" => return ESheetType::KV,
+                "enums" => return ESheetType::Enum,
+                "localizes" => return ESheetType::Localize,
+                _ => return ESheetType::Normal,
+            }
+        }
+    }
+    ESheetType::Normal
 }

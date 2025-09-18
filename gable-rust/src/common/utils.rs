@@ -28,23 +28,6 @@ pub fn cell_range(start_row: u32, start_col: u32, end_row: u32, end_col: u16) ->
     )
 }
 
-///根据文件路径确定ESheetType
-pub fn determine_sheet_type(path: &Path) -> ESheetType {
-    // 获取父目录名称
-    if let Some(parent) = path.parent() {
-        if let Some(parent_name) = parent.file_name() {
-            match parent_name.to_string_lossy().as_ref() {
-                "kvs" => return ESheetType::KV,
-                "enums" => return ESheetType::Enum,
-                "localizes" => return ESheetType::Localize,
-                _ => return ESheetType::Normal,
-            }
-        }
-    }
-    // 默认类型
-    ESheetType::Normal
-}
-
 pub fn get_selected_color(ctx: &Context) -> Color32 {
     let style: Arc<Style> = ctx.style();
     if style.visuals.dark_mode {

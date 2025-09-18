@@ -667,7 +667,7 @@ pub fn write_gable_new(gable_path: &PathBuf) -> Result<(), Box<dyn Error>> {
     if gable_path.exists() {
         return Err("gable文件已存在".into());
     }
-    let sheet_type: ESheetType = utils::determine_sheet_type(Path::new(&gable_path));
+    let sheet_type: ESheetType = setting::determine_sheet_type(Path::new(&gable_path));
     let gable_data: GableData = GableData::new(sheet_type);
     let json_data: String = serde_json::to_string_pretty(&gable_data)?;
     fs::write(&gable_path, json_data)?;

@@ -121,23 +121,6 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     // 处理 .gable 文件
     for (excel_name, sheets) in gable_files {
         if sheets.len() == 1 && sheets[0].1.is_empty() {
-            // let gable_content: Option<GableData> =
-            //     file_contents.get(&sheets[0].0).cloned().unwrap_or(None);
-            // let sheet_type: ESheetType = utils::determine_sheet_type(Path::new(&sheets[0].0));
-            // let tree_data: Option<TreeData> = gable_content.map(|content| TreeData {
-            //     gable_type: sheet_type,
-            //     content,
-            // });
-            // items.push(TreeItem {
-            //     item_type: EItemType::Excel,
-            //     display_name: excel_name.clone(),
-            //     link_name: Some(excel_name),
-            //     is_open: false,
-            //     fullpath: sheets[0].0.clone(),
-            //     parent: Some(path.to_string_lossy().to_string()),
-            //     children: vec![],
-            //     data: tree_data,
-            // });
             log::warn!("不应该存在空sheet的excel{}", excel_name);
         } else {
             let excel_fullpath: String = path.join(&excel_name).to_string_lossy().to_string();
@@ -150,7 +133,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
                 let gable_content: Option<GableData> =
                     file_contents.get(&full_path).cloned().unwrap_or(None);
                 // 确定文件类型
-                let sheet_type: ESheetType = utils::determine_sheet_type(Path::new(&full_path));
+                let sheet_type: ESheetType = setting::determine_sheet_type(Path::new(&full_path));
                 let tree_data: Option<TreeData> = gable_content.map(|content| TreeData {
                     gable_type: sheet_type,
                     file_name: sheet_name.clone(),
@@ -289,7 +272,7 @@ fn build_item_from_path(path: &str, item_type: EItemType) -> Option<TreeItem> {
                             file_contents.get(full_path).cloned().unwrap_or(None);
                         // 确定文件类型
                         let sheet_type: ESheetType =
-                            utils::determine_sheet_type(Path::new(full_path));
+                            setting::determine_sheet_type(Path::new(full_path));
                         let tree_data: Option<TreeData> = gable_content.map(|content| TreeData {
                             gable_type: sheet_type,
                             file_name: sheet_name.clone(),
@@ -346,7 +329,7 @@ fn build_item_from_path(path: &str, item_type: EItemType) -> Option<TreeItem> {
                     if let Some(sheet_name) = sheet_name {
                         // 读取文件内容
                         let gable_content: Option<GableData> = excel_util::read_gable_file(path);
-                        let sheet_type: ESheetType = utils::determine_sheet_type(path_buf);
+                        let sheet_type: ESheetType = setting::determine_sheet_type(path_buf);
                         let tree_data: Option<TreeData> = gable_content.map(|content| TreeData {
                             gable_type: sheet_type,
                             file_name: sheet_name.clone(),
@@ -564,7 +547,8 @@ pub fn add_new_item(new_path: &Path, new_item: EItemType) -> bool {
                     }
                 };
                 if let Some(gable_data) = excel_util::read_gable_file(&new_path.to_string_lossy()) {
-                    let sheet_type: ESheetType = utils::determine_sheet_type(Path::new(&new_path));
+                    let sheet_type: ESheetType =
+                        setting::determine_sheet_type(Path::new(&new_path));
                     tree_data = Some(TreeData {
                         gable_type: sheet_type,
                         file_name: display_name.clone(),
@@ -672,7 +656,7 @@ fn reload_gable(gable_file_paths: Option<Vec<String>>) -> bool {
             for item in items.iter_mut() {
                 if item.fullpath == file_path {
                     let path: &Path = Path::new(&file_path);
-                    let gable_type = utils::determine_sheet_type(path);
+                    let gable_type = setting::determine_sheet_type(path);
                     let file_name = if let Some(file_name) = path.file_name() {
                         file_name.to_string_lossy().to_string()
                     } else {

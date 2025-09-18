@@ -8,6 +8,11 @@ use crate::{
 use serde_json::{Map, Value};
 use std::{error::Error, path::PathBuf};
 
+/**
+ * 将数据转换为protobuff
+ * @param build_setting 构建设置
+ * @param tree_data 树数据
+*/
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     if tree_data.gable_type == ESheetType::Enum {
         return;
@@ -52,6 +57,12 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
 }
 
+/**
+ * 将普通数据表转换为Protobuf二进制数据
+ * @param items 数据
+ * @param fields 字段数据
+ * @return 二进制数据
+ */
 fn encode_normal_data(
     items: &Vec<Map<String, Value>>,
     fields: &Vec<ProtoFieldInfo>,
@@ -82,6 +93,12 @@ fn encode_normal_data(
     Ok(table_buffer)
 }
 
+/**
+ * 将KV表转换成二进制数据
+ * @param item KV表
+ * @param field_infos 字段信息
+ * @return 二进制数据
+ */
 fn encode_kv_data(
     item: &Map<String, Value>,
     field_infos: &Vec<ProtoFieldInfo>,
@@ -99,6 +116,14 @@ fn encode_kv_data(
     Ok(item_buffer)
 }
 
+/**
+ * 将字段转换成二进制数据
+ * @param field_number 字段编号
+ * @param value 字段值
+ * @param data_type 字段类型
+ * @param item_buffer 二进制数据缓冲区
+ * @return 二进制数据缓冲区
+ */
 fn encode_field_value(
     field_number: u32,
     value: &Value,
@@ -170,14 +195,14 @@ fn encode_field_value(
                 if let Some(arr) = value.as_array() {
                     for val in arr {
                         if let Some(s) = val.as_str() {
-                            let vector_data = parse_vector_data(s, inner_type)?;
+                            let vector_data: Vec<u8> = encode_vector_data(s, inner_type)?;
                             let key: u32 = (field_number << 3) | 2; // wire type 2 for length-delimited
                             encode_varint(key as u64, buffer);
                             encode_varint(vector_data.len() as u64, buffer);
                             buffer.extend_from_slice(&vector_data);
                         } else {
                             let s: String = val.to_string();
-                            let vector_data = parse_vector_data(&s, inner_type)?;
+                            let vector_data: Vec<u8> = encode_vector_data(&s, inner_type)?;
                             let key: u32 = (field_number << 3) | 2; // wire type 2 for length-delimited
                             encode_varint(key as u64, buffer);
                             encode_varint(vector_data.len() as u64, buffer);
@@ -251,7 +276,7 @@ fn encode_field_value(
                 // Vector类型需要特殊处理，它们是嵌套消息而不是字符串
                 if let Some(s) = value.as_str() {
                     // 解析Vector字符串格式 "{x,y}" 或 "{x,y,z}" 或 "{x,y,z,w}"
-                    let vector_data = parse_vector_data(s, data_type)?;
+                    let vector_data: Vec<u8> = encode_vector_data(s, data_type)?;
                     let key: u32 = (field_number << 3) | 2; // wire type 2 for length-delimited
                     encode_varint(key as u64, buffer);
                     encode_varint(vector_data.len() as u64, buffer);
@@ -309,7 +334,13 @@ fn encode_field_value(
     Ok(())
 }
 
-fn parse_vector_data(vector_str: &str, vector_type: &str) -> Result<Vec<u8>, Box<dyn Error>> {
+/**
+ * 将vector数据转换成二进制数据
+ * @param vector_str vector字符串信息
+ * @param vector_type vector类型
+ * @return 二进制数据
+ */
+fn encode_vector_data(vector_str: &str, vector_type: &str) -> Result<Vec<u8>, Box<dyn Error>> {
     let mut buffer = Vec::new();
 
     // 移除大括号并分割值
@@ -386,7 +417,11 @@ fn parse_vector_data(vector_str: &str, vector_type: &str) -> Result<Vec<u8>, Box
     Ok(buffer)
 }
 
-// Protocol Buffers 中的 varint 编码算法
+/**
+ * Protocol Buffers 中的 varint 编码算法
+ * @param value 要编码的整数值
+ * @param buffer 用于存储编码结果的缓冲区
+*/
 fn encode_varint(mut value: u64, buffer: &mut Vec<u8>) {
     loop {
         let mut byte: u8 = (value & 0x7F) as u8;

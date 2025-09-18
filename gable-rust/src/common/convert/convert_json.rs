@@ -5,6 +5,11 @@ use crate::{
 use serde_json::{Map, Value};
 use std::io::Error;
 
+/**
+ * 将数据转换为json
+ * @param build_setting 构建设置
+ * @param tree_data 树数据
+ */
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     if tree_data.gable_type == ESheetType::Enum {
         // 枚举不导出

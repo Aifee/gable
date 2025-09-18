@@ -1,5 +1,4 @@
 use crate::common::constant;
-use crate::gui::datas::esheet_type::ESheetType;
 use eframe::egui::{Color32, Context, Style};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;

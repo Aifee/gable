@@ -201,7 +201,11 @@ pub fn get_build_setting_with_name(name: &str) -> Option<BuildSetting> {
     None
 }
 
-/// 更新指定索引的BuildSetting
+/**
+ * 更新指定索引的BuildSetting
+ * @param index
+ * @param setting
+ */
 pub fn update_build_setting(index: usize, setting: BuildSetting) -> io::Result<()> {
     let mut settings = APP_SETTINGS.write().unwrap();
     if index < settings.build_settings.len() {
@@ -215,7 +219,10 @@ pub fn update_build_setting(index: usize, setting: BuildSetting) -> io::Result<(
     }
 }
 
-/// 保存BuildSetting列表到JSON文件
+/**
+ * 保存BuildSetting列表到JSON文件
+ * @param settings AppSettings 当前设置项
+ */
 fn save_build_settings_to_file(settings: &AppSettings) -> io::Result<()> {
     let json: String = serde_json::to_string_pretty(settings)?;
     let path: PathBuf = get_data_path().join(constant::SETTING_PREFS);

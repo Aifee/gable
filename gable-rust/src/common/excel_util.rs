@@ -20,7 +20,11 @@ use umya_spreadsheet::{
     Spreadsheet, Style, Worksheet, reader, writer,
 };
 
-/// 读取并解析gable文件
+/**
+ * 读取并解析gable文件
+ * @param file_path gable文件路径
+ * @return gable数据
+*/
 pub fn read_gable_file(file_path: &str) -> Option<GableData> {
     match fs::read_to_string(file_path) {
         Ok(content) => match serde_json::from_str::<GableData>(&content) {
@@ -37,7 +41,13 @@ pub fn read_gable_file(file_path: &str) -> Option<GableData> {
     }
 }
 
-// 写入Excel文件
+/**
+ * 写入Excel文件
+ * @param excel_name 文件名
+ * @param sheet_type 表单类型
+ * @param gable_files 数据文件列表
+ * @return 是否成功
+*/
 pub fn write_excel(
     excel_name: &str,
     sheet_type: &ESheetType,
@@ -154,6 +164,11 @@ pub fn write_excel(
     Ok(excel_file_path)
 }
 
+/**
+ * 普通表单写入Excel文件
+ * @param worksheet 工作表
+ * @param gable_data Gable数据
+*/
 fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
     let max_row: u32 = gable_data.max_row + 1;
     let max_col: u16 = gable_data.max_col + 1;
@@ -367,6 +382,11 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
     }
 }
 
+/**
+ * 本地化表单写入Excel文件
+ * @param worksheet 工作表
+ * @param gable_data Gable数据
+*/
 fn write_excel_localize(worksheet: &mut Worksheet, gable_data: &GableData) {
     // 数据类型下拉框
     let range: String = utils::cell_range(
@@ -402,6 +422,11 @@ fn write_excel_localize(worksheet: &mut Worksheet, gable_data: &GableData) {
     }
 }
 
+/**
+ * KV表单写入Excel文件
+ * @param worksheet 工作表
+ * @param gable_data Gable数据
+*/
 fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
     let max_row: u32 = gable_data.max_row + 1;
 
@@ -601,6 +626,12 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
         }
     }
 }
+
+/**
+ * 枚举表单写入Excel文件
+ * @param worksheet 工作表
+ * @param gable_data Gable数据
+*/
 fn write_excel_enum(worksheet: &mut Worksheet, gable_data: &GableData) {
     // 数据内容处理
     for (row_index, row_data) in &gable_data.cells {
@@ -611,7 +642,12 @@ fn write_excel_enum(worksheet: &mut Worksheet, gable_data: &GableData) {
         }
     }
 }
-// excel 单元格数据类型写入
+
+/**
+ * excel 单元格数据类型写入
+ * @param cell 单元格
+ * @param cell_data 单元格数据
+*/
 fn write_excel_cell_style(cell: &mut Cell, cell_data: &CellData) {
     let style: &mut Style = cell.get_style_mut();
     // 边框
@@ -735,6 +771,13 @@ pub fn write_gable(
     Ok(gable_file_paths)
 }
 
+/**
+ * 将excel以普通表单写入gable文件
+ * @param worksheet 工作表
+ * @param gable_data gable数据
+ * @param max_row 最大行数
+ * @param max_col 最大列数
+*/
 fn write_gable_normal(
     worksheet: &Worksheet,
     gable_data: &mut GableData,
@@ -886,6 +929,13 @@ fn write_gable_normal(
     }
 }
 
+/**
+ * 将excel以本地化表单写入gable文件
+ * @param worksheet 工作表
+ * @param gable_data gable数据
+ * @param max_row 最大行数
+ * @param max_col 最大列数
+*/
 fn write_gable_localize(
     worksheet: &Worksheet,
     gable_data: &mut GableData,
@@ -924,6 +974,13 @@ fn write_gable_localize(
     }
 }
 
+/**
+ * 将excel以KV表单写入gable文件
+ * @param worksheet 工作表
+ * @param gable_data gable数据
+ * @param max_row 最大行数
+ * @param max_col 最大列数
+*/
 fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u32, max_col: u32) {
     // 读取数据并填充到GableData中
     for row_idx in 1..max_row {
@@ -1072,6 +1129,14 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
         }
     }
 }
+
+/**
+ * 将excel以枚举表单写入gable文件
+ * @param worksheet 工作表
+ * @param gable_data gable数据
+ * @param max_row 最大行数
+ * @param max_col 最大列数
+*/
 fn write_gable_enum(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u32, max_col: u32) {
     // 读取数据并填充到GableData中
     for row_idx in 1..max_row {

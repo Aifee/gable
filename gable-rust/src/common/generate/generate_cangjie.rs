@@ -24,6 +24,11 @@ struct CangjieFieldInfo {
     pub field_index: i32,
 }
 
+/**
+ * 生成仓颉语言脚本
+ * @param build_setting 构建设置
+ * @param tree_data 树数据
+*/
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
     let cangjie_fields: Vec<CangjieFieldInfo> = transition_fields(&fields);
@@ -71,6 +76,11 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
 }
 
+/**
+ * 通用字段转换仓颉语法字段
+ * @param fields 通用字段信息
+ * @return 仓颉语法字段信息
+*/
 fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CangjieFieldInfo> {
     let mut cangjie_fields: Vec<CangjieFieldInfo> = Vec::new();
     for field in fields {
@@ -119,6 +129,11 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CangjieFieldInfo> {
     return cangjie_fields;
 }
 
+/**
+ * 收集要导入的模块
+ * @param fields 字段信息
+ * @return 导入的模块列表
+*/
 fn collect_imports(fields: &Vec<CangjieFieldInfo>) -> Vec<String> {
     let mut imports: Vec<String> = Vec::new();
 

@@ -9,6 +9,11 @@ use std::{
     path::PathBuf,
 };
 
+/**
+ * csv 转换
+ * @param build_setting 构建设置
+ * @param tree_data 树数据
+ * */
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     if tree_data.gable_type == ESheetType::Enum {
         // 枚举不导出
@@ -68,10 +73,16 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     );
 }
 
+/**
+ *  转换为csv数据
+ *  @param tree_data 树数据
+ *  @param keyword 关键字
+ * */
 fn to_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
     match tree_data.gable_type {
         ESheetType::Normal => normal_csv_data(tree_data, keyword),
         ESheetType::KV => kv_csv_data(tree_data, keyword),
+        ESheetType::Localize => localize_csv_data(tree_data, keyword),
         _ => {
             log::error!("The enumeration table does not export as CSV.");
             Vec::new()
@@ -79,6 +90,11 @@ fn to_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
     }
 }
 
+/**
+ * 普通表格转换
+ * @param tree_data 树数据
+ * @param keyword 关键字
+*/
 fn normal_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
     let (valids_main, valids) = tree_data.content.get_valid_normal_heads(keyword);
     let mut items: Vec<Vec<String>> = Vec::new();
@@ -167,6 +183,11 @@ fn normal_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
     return items;
 }
 
+/**
+ * KV表格转换
+ * @param tree_data 树数据
+ * @param keyword 关键字
+*/
 fn kv_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
     let mut items: Vec<Vec<String>> = Vec::new();
     for row_data in tree_data.content.heads.values() {
@@ -240,6 +261,99 @@ fn kv_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
         row_item.push(type_cell.value.clone());
         row_item.push(value_cell.value.clone());
         items.push(row_item);
+    }
+    return items;
+}
+
+/**
+ * 本地化表格转换
+ * @param tree_data 树数据
+ * @param keyword 关键字
+*/
+fn localize_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
+    let (valids_main, valids) = tree_data.content.get_valid_normal_heads(keyword);
+    let mut items: Vec<Vec<String>> = Vec::new();
+
+    let mut desc_row_item: Vec<String> = Vec::new();
+    let mut field_row_item: Vec<String> = Vec::new();
+    let mut type_row_item: Vec<String> = Vec::new();
+    // 主键表头
+    for (_, col_data) in valids_main.iter() {
+        let desc_cell: &&CellData = col_data.get(&constant::TABLE_LOCALIZE_ROW_DESC).unwrap();
+        let field_cell: &CellData =
+            if let Some(field_cell) = col_data.get(&constant::TABLE_LOCALIZE_ROW_FIELD) {
+                field_cell
+            } else {
+                return items;
+            };
+        if field_cell.value.is_empty() {
+            return items;
+        };
+        let type_cell: &CellData =
+            if let Some(type_cell) = col_data.get(&constant::TABLE_LOCALIZE_ROW_TYPE) {
+                type_cell
+            } else {
+                return items;
+            };
+        if type_cell.value.is_empty() {
+            return items;
+        };
+        desc_row_item.push(desc_cell.value.clone());
+        let field_value: String = field_cell.value.replace("*", "");
+        field_row_item.push(field_value);
+        type_row_item.push(type_cell.value.clone());
+    }
+    // 表头
+    for (_, col_data) in valids.iter() {
+        let desc_cell = col_data.get(&constant::TABLE_LOCALIZE_ROW_DESC).unwrap();
+        let field_cell: &&CellData = col_data.get(&constant::TABLE_LOCALIZE_ROW_FIELD).unwrap();
+        let type_cell: &&CellData = col_data.get(&constant::TABLE_LOCALIZE_ROW_TYPE).unwrap();
+        desc_row_item.push(desc_cell.value.clone());
+        field_row_item.push(field_cell.value.clone());
+        type_row_item.push(type_cell.value.clone());
+    }
+    items.push(desc_row_item);
+    items.push(field_row_item);
+    items.push(type_row_item);
+
+    let max_row: u32 = tree_data.content.max_row + 1;
+    for row_index in constant::TABLE_LOCALIZE_ROW_TOTAL..=max_row {
+        let row_data: &BTreeMap<u16, CellData> =
+            if let Some(row_data) = tree_data.content.cells.get(&row_index) {
+                row_data
+            } else {
+                continue;
+            };
+        let mut row_valid: bool = true;
+        let mut item_data: Vec<String> = Vec::new();
+        // 检测行数据是否有效，主键没有数据，行数据无效则跳过
+        for (col_index, _) in valids_main.iter() {
+            let value_cell: &CellData = if let Some(value_cell) = row_data.get(col_index) {
+                value_cell
+            } else {
+                row_valid = false;
+                continue;
+            };
+            if value_cell.value.is_empty() {
+                row_valid = false;
+                continue;
+            };
+            item_data.push(value_cell.value.clone());
+        }
+        // 行数据无效
+        if !row_valid {
+            continue;
+        }
+
+        for (col_index, _) in valids.iter() {
+            let value_cell = if let Some(value_cell) = row_data.get(col_index) {
+                value_cell.value.clone()
+            } else {
+                String::new()
+            };
+            item_data.push(value_cell);
+        }
+        items.push(item_data);
     }
     return items;
 }

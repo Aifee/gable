@@ -89,9 +89,7 @@ impl FileWatcher {
                                                     file_path.file_name().and_then(|f| f.to_str())
                                                 {
                                                     if !file_name.starts_with("~$") {
-                                                        // 使用标准库方法规范化路径
-                                                        let path_str = file_path.to_string_lossy();
-                                                        gables::editor_complete(path_str.as_str());
+                                                        gables::editor_complete(file_path);
                                                     }
                                                 }
                                             }
@@ -122,7 +120,7 @@ impl FileWatcher {
                                                                 let path_str = original_file_path
                                                                     .to_string_lossy();
                                                                 gables::editor_complete(
-                                                                    path_str.as_str(),
+                                                                    &original_file_path,
                                                                 );
                                                                 gables::remove_editor_file(
                                                                     path_str.as_str(),

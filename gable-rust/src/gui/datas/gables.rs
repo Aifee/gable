@@ -36,9 +36,9 @@ pub fn remove_editor_file(file_path: &str) {
 }
 
 // 判断是否是编辑文件
-fn has_eidtor_file(file_path: &str) -> (bool, Option<WatcherData>) {
+fn has_eidtor_file(file_path: &PathBuf) -> (bool, Option<WatcherData>) {
     let files = EDITION_FILES.read().unwrap();
-    match files.get(file_path) {
+    match files.get(&file_path.to_string_lossy().to_string()) {
         Some(data) => (true, Some(data.clone())),
         None => (false, None),
     }
@@ -612,19 +612,23 @@ fn add_item_to_parent(items: &mut [TreeItem], new_item: TreeItem, parent_path: &
     false
 }
 
-// 文件编辑完成时触发
-pub fn editor_complete(excel_path: &str) -> bool {
+/**
+ * 文件编辑完成时触发
+ * @param excel_path: 文件路径
+ * @return: 是否成功
+ * */
+pub fn editor_complete(excel_path: &PathBuf) -> bool {
     let (has, data) = has_eidtor_file(excel_path);
     if !has {
         return false;
     }
     let (result, gable_file_paths) = if let Some(data) = data {
-        match excel_util::write_gable(excel_path, data.target_path, data.sheet_type) {
+        match excel_util::write_gable(excel_path, &data.target_path, &data.sheet_type) {
             Ok(gable_file_paths) => (true, Some(gable_file_paths)),
             Err(_) => (false, None),
         }
     } else {
-        log::error!("无法获取文件 '{}' 的 sheet 类型", excel_path);
+        log::error!("无法获取文件 '{:?}' 的 sheet 类型", excel_path);
         (false, None)
     };
     if !result {

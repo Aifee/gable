@@ -9,6 +9,7 @@ use eframe::egui::{
     CollapsingHeader, Color32, Context, CornerRadius, Frame, InputState, Key, Response, ScrollArea,
     SidePanel, Ui,
 };
+use rfd::FileDialog;
 use std::{
     borrow::Cow,
     fs::{self, DirEntry},
@@ -207,9 +208,11 @@ impl GableExplorer {
                     ui.close();
                 }
                 if ui.button("导入").clicked() {
-                    let sheet_type = setting::determine_sheet_type(Path::new(&item.fullpath));
-                    log::warn!("sheet_type: {:?}", sheet_type);
                     ui.close();
+                    if let Some(files) = FileDialog::new().set_title("选择导入的文件").pick_files()
+                    {
+                        excel_util::import_excels(&item.fullpath, files);
+                    }
                 }
                 ui.separator();
                 if ui.button("删除").clicked() {

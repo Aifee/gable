@@ -255,6 +255,11 @@ impl GableApp {
         let action: ActionCommand = ActionCommand::new(ECommandType::Delete, Some(full_path), None);
         commands.push_back(action);
     }
+
+    pub fn refresh_command() {
+        let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
+        commands.push_back(ActionCommand::new(ECommandType::Refresh, None, None));
+    }
     /// 更新指令
     pub fn update_command(&mut self) {
         let mut commands = COMMANDS.lock().unwrap();
@@ -329,6 +334,9 @@ impl GableApp {
                             gables::remove_tree_item(&full_path);
                         }
                     }
+                }
+                ECommandType::Refresh => {
+                    gables::refresh_gables();
                 }
             }
         }

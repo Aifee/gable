@@ -22,6 +22,8 @@ pub enum ECommandType {
     Rename,
     // 删除
     Delete,
+    // 刷新工程
+    Refresh,
 }
 
 #[derive(Debug, Clone)]

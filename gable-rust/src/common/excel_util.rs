@@ -1,8 +1,11 @@
 use crate::{
     common::{constant, setting, utils},
-    gui::datas::{
-        cell_data::CellData, edata_type::EDataType, esheet_type::ESheetType, gable_data::GableData,
-        gables,
+    gui::{
+        datas::{
+            cell_data::CellData, edata_type::EDataType, esheet_type::ESheetType,
+            gable_data::GableData, gables,
+        },
+        gable_app::GableApp,
     },
 };
 use std::{
@@ -663,6 +666,10 @@ fn write_excel_cell_style(cell: &mut Cell, cell_data: &CellData) {
     }
 }
 
+/**
+ * 新建gable文件
+ * @param gable_path 文件路径
+ * */
 pub fn write_gable_new(gable_path: &PathBuf) -> Result<(), Box<dyn Error>> {
     if gable_path.exists() {
         return Err("gable文件已存在".into());
@@ -674,11 +681,17 @@ pub fn write_gable_new(gable_path: &PathBuf) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-// Excel数据写入gable文件
+/**
+ * Excel数据写入gable文件
+ * @param excel_file: Excel文件路径
+ * @param target_path: gable文件所在目录
+ * @param sheet_type: 表类型
+ * @return: Result<(), String>
+ * */
 pub fn write_gable(
-    excel_file: &str,
-    target_path: String,
-    sheet_type: ESheetType,
+    excel_file: &PathBuf,
+    target_path: &str,
+    sheet_type: &ESheetType,
 ) -> Result<Vec<String>, Box<dyn Error>> {
     let workbook: Spreadsheet = reader::xlsx::read(excel_file).unwrap();
     let sheet_counts: usize = workbook.get_sheet_count();
@@ -1089,4 +1102,29 @@ fn write_gable_enum(worksheet: &Worksheet, gable_data: &mut GableData, max_row: 
             gable_data.cells.insert(row_idx, row_data);
         }
     }
+}
+
+/**
+ * 导入Excel文件
+ * @param targe_path 导入到工程目录
+ * @param files 文件列表
+*/
+pub fn import_excels(targe_path: &str, files: Vec<PathBuf>) {
+    if files.len() <= 0 {
+        return;
+    }
+    let sheet_type: ESheetType = setting::determine_sheet_type(Path::new(targe_path));
+    for file in files {
+        match write_gable(&file, targe_path, &sheet_type) {
+            Ok(gable_file_paths) => {
+                for gable_file_path in gable_file_paths {
+                    log::info!("import gable file: {}", gable_file_path);
+                }
+            }
+            Err(_) => {
+                log::error!("import gable file failed: {:?}", file);
+            }
+        };
+    }
+    GableApp::refresh_command();
 }

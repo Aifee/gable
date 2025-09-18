@@ -16,6 +16,9 @@ use crate::{
 use std::process::Command;
 use std::{collections::HashMap, path::PathBuf};
 
+/**
+ * 批量生成代码（所有平台 & 所有表单）
+*/
 pub fn from_all() {
     let settings = setting::APP_SETTINGS.read().unwrap();
     for setting in settings.build_settings.iter() {
@@ -23,6 +26,10 @@ pub fn from_all() {
     }
 }
 
+/**
+ * 批量生成代码（指定平台 & 所有表单）
+ * @param setting 指定的平台
+*/
 pub fn from_target(build_setting: &BuildSetting) {
     if !build_setting.generate_script {
         return;
@@ -65,6 +72,10 @@ pub fn from_target(build_setting: &BuildSetting) {
     }
 }
 
+/**
+ * 批量转换（所有平台 & 指定表单）
+ * @param item 指定的表单
+*/
 pub fn from_items(item: &TreeItem) {
     let datas: HashMap<String, &TreeData> = item.get_datas();
     if datas.len() <= 0 {
@@ -104,6 +115,9 @@ pub fn from_items(item: &TreeItem) {
     }
 }
 
+/**
+ * 执行系统命令
+*/
 fn system_command(command: &str, path: &PathBuf) {
     if command.is_empty() {
         return;

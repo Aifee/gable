@@ -10,6 +10,9 @@ use crate::{
 };
 use tera::{Context, Tera};
 
+/**
+ * golang语言字段信息
+*/
 #[derive(serde::Serialize)]
 struct GolangFieldInfo {
     // 是否是主键
@@ -24,6 +27,11 @@ struct GolangFieldInfo {
     pub field_index: i32,
 }
 
+/**
+ * golang语言生成
+ * @param build_setting 构建设置
+ * @param tree_data 树数据
+*/
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
     let go_fields: Vec<GolangFieldInfo> = transition_fields(&fields);
@@ -71,6 +79,11 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
 }
 
+/**
+ * 通用字段转换Golang字段
+ * @param fields 字段列表
+ * @return Golang字段列表
+*/
 fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<GolangFieldInfo> {
     let mut go_fields: Vec<GolangFieldInfo> = Vec::new();
     for field in fields {
@@ -123,6 +136,11 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<GolangFieldInfo> {
     return go_fields;
 }
 
+/**
+ * 收集导入的模块
+ * @param fields 字段列表
+ * @return 导入的模块列表
+*/
 fn collect_imports(fields: &Vec<GolangFieldInfo>) -> Vec<String> {
     let mut imports: Vec<String> = Vec::new();
 
@@ -168,6 +186,11 @@ fn collect_imports(fields: &Vec<GolangFieldInfo>) -> Vec<String> {
     imports
 }
 
+/**
+ * 首字母大写，遵循go语言命名规则
+ * @param s 字符串
+ * @return 转换后的字符串
+*/
 fn capitalize_first_letter(s: &str) -> String {
     let mut chars = s.chars();
     match chars.next() {

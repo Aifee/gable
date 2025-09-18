@@ -10,6 +10,9 @@ use crate::{
 };
 use tera::{Context, Tera};
 
+/**
+ * 仓颉语言字段信息
+*/
 #[derive(serde::Serialize)]
 struct CangjieFieldInfo {
     // 是否是主键

@@ -9,7 +9,9 @@ use crate::{
     },
 };
 use tera::{Context, Tera};
-
+/**
+ * typescript 字段信息
+*/
 #[derive(serde::Serialize)]
 struct TypescriptFieldInfo {
     // 是否是主键
@@ -23,7 +25,11 @@ struct TypescriptFieldInfo {
     // 字段序号
     pub field_index: i32,
 }
-
+/**
+ * 生成typescript代码
+ * @param build_setting 构建设置
+ * @param tree_data 表数据
+*/
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
     let typescript_fields: Vec<TypescriptFieldInfo> = transition_fields(&fields);
@@ -71,6 +77,11 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
 }
 
+/**
+ * 通用字段转换typescript字段
+ * @param fields 字段列表
+ * @return 转换后的字段列表
+*/
 fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<TypescriptFieldInfo> {
     let mut typescript_fields: Vec<TypescriptFieldInfo> = Vec::new();
     for field in fields {
@@ -119,6 +130,11 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<TypescriptFieldInfo> {
     return typescript_fields;
 }
 
+/**
+ * 收集导入的模块
+ * @param fields 字段列表
+ * @return 导入的模块列表
+*/
 fn collect_imports(fields: &Vec<TypescriptFieldInfo>) -> Vec<String> {
     let mut imports: Vec<String> = Vec::new();
 

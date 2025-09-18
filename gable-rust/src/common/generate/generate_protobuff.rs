@@ -9,10 +9,15 @@ use crate::{
 use std::{io::Error, path::PathBuf};
 use tera::{Context, Tera};
 
+/**
+ * 生成ProtoBuff文件
+ * @param build_setting 构建设置
+ * @param tree_data 树数据
+*/
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
     let (imports, proto_fields, common_protos) =
-        ProtoFieldInfo::transition_fields_2(&fields, build_setting.is_proto_2);
+        ProtoFieldInfo::transition_fields(&fields, build_setting.is_proto_2);
     let templat_path = if build_setting.is_proto_2 {
         "assets/templates/proto2/*"
     } else {
@@ -63,6 +68,12 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
 }
 
+/**
+ * 生成公共的proto文件
+ * @param tera 模板
+ * @param common_protos 公共字段信息
+ * @param target_path 生成目录
+*/
 fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path: &PathBuf) {
     for data_type in common_protos.iter() {
         let class_name;

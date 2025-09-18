@@ -10,6 +10,9 @@ use crate::{
 };
 use tera::{Context, Tera};
 
+/**
+ * C/C++ 字段信息
+*/
 #[derive(serde::Serialize)]
 struct CppFieldInfo {
     // 是否是主键
@@ -24,6 +27,11 @@ struct CppFieldInfo {
     pub field_index: i32,
 }
 
+/**
+ * 生成C/C++代码
+ * @param build_setting 构建设置
+ * @param tree_data 树数据
+*/
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
     let cpp_fields: Vec<CppFieldInfo> = transition_fields(&fields);
@@ -71,6 +79,11 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
 }
 
+/**
+ * C/C++字段信息转换
+ * @param fields 字段列表
+ * @return C/C++字段列表
+*/
 fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CppFieldInfo> {
     let mut cpp_fields: Vec<CppFieldInfo> = Vec::new();
     for field in fields {
@@ -119,6 +132,11 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CppFieldInfo> {
     return cpp_fields;
 }
 
+/**
+ * 收集导入的模块
+ * @param fields 字段列表
+ * @return 导入的模块列表
+*/
 fn collect_imports(fields: &Vec<CppFieldInfo>) -> Vec<String> {
     let mut imports: Vec<String> = Vec::new();
 

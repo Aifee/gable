@@ -10,6 +10,9 @@ use crate::{
 };
 use tera::{Context, Tera};
 
+/**
+ * Java字段信息
+*/
 #[derive(serde::Serialize)]
 struct JavaFieldInfo {
     // 是否是主键
@@ -24,6 +27,11 @@ struct JavaFieldInfo {
     pub field_index: i32,
 }
 
+/**
+ * 生成Java代码
+ * @param build_setting 构建设置
+ * @param tree_data 树结构数据
+*/
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
     let java_fields: Vec<JavaFieldInfo> = transition_fields(&fields);
@@ -71,6 +79,11 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
 }
 
+/**
+ * 通用字段转换Java字段
+ * @param fields 字段列表
+ * @return Java字段列表
+*/
 fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<JavaFieldInfo> {
     let mut java_fields: Vec<JavaFieldInfo> = Vec::new();
     for field in fields {
@@ -119,6 +132,11 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<JavaFieldInfo> {
     return java_fields;
 }
 
+/**
+ * 收集导入的模块
+ * @param fields 字段列表
+ * @return 模块列表
+*/
 fn collect_imports(fields: &Vec<JavaFieldInfo>) -> Vec<String> {
     let mut imports: Vec<String> = Vec::new();
 

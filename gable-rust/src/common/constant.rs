@@ -1,29 +1,59 @@
 use lazy_static::lazy_static;
 use std::path::PathBuf;
 
-///数据文件类型
+/**
+ * 数据文件类型
+ */
 pub const GABLE_FILE_TYPE: &str = ".gable";
-///临时目录
+/**
+ * 临时目录
+*/
 pub const DIR_TEMP: &str = "__Temps";
+/**
+ * 数据目录
+ */
 pub const DIR_DATA: &str = "__Datas";
+/**
+ * 日志目录
+ */
 pub const DIR_LOG: &str = "__Temps/__Logs";
+/**
+ * 忽略的目录
+ */
 pub const IGNORED_DIRS: &[&str] = &[".vscode", ".git", "_log", DIR_TEMP, DIR_DATA];
-// 设置文件名
+/**
+ * 设置文件名
+*/
 pub const SETTING_PREFS: &str = "appPrefs.json";
-/// EXCEL文件扩展名
+/**
+ * EXCEL文件扩展名
+*/
 pub const EXCEL_EXTENSION: &str = ".xlsx";
-/// 日期格时间格式
+/**
+ * 日期格时间格式
+*/
 pub const NUMBER_FORMAT_DATE: &str = "YYYY-mm-dd hh:mm:ss";
-/// 单元格时间格式
+/**
+ * 单元格时间格式
+*/
 pub const NUMBER_FORMAT_TIME: &str = "hh:mm:ss";
 
-/// 单元格百分比格式
+/**
+ * 单元格百分比格式
+*/
 pub const NUMBER_FORMAT_PERCENTAGE: &str = "0%";
-/// 单元格千分比格式
+/**
+ * 单元格千分比格式
+ */
 pub const NUMBER_FORMAT_PERMILLAGE: &str = "0‰";
-/// 单元格万分比格式
+/**
+ * 单元格万分比格式
+ * */
 pub const NUMBER_FORMAT_PERMIAN: &str = "0‱";
 lazy_static! {
+    /**
+     * 当前运行目录
+    */
     pub static ref EXE_DIR: PathBuf = {
         let exe_path = std::env::current_exe().expect("无法获取当前可执行文件路径");
         exe_path
@@ -33,59 +63,107 @@ lazy_static! {
     };
 }
 
-/// 表单最小行数
+/**
+ * 表单最小行数
+*/
 pub const FORM_MIN_ROW: u32 = 47;
-/// 表单最小列数
+/**
+ * 表单最小列数
+*/
 pub const FORM_MIN_COL: u16 = 25;
 
-///[数据表单]描述行
+/**
+ * [数据表单]描述行
+*/
 pub const TABLE_NORMAL_ROW_DESC: u32 = 1;
-///[数据表单]字段行
+/**
+ * [数据表单]字段行
+*/
 pub const TABLE_NORMAL_ROW_FIELD: u32 = 2;
-///[数据表单]类型行
+/**
+ * [数据表单]类型行
+*/
 pub const TABLE_NORMAL_ROW_TYPE: u32 = 3;
-///[数据表单]平台行
+/**
+ * [数据表单]平台行
+*/
 pub const TABLE_NORMAL_ROW_KEYWORD: u32 = 4;
-///[数据表单]关联信息行
+/**
+ * [数据表单]关联信息行
+*/
 pub const TABLE_NORMAL_ROW_LINK: u32 = 5;
 /// [数据表单]有效数据起始行数
 pub const TABLE_NORMAL_ROW_TOTAL: u32 = 6;
 
-///[本地化表单]描述行
+/**
+ * [本地化表单]描述行
+*/
 pub const TABLE_LOCALIZE_ROW_DESC: u32 = 1;
-///[本地化表单]字段行
+/**
+ * [本地化表单]字段行
+*/
 pub const TABLE_LOCALIZE_ROW_FIELD: u32 = 2;
-///[本地化表单]类型行
+/**
+ * [本地化表单]类型行
+*/
 pub const TABLE_LOCALIZE_ROW_TYPE: u32 = 3;
-///[本地化表单]平台行
+/**
+ * [本地化表单]平台行
+*/
 // pub const TABLE_LOCALIZE_ROW_KEYWORD: u32 = 4;
-// ///[本地化表单]关联信息行
+/**
+ * [本地化表单]关联信息行
+*/
 // pub const TABLE_LOCALIZE_ROW_LINK: u32 = 5;
-/// [本地化表单]有效数据起始行数
+/**
+ * [本地化表单]有效数据起始行数
+*/
 pub const TABLE_LOCALIZE_ROW_TOTAL: u32 = 6;
 
-///[KV表单]字段行
+/**
+ * [KV表单]字段行
+*/
 pub const TABLE_KV_COL_FIELD: u32 = 1;
-///[KV表单]类型列
+/**
+ * [KV表单]类型列
+*/
 pub const TABLE_KV_COL_TYPE: u32 = 2;
-///[KV表单]平台行
+/**
+ * [KV表单]平台行
+*/
 pub const TABLE_KV_COL_KEYWORD: u32 = 3;
-///[KV表单]关联信息列
+/**
+ * [KV表单]关联信息列
+*/
 pub const TABLE_KV_COL_LINK: u32 = 4;
-///[KV表单]值列
+/**
+ * [KV表单]值列
+*/
 pub const TABLE_KV_COL_VALUE: u32 = 5;
-///[数据表单]描述行
+/**
+ * [数据表单]描述行
+*/
 pub const TABLE_KV_COL_DESC: u32 = 6;
-///[KV表单]有效数据起始行数
+/**
+ * [KV表单]有效数据起始行数
+*/
 pub const TABLE_KV_ROW_TOTAL: u32 = 2;
 
-///[枚举表单]字段行
+/**
+ * [枚举表单]字段行
+*/
 pub const TABLE_ENUM_COL_FIELD: u32 = 1;
-///[枚举表单]值列
+/**
+ * [枚举表单]值列
+*/
 pub const TABLE_ENUM_COL_VALUE: u16 = 2;
-///[枚举表单]描述列
+/**
+ * [枚举表单]描述列
+*/
 pub const TABLE_ENUM_COL_DESC: u16 = 3;
-///[枚举表单]有效数据起始行数
+/**
+ * [枚举表单]有效数据起始行数
+*/
 pub const TABLE_ENUM_ROW_TOTAL: u32 = 2;
 
 pub const DATA_TYPE_KEY_INT: &str = "int";

@@ -10,6 +10,9 @@ use crate::{
 };
 use tera::{Context, Tera};
 
+/**
+ * Lua 字段信息
+*/
 #[derive(serde::Serialize)]
 struct LuaFieldInfo {
     // 是否是主键
@@ -24,6 +27,11 @@ struct LuaFieldInfo {
     pub field_index: i32,
 }
 
+/**
+ * 生成 Lua脚本
+ * @param build_setting 构建设置
+ * @param tree_data 树数据
+*/
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
     let lua_fields: Vec<LuaFieldInfo> = transition_fields(&fields);
@@ -71,6 +79,11 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
 }
 
+/**
+ * 通用字段转换成lua字段
+ * @param fields 通用字段
+ * @return lua字段
+*/
 fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<LuaFieldInfo> {
     let mut lua_fields: Vec<LuaFieldInfo> = Vec::new();
     for field in fields {
@@ -120,6 +133,11 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<LuaFieldInfo> {
     return lua_fields;
 }
 
+/**
+ * 收集导入的模块
+ * @param fields 字段列表
+ * @returns 导入的模块列表
+*/
 fn collect_imports(fields: &Vec<LuaFieldInfo>) -> Vec<String> {
     let mut imports: Vec<String> = Vec::new();
 

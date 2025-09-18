@@ -10,6 +10,9 @@ use crate::{
 };
 use tera::{Context, Tera};
 
+/**
+ * python 字段信息
+*/
 #[derive(serde::Serialize)]
 struct PythonFieldInfo {
     // 是否是主键
@@ -23,7 +26,11 @@ struct PythonFieldInfo {
     // 字段序号
     pub field_index: i32,
 }
-
+/**
+ * 生成python脚本
+ * @param build_setting 构建设置
+ * @param tree_data 树结构数据
+*/
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
     let python_fields: Vec<PythonFieldInfo> = transition_fields(&fields);
@@ -70,7 +77,11 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
         );
     }
 }
-
+/**
+ * 通用字段转换成python字段
+ * @param fields 字段列表
+ * @return python字段列表
+*/
 fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<PythonFieldInfo> {
     let mut python_fields: Vec<PythonFieldInfo> = Vec::new();
     for field in fields {
@@ -119,7 +130,11 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<PythonFieldInfo> {
     }
     return python_fields;
 }
-
+/**
+ * 收集需要导入的模块
+ * @param fields 字段列表
+ * @return 模块列表
+*/
 fn collect_imports(fields: &Vec<PythonFieldInfo>) -> Vec<String> {
     let mut imports: Vec<String> = Vec::new();
 

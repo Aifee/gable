@@ -3,6 +3,9 @@ use crate::{
     gui::datas::{edata_type::EDataType, gables, tree_data::FieldInfo},
 };
 
+/**
+ * proto字段信息
+*/
 #[derive(serde::Serialize)]
 pub struct ProtoFieldInfo {
     // 是否是主键
@@ -22,7 +25,13 @@ pub struct ProtoFieldInfo {
 }
 
 impl ProtoFieldInfo {
-    pub fn transition_fields_2(
+    /**
+     * 通用字段转换成Protobuff字段
+     * @param fields 通用字段
+     * @param isproto2 是否是版本2
+     * @return Protobuff字段
+     */
+    pub fn transition_fields(
         fields: &Vec<FieldInfo>,
         isproto2: bool,
     ) -> (Vec<String>, Vec<ProtoFieldInfo>, Vec<&EDataType>) {

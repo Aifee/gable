@@ -23,7 +23,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
         return;
     }
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
-    let (_, proto_fields, _) = ProtoFieldInfo::transition_fields_2(&fields, true);
+    let (_, proto_fields, _) = ProtoFieldInfo::transition_fields(&fields, true);
     let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
         .join(format!("{}.bin", tree_data.file_name));
     match tree_data.gable_type {

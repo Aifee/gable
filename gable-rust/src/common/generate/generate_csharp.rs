@@ -9,6 +9,9 @@ use crate::{
 use std::{fs, io::Error, path::PathBuf};
 use tera::{Context, Tera};
 
+/**
+ * C# 字段信息
+*/
 #[derive(serde::Serialize)]
 struct CsharpFieldInfo {
     // 是否是主键
@@ -23,6 +26,11 @@ struct CsharpFieldInfo {
     pub field_index: i32,
 }
 
+/**
+ * 生成C#脚本
+ * @param build_setting 构建设置
+ * @param tree_data 树结构数据
+*/
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
     let cs_fields: Vec<CsharpFieldInfo> = transition_fields(&fields);
@@ -65,6 +73,11 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
 }
 
+/**
+ * 通用字段转换成C#字段
+ * @param fields 字段列表
+ * @return C#字段列表
+*/
 fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CsharpFieldInfo> {
     let mut cs_fields: Vec<CsharpFieldInfo> = Vec::new();
     for field in fields {

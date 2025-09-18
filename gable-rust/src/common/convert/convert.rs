@@ -7,6 +7,9 @@ use crate::{
 };
 use std::collections::HashMap;
 
+/**
+ * 批量转换（所有平台 & 所有表单）
+ */
 pub fn from_all() {
     let settings = setting::APP_SETTINGS.read().unwrap();
     for setting in settings.build_settings.iter() {
@@ -14,6 +17,10 @@ pub fn from_all() {
     }
 }
 
+/**
+ * 批量转换（指定平台 & 所有表单）
+ * @param setting 指定的平台
+ */
 pub fn from_target(setting: &BuildSetting) {
     let items = gables::TREE_ITEMS.read().unwrap();
     let mut datas: HashMap<String, &TreeData> = HashMap::new();
@@ -36,6 +43,10 @@ pub fn from_target(setting: &BuildSetting) {
     }
 }
 
+/**
+ * 批量转换（所有平台 & 指定表单）
+ * @param item 指定表单
+*/
 pub fn from_items(item: &TreeItem) {
     let datas: HashMap<String, &TreeData> = item.get_datas();
     if datas.len() <= 0 {

@@ -23,8 +23,8 @@ pub fn from_all() {
     }
 }
 
-pub fn from_target(setting: &BuildSetting) {
-    if !setting.generate_script {
+pub fn from_target(build_setting: &BuildSetting) {
+    if !build_setting.generate_script {
         return;
     }
     let items = gables::TREE_ITEMS.read().unwrap();
@@ -40,28 +40,28 @@ pub fn from_target(setting: &BuildSetting) {
         return;
     }
     for (_, data) in datas.iter() {
-        if setting.target_type == ETargetType::Protobuff {
-            generate_protobuff::to(setting, data);
+        if build_setting.target_type == ETargetType::Protobuff {
+            generate_protobuff::to(build_setting, data);
         } else {
-            match setting.dev {
-                EDevelopType::Cpp => generate_cpp::to(setting, data),
-                EDevelopType::Csharp => generate_csharp::to(setting, data),
-                EDevelopType::Cangjie => generate_cangjie::to(setting, data),
-                EDevelopType::Golang => generate_golang::to(setting, data),
-                EDevelopType::Java => generate_java::to(setting, data),
-                EDevelopType::JavaScript => generate_javascript::to(setting, data),
-                EDevelopType::Lua => generate_lua::to(setting, data),
-                EDevelopType::Python => generate_python::to(setting, data),
-                EDevelopType::TypeScript => generate_typescript::to(setting, data),
+            match build_setting.dev {
+                EDevelopType::Cpp => generate_cpp::to(build_setting, data),
+                EDevelopType::Csharp => generate_csharp::to(build_setting, data),
+                EDevelopType::Cangjie => generate_cangjie::to(build_setting, data),
+                EDevelopType::Golang => generate_golang::to(build_setting, data),
+                EDevelopType::Java => generate_java::to(build_setting, data),
+                EDevelopType::JavaScript => generate_javascript::to(build_setting, data),
+                EDevelopType::Lua => generate_lua::to(build_setting, data),
+                EDevelopType::Python => generate_python::to(build_setting, data),
+                EDevelopType::TypeScript => generate_typescript::to(build_setting, data),
                 // _ => {
-                //     log::error!("当前开发环境不支持导出配置:{:?}", setting.dev);
+                //     log::error!("当前开发环境不支持导出配置:{:?}", build_setting.dev);
                 // }
             }
         }
     }
-    if setting.target_type == ETargetType::Protobuff {
-        let target_path: PathBuf = utils::get_absolute_path(&setting.proto_target_path);
-        system_command(&setting.postprocessing, &target_path);
+    if !build_setting.postprocessing.is_empty() {
+        let target_path: PathBuf = utils::get_absolute_path(&setting::get_workspace());
+        system_command(&build_setting.postprocessing, &target_path);
     }
 }
 
@@ -73,33 +73,33 @@ pub fn from_items(item: &TreeItem) {
     }
 
     let settings = setting::APP_SETTINGS.read().unwrap();
-    for setting in settings.build_settings.iter() {
-        if !setting.generate_script {
+    for build_setting in settings.build_settings.iter() {
+        if !build_setting.generate_script {
             continue;
         }
         for (_, data) in datas.iter() {
-            if setting.target_type == ETargetType::Protobuff {
-                generate_protobuff::to(setting, data);
+            if build_setting.target_type == ETargetType::Protobuff {
+                generate_protobuff::to(build_setting, data);
             } else {
-                match setting.dev {
-                    EDevelopType::Cpp => generate_cpp::to(setting, data),
-                    EDevelopType::Csharp => generate_csharp::to(setting, data),
-                    EDevelopType::Cangjie => generate_cangjie::to(setting, data),
-                    EDevelopType::Golang => generate_golang::to(setting, data),
-                    EDevelopType::Java => generate_java::to(setting, data),
-                    EDevelopType::JavaScript => generate_javascript::to(setting, data),
-                    EDevelopType::Lua => generate_lua::to(setting, data),
-                    EDevelopType::Python => generate_python::to(setting, data),
-                    EDevelopType::TypeScript => generate_typescript::to(setting, data),
+                match build_setting.dev {
+                    EDevelopType::Cpp => generate_cpp::to(build_setting, data),
+                    EDevelopType::Csharp => generate_csharp::to(build_setting, data),
+                    EDevelopType::Cangjie => generate_cangjie::to(build_setting, data),
+                    EDevelopType::Golang => generate_golang::to(build_setting, data),
+                    EDevelopType::Java => generate_java::to(build_setting, data),
+                    EDevelopType::JavaScript => generate_javascript::to(build_setting, data),
+                    EDevelopType::Lua => generate_lua::to(build_setting, data),
+                    EDevelopType::Python => generate_python::to(build_setting, data),
+                    EDevelopType::TypeScript => generate_typescript::to(build_setting, data),
                     // _ => {
-                    //     log::error!("当前开发环境不支持导出配置:{:?}", setting.dev);
+                    //     log::error!("当前开发环境不支持导出配置:{:?}", build_setting.dev);
                     // }
                 }
             }
         }
-        if setting.target_type == ETargetType::Protobuff {
-            let target_path: PathBuf = utils::get_absolute_path(&setting.proto_target_path);
-            system_command(&setting.postprocessing, &target_path);
+        if !build_setting.postprocessing.is_empty() {
+            let target_path: PathBuf = utils::get_absolute_path(&setting::get_workspace());
+            system_command(&build_setting.postprocessing, &target_path);
         }
     }
 }
@@ -110,12 +110,28 @@ fn system_command(command: &str, path: &PathBuf) {
     }
     #[cfg(target_os = "windows")]
     {
-        if let Err(e) = Command::new("cmd")
+        // 对于Windows系统，将多行命令写入临时批处理文件执行
+        let temp_script = path.join("temp_script.bat");
+        if let Err(e) = std::fs::write(&temp_script, command) {
+            log::error!("无法创建临时脚本文件: {}", e);
+            return;
+        }
+
+        match Command::new("cmd")
             .current_dir(&path)
-            .args(&["/C", &command])
+            .args(&["/C", &temp_script.to_string_lossy()])
             .spawn()
         {
-            log::error!("无法执行后处理命令: {}", e);
+            Ok(mut child) => {
+                // 等待命令执行完成
+                let _ = child.wait();
+                // 删除临时脚本文件
+                let _ = std::fs::remove_file(&temp_script);
+            }
+            Err(e) => {
+                log::error!("无法执行后处理命令: {}", e);
+                let _ = std::fs::remove_file(&temp_script);
+            }
         }
     }
 

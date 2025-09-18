@@ -25,7 +25,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
     let tera: Tera = tera_result.unwrap();
     if common_protos.len() > 0 {
-        create_common_proto(&tera, &common_protos, &build_setting.proto_target_path)
+        create_common_proto(&tera, &common_protos, &build_setting.script_path)
     }
     let mut context: Context = Context::new();
     context.insert("CLASS_NAME", &tree_data.file_name);
@@ -44,21 +44,21 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let rendered: String = rendered_result.unwrap();
 
     // 写入文件
-    let target_path: PathBuf = utils::get_absolute_path(&build_setting.proto_target_path)
+    let proto_path: PathBuf = utils::get_absolute_path(&build_setting.script_path)
         .join(format!("{}.proto", tree_data.file_name));
 
-    let result: Result<(), Error> = std::fs::write(&target_path, rendered);
+    let result: Result<(), Error> = std::fs::write(&proto_path, rendered);
     if result.is_err() {
         log::error!(
             "导出【{}】失败:{}",
             build_setting.display_name,
-            target_path.to_str().unwrap()
+            proto_path.to_str().unwrap()
         );
     } else {
         log::info!(
             "导出【{}】成功:{}",
             build_setting.display_name,
-            target_path.to_str().unwrap()
+            proto_path.to_str().unwrap()
         );
     }
 }

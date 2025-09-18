@@ -20,12 +20,10 @@ pub struct BuildSetting {
     // 是否是protobuff 2版本
     pub is_proto_2: bool,
     // 是否自定义模板
-    pub is_proto_custom: bool,
+    pub is_custom: bool,
     // 自定义模板路径
-    pub proto_custom_template: PathBuf,
-    // 生成proto文件路径
-    pub proto_target_path: PathBuf,
-    // 生成proto文件后处理
+    pub custom_template: PathBuf,
+    // 后处理命令
     pub postprocessing: String,
     /// 构建目标路径，相对路径
     pub target_path: PathBuf,
@@ -43,9 +41,8 @@ impl Default for BuildSetting {
             keyword: String::new(),
             target_type: ETargetType::Json,
             is_proto_2: false,
-            is_proto_custom: false,
-            proto_custom_template: PathBuf::new(),
-            proto_target_path: PathBuf::new(),
+            is_custom: false,
+            custom_template: PathBuf::new(),
             postprocessing: String::new(),
             target_path: PathBuf::new(),
             generate_script: false,
@@ -149,9 +146,8 @@ pub fn add_build_setting(dev_type: EDevelopType) -> Option<usize> {
         keyword: dev_type.to_keyword().to_string(),
         target_type: ETargetType::Json,
         is_proto_2: false,
-        is_proto_custom: false,
-        proto_custom_template: PathBuf::new(),
-        proto_target_path: PathBuf::new(),
+        is_custom: false,
+        custom_template: PathBuf::new(),
         postprocessing: String::new(),
         target_path: utils::get_env_relative_path(&get_workspace()),
         generate_script: false,

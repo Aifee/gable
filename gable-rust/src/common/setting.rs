@@ -7,6 +7,9 @@ use std::path::{Path, PathBuf};
 use std::sync::RwLock;
 use std::{fs, io};
 
+/**
+ * 构建设置模型
+*/
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct BuildSetting {
@@ -52,6 +55,9 @@ impl Default for BuildSetting {
     }
 }
 
+/**
+ * 应用设置
+*/
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppSettings {
     pub workspace: Option<String>,
@@ -65,7 +71,9 @@ lazy_static! {
     });
 }
 
-/// 从JSON文件加载BuildSetting列表
+/**
+ * 从JSON文件加载BuildSetting列表
+*/
 pub fn init() {
     let path: PathBuf = get_data_path().join(constant::SETTING_PREFS);
     if path.exists() {
@@ -86,19 +94,29 @@ pub fn init() {
     }
 }
 
-/// 获取窗口标题
+/**
+ * 获取窗口标题
+*/
 pub fn get_title() -> String {
     let workspace = get_workspace().to_string_lossy().to_string();
     format!("Gable - {}", workspace)
 }
 
-// 提供一个安全的设置方法
+/**
+ * 设置工作空间目录
+ * @param path 路径
+ * @return 设置结果
+*/
 pub fn set_workspace(path: String) -> io::Result<()> {
     let mut settings = APP_SETTINGS.write().unwrap();
     settings.workspace = Some(path);
     save_build_settings_to_file(&*settings)
 }
 
+/**
+ * 获取工作空间目录
+ * @return 工作空间目录
+*/
 pub fn get_workspace() -> PathBuf {
     let settings = APP_SETTINGS.read().unwrap();
     let root_path: PathBuf = if let Some(path) = settings.workspace.as_ref() {
@@ -109,7 +127,10 @@ pub fn get_workspace() -> PathBuf {
     root_path
 }
 
-/// 获取临时目录
+/**
+ * 获取临时目录
+ * @return 临时目录
+*/
 pub fn get_temp_path() -> PathBuf {
     let path: PathBuf = get_workspace().join(&constant::DIR_TEMP);
     if !path.exists() {
@@ -120,7 +141,10 @@ pub fn get_temp_path() -> PathBuf {
     path
 }
 
-/// 获取数据目录
+/**
+ * 获取数据目录
+ * @return 数据目录
+*/
 pub fn get_data_path() -> PathBuf {
     let exe_path: PathBuf = std::env::current_exe().expect("无法获取当前可执行文件路径");
     let exe_dir: &Path = exe_path.parent().expect("无法获取可执行文件所在目录");
@@ -140,6 +164,10 @@ pub fn clone_build_settings() -> Vec<BuildSetting> {
     build_settings
 }
 
+/**
+ * 添加构建设置
+ * @param dev_type 开发类型
+ */
 pub fn add_build_setting(dev_type: EDevelopType) -> Option<usize> {
     let build_setting: BuildSetting = BuildSetting {
         dev: dev_type,
@@ -164,7 +192,11 @@ pub fn add_build_setting(dev_type: EDevelopType) -> Option<usize> {
     }
 }
 
-/// 删除BuildSetting
+/**
+ * 删除BuildSetting
+ * @param index 索引
+ * @return 新的索引
+*/
 pub fn remove_build_setting(index: usize) -> Option<usize> {
     let mut settings = APP_SETTINGS.write().unwrap();
     settings.build_settings.remove(index);
@@ -182,6 +214,11 @@ pub fn remove_build_setting(index: usize) -> Option<usize> {
     }
 }
 
+/**
+ * 通过索引ID获取构建设置
+ * @param index 索引ID
+ * @return 构建设置
+*/
 pub fn get_build_setting(index: usize) -> Option<BuildSetting> {
     let settings = APP_SETTINGS.read().unwrap();
     if index < settings.build_settings.len() {
@@ -191,6 +228,11 @@ pub fn get_build_setting(index: usize) -> Option<BuildSetting> {
     }
 }
 
+/**
+ * 通过名称获取构建设置
+ * @param name 名称
+ * @return 构建设置
+*/
 pub fn get_build_setting_with_name(name: &str) -> Option<BuildSetting> {
     let settings = APP_SETTINGS.read().unwrap();
     for setting in settings.build_settings.iter() {

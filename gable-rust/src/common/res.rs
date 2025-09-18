@@ -2,18 +2,14 @@ use crate::gui::datas::edevelop_type::EDevelopType;
 use eframe::egui::{Color32, ColorImage, Context, TextureHandle, TextureOptions, Vec2};
 use image::{DynamicImage, ImageBuffer, Rgba};
 
-// pub const ICON_DEFUALT: &[u8] = include_bytes!(r"../../assets/icons/error.png");
-/// 字体资源
+/**
+ * 字体资源
+*/
 pub const FONT_ASSETS: &[u8] = include_bytes!(r"../../assets/fonts/SourceHanSansSC-Normal.otf");
-/// fallback字体
+/**
+ * fallback字体
+*/
 pub const FONT_FALLBACK: &[u8] = include_bytes!(r"../../assets/fonts/fallback_font.ttf");
-
-// pub const ICON_SETTING: &[u8] = include_bytes!("../../assets/icons/setting.png");
-// pub const ICON_SEARCH: &[u8] = include_bytes!("../../assets/icons/search.png");
-// pub const ICON_SYSTEM: &[u8] = include_bytes!("../../assets/icons/system.png");
-
-// pub const ICON_CLIENT: &[u8] = include_bytes!("../../assets/icons/client.png");
-// pub const ICON_SERVER: &[u8] = include_bytes!("../../assets/icons/server.png");
 
 // pub const ICON_FOLDER_BLUE: &[u8] = include_bytes!("../../assets/icons/folder_blue.png");
 // pub const ICON_FOLDER_NORMAL: &[u8] = include_bytes!("../../assets/icons/folder_normal.png");
@@ -31,7 +27,9 @@ pub const ICON_PYTHON: &[u8] = include_bytes!("../../assets/icons/python.png");
 pub const ICON_TYPESCRIPT: &[u8] = include_bytes!("../../assets/icons/typescript.png");
 // pub const ICON_YAML: &[u8] = include_bytes!("../../assets/icons/yaml.png");
 
-/// 加载图片
+/**
+ * 加载图片
+*/
 pub fn load_texture(ctx: &Context, data: &[u8], name: &str) -> TextureHandle {
     let img: DynamicImage = image::load_from_memory(data).expect("无法从内存加载图像");
     let size: [usize; 2] = [img.width() as usize, img.height() as usize];
@@ -47,7 +45,10 @@ pub fn load_texture(ctx: &Context, data: &[u8], name: &str) -> TextureHandle {
     };
     ctx.load_texture(name, color_image, TextureOptions::default())
 }
-/// 加载开发语言图标
+
+/**
+ * 加载开发语言图标
+*/
 pub fn load_develop_icon(ctx: &Context, dev: &EDevelopType) -> TextureHandle {
     let icon_texture = match dev {
         EDevelopType::Cpp => ICON_C,

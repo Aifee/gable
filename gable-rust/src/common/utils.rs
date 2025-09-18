@@ -3,7 +3,11 @@ use eframe::egui::{Color32, Context, Style};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-/// 将列号转换为Excel风格的列名（A, B, ..., Z, AA, AB, ...）
+/**
+ * 将列号转换为Excel风格的列名（A, B, ..., Z, AA, AB, ...）
+ * @param col 列号
+ * @return Excel风格的列名
+*/
 pub fn column_index_to_name(col: u32) -> String {
     let mut result: String = String::new();
     let mut num: u32 = col;
@@ -17,6 +21,14 @@ pub fn column_index_to_name(col: u32) -> String {
     result
 }
 
+/**
+ * @description: 获取单元格范围
+ * @param start_row 起始行号
+ * @param start_col 起始列号
+ * @param end_row 结束行号
+ * @param end_col 结束列号
+ * @return 单元格范围
+*/
 pub fn cell_range(start_row: u32, start_col: u32, end_row: u32, end_col: u16) -> String {
     format!(
         "{}{}:{}{}",
@@ -27,6 +39,11 @@ pub fn cell_range(start_row: u32, start_col: u32, end_row: u32, end_col: u16) ->
     )
 }
 
+/**
+ * 获取选中颜色
+ * @param ctx 上下文
+ * @return 选中颜色
+*/
 pub fn get_selected_color(ctx: &Context) -> Color32 {
     let style: Arc<Style> = ctx.style();
     if style.visuals.dark_mode {
@@ -36,7 +53,11 @@ pub fn get_selected_color(ctx: &Context) -> Color32 {
     }
 }
 
-/// 绝对路径转换成exe相对路径
+/**
+ * 绝对路径转换成exe相对路径
+ * @param path 绝对路径
+ * @return 相对路径
+*/
 pub fn get_env_relative_path(path: &Path) -> PathBuf {
     if let Ok(relative_path) = path.strip_prefix(&*constant::EXE_DIR) {
         relative_path.to_path_buf()
@@ -82,7 +103,11 @@ pub fn get_env_relative_path(path: &Path) -> PathBuf {
     }
 }
 
-// 获取绝对路径
+/**
+ * 获取绝对路径
+ * @param path 相对路径
+ * @return 绝对路径
+*/
 pub fn get_absolute_path(path: &Path) -> PathBuf {
     if path.is_absolute() {
         path.to_path_buf()
@@ -108,7 +133,11 @@ pub fn get_absolute_path(path: &Path) -> PathBuf {
     }
 }
 
-/// 检查文件名是否合法
+/**
+ * 检查文件名是否合法
+ * @param name 文件名
+ * @return 是否合法
+*/
 pub fn is_valid_filename(name: &str) -> bool {
     // 检查是否为空
     if name.is_empty() {
@@ -143,7 +172,12 @@ pub fn is_valid_filename(name: &str) -> bool {
     true
 }
 
-/// 检查同名文件/文件夹是否已存在
+/**
+ * 检查同名文件/文件夹是否已存在
+ * @param full_path 文件/文件夹的完整路径
+ * @param new_name 新的文件/文件夹名
+ * @return true:已存在
+*/
 pub fn is_name_exists(full_path: &str, new_name: &str) -> bool {
     let path: &Path = Path::new(&full_path);
     if let Some(parent_path) = path.parent() {
@@ -154,7 +188,11 @@ pub fn is_name_exists(full_path: &str, new_name: &str) -> bool {
     }
 }
 
-/// 解析 .gable 文件名，返回 (excel_name, sheet_name) 或仅 excel_name
+/**
+ * 解析 .gable 文件名
+ * @param file_name 文件名
+ * @return (excel_name, sheet_name) 或仅 excel_name
+*/
 pub fn parse_gable_filename(filename: &str) -> Option<(String, Option<String>)> {
     if !filename.ends_with(constant::GABLE_FILE_TYPE) {
         return None;
@@ -173,6 +211,11 @@ pub fn parse_gable_filename(filename: &str) -> Option<(String, Option<String>)> 
     }
 }
 
+/**
+ * 打开资源管理器
+ * @param path 路径
+ * @return 是否成功打开
+*/
 pub fn open_in_explorer(path: &str) -> std::io::Result<()> {
     let path_obj = Path::new(path);
     let (explorer_path, select_path) = if path_obj.is_file() {

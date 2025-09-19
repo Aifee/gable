@@ -31,6 +31,11 @@ pub struct TreeData {
 }
 
 impl TreeData {
+    /**
+     * 将数据转换为值列表
+     * @param keyword 关键字，用于筛选包含该关键字的数据
+     * @return 返回值映射列表
+     */
     pub fn to_values(&self, keyword: &str) -> Vec<Map<String, Value>> {
         match self.gable_type {
             ESheetType::Normal => self.normal_data(keyword),
@@ -43,6 +48,11 @@ impl TreeData {
         }
     }
 
+    /**
+     * 将数据转换为字段信息列表
+     * @param keyword 关键字，用于筛选包含该关键字的数据
+     * @return 返回字段信息列表
+     */
     pub fn to_fields(&self, keyword: &str) -> Vec<FieldInfo> {
         match self.gable_type {
             ESheetType::Normal => self.normal_fields(keyword),
@@ -52,6 +62,11 @@ impl TreeData {
         }
     }
 
+    /**
+     * 获取普通表数据
+     * @param keyword 关键字，用于筛选包含该关键字的数据
+     * @return 返回值映射列表
+     */
     fn normal_data(&self, keyword: &str) -> Vec<Map<String, Value>> {
         let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
         let mut items: Vec<Map<String, Value>> = Vec::new();
@@ -127,6 +142,11 @@ impl TreeData {
         return items;
     }
 
+    /**
+     * 获取本地化表数据
+     * @param keyword 关键字，用于筛选包含该关键字的数据
+     * @return 返回值映射列表
+     */
     fn localize_data(&self, keyword: &str) -> Vec<Map<String, Value>> {
         let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
         let mut items: Vec<Map<String, Value>> = Vec::new();
@@ -202,6 +222,11 @@ impl TreeData {
         return items;
     }
 
+    /**
+     * 获取键值对表数据
+     * @param keyword 关键字，用于筛选包含该关键字的数据
+     * @return 返回值映射列表
+     */
     fn kv_data(&self, keyword: &str) -> Vec<Map<String, Value>> {
         let mut items: Map<String, Value> = Map::new();
         for (_, row_data) in self.content.cells.iter() {
@@ -254,6 +279,12 @@ impl TreeData {
         return vec![items];
     }
 
+    /**
+     * 根据类型和值获取对应的JSON值
+     * @param type_cell 类型单元格
+     * @param value_cell 值单元格
+     * @return 返回对应的JSON值
+     */
     fn get_value(type_cell: &CellData, value_cell: &CellData) -> Value {
         let data_type: EDataType = EDataType::convert(&type_cell.value);
         match data_type {
@@ -279,6 +310,11 @@ impl TreeData {
         }
     }
 
+    /**
+     * 获取普通表字段信息
+     * @param keyword 关键字，用于筛选包含该关键字的数据
+     * @return 返回字段信息列表
+     */
     fn normal_fields(&self, keyword: &str) -> Vec<FieldInfo> {
         let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
         let mut fields: Vec<FieldInfo> = Vec::new();
@@ -384,6 +420,11 @@ impl TreeData {
         return fields;
     }
 
+    /**
+     * 获取本地化表字段信息
+     * @param keyword 关键字，用于筛选包含该关键字的数据
+     * @return 返回字段信息列表
+     */
     fn localize_fields(&self, keyword: &str) -> Vec<FieldInfo> {
         let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
         let mut fields: Vec<FieldInfo> = Vec::new();
@@ -474,6 +515,11 @@ impl TreeData {
         return fields;
     }
 
+    /**
+     * 获取键值对表字段信息
+     * @param keyword 关键字，用于筛选包含该关键字的数据
+     * @return 返回字段信息列表
+     */
     fn kv_fields(&self, keyword: &str) -> Vec<FieldInfo> {
         let mut fields: Vec<FieldInfo> = Vec::new();
         let mut field_index: i32 = 1;
@@ -542,6 +588,10 @@ impl TreeData {
         return fields;
     }
 
+    /**
+     * 获取枚举表字段信息
+     * @return 返回字段信息列表
+     */
     fn enum_fields(&self) -> Vec<FieldInfo> {
         let mut fields: Vec<FieldInfo> = Vec::new();
         for (_, row_data) in self.content.cells.iter() {

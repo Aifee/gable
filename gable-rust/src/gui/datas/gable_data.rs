@@ -14,6 +14,11 @@ pub struct GableData {
 }
 
 impl GableData {
+    /**
+     * 创建一个新的GableData实例
+     * @param sheet_type 表格类型
+     * @return 返回对应类型的GableData模板实例
+     */
     pub fn new(sheet_type: ESheetType) -> Self {
         match sheet_type {
             ESheetType::Normal => Self::normal_template(),
@@ -23,6 +28,10 @@ impl GableData {
         }
     }
 
+    /**
+     * 创建普通表格模板
+     * @return 返回普通表格的GableData模板
+     */
     fn normal_template() -> GableData {
         let mut heads: BTreeMap<u32, BTreeMap<u16, CellData>> = BTreeMap::new();
         let mut desc_cols: BTreeMap<u16, CellData> = BTreeMap::new();
@@ -83,6 +92,10 @@ impl GableData {
         }
     }
 
+    /**
+     * 创建键值对表格模板
+     * @return 返回键值对表格的GableData模板
+     */
     fn kv_template() -> GableData {
         let mut heads: BTreeMap<u32, BTreeMap<u16, CellData>> = BTreeMap::new();
         let mut cols: BTreeMap<u16, CellData> = BTreeMap::new();
@@ -155,6 +168,10 @@ impl GableData {
         }
     }
 
+    /**
+     * 创建枚举表格模板
+     * @return 返回枚举表格的GableData模板
+     */
     fn enum_template() -> GableData {
         let mut heads: BTreeMap<u32, BTreeMap<u16, CellData>> = BTreeMap::new();
         let mut cols: BTreeMap<u16, CellData> = BTreeMap::new();
@@ -197,6 +214,10 @@ impl GableData {
         }
     }
 
+    /**
+     * 创建本地化表格模板
+     * @return 返回本地化表格的GableData模板
+     */
     fn localize_template() -> GableData {
         let mut heads: BTreeMap<u32, BTreeMap<u16, CellData>> = BTreeMap::new();
         let mut desc_cols: BTreeMap<u16, CellData> = BTreeMap::new();
@@ -243,7 +264,11 @@ impl GableData {
         }
     }
 
-    /// 获取普通表的有效的数据头,列，行
+    /**
+     * 获取普通表的有效的数据头,列，行
+     * @param keyword 关键字，用于筛选包含该关键字的数据
+     * @return 返回一个元组，包含主键表头数据和其他表头数据
+     */
     pub fn get_valid_normal_heads(
         &self,
         keyword: &str,

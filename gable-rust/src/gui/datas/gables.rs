@@ -17,7 +17,12 @@ lazy_static! {
     pub static ref EDITION_FILES: Arc<RwLock<HashMap<String, WatcherData>>> = Arc::new(RwLock::new(HashMap::new()));
 }
 
-/// 添加编辑文件到编辑列表
+/**
+ * 添加编辑文件到编辑列表
+ * @param file_path 文件路径
+ * @param targe_path 目标路径
+ * @param sheet_type 表格类型
+ */
 fn add_editor_file(file_path: String, targe_path: String, sheet_type: ESheetType) {
     let mut editor_files = EDITION_FILES.write().unwrap();
     editor_files.insert(
@@ -29,13 +34,20 @@ fn add_editor_file(file_path: String, targe_path: String, sheet_type: ESheetType
     );
 }
 
-// 移除编辑文件
+/**
+ * 移除编辑文件
+ * @param file_path 文件路径
+ */
 pub fn remove_editor_file(file_path: &str) {
     let mut editor_files = EDITION_FILES.write().unwrap();
     editor_files.remove(file_path);
 }
 
-// 判断是否是编辑文件
+/**
+ * 判断是否是编辑文件
+ * @param file_path 文件路径
+ * @return 返回一个元组，第一个元素表示是否是编辑文件，第二个元素是WatcherData
+ */
 fn has_eidtor_file(file_path: &PathBuf) -> (bool, Option<WatcherData>) {
     let files = EDITION_FILES.read().unwrap();
     match files.get(&file_path.to_string_lossy().to_string()) {
@@ -44,7 +56,11 @@ fn has_eidtor_file(file_path: &PathBuf) -> (bool, Option<WatcherData>) {
     }
 }
 
-/// 并行读取所有gable文件
+/**
+ * 并行读取所有gable文件
+ * @param gable_files gable文件映射
+ * @return 返回文件路径和对应GableData的映射
+ */
 fn read_all_gable_files_parallel(
     gable_files: &HashMap<String, Vec<(String, String)>>,
 ) -> HashMap<String, Option<GableData>> {
@@ -64,7 +80,11 @@ fn read_all_gable_files_parallel(
         .collect()
 }
 
-/// 递归构建目录树
+/**
+ * 递归构建目录树
+ * @param path 路径
+ * @return 返回构建的目录树项列表
+ */
 fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     let mut items: Vec<TreeItem> = Vec::new();
 
@@ -187,6 +207,9 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
 
 /**
  * 构建树形某个节点结构
+ * @param path 路径
+ * @param item_type 项类型
+ * @return 返回构建的树节点
  */
 fn build_item_from_path(path: &str, item_type: EItemType) -> Option<TreeItem> {
     let path_buf = Path::new(path);
@@ -365,6 +388,13 @@ fn build_item_from_path(path: &str, item_type: EItemType) -> Option<TreeItem> {
         }
     }
 }
+
+/**
+ * 根据路径查找树节点
+ * @param items 树项列表
+ * @param path 路径
+ * @return 返回找到的树节点
+ */
 pub fn find_item_by_path<'a>(items: &'a [TreeItem], path: &str) -> Option<&'a TreeItem> {
     for item in items {
         if item.fullpath == path {
@@ -378,7 +408,12 @@ pub fn find_item_by_path<'a>(items: &'a [TreeItem], path: &str) -> Option<&'a Tr
     None
 }
 
-// 根据路径查找树节点，当节点和item_type不匹配时，往父节点查找
+/**
+ * 根据路径查找树节点，当节点和item_type不匹配时，往父节点查找
+ * @param path 路径
+ * @param item_type 项类型
+ * @return 返回找到的树节点
+ */
 pub fn find_item_clone(path: &str, item_type: EItemType) -> Option<TreeItem> {
     fn find_parent_item(path: &str, target_type: EItemType) -> Option<TreeItem> {
         // 先找到当前项
@@ -408,7 +443,11 @@ pub fn find_item_clone(path: &str, item_type: EItemType) -> Option<TreeItem> {
     }
 }
 
-// 根据路径查找树节点
+/**
+ * 根据路径查找树节点
+ * @param path 路径
+ * @return 返回找到的树节点
+ */
 pub fn get_item_clone(path: &str) -> Option<TreeItem> {
     let tree_items = TREE_ITEMS.read().unwrap();
     fn get_item_by_path<'a>(items: &'a [TreeItem], path: &str) -> Option<&'a TreeItem> {
@@ -427,7 +466,12 @@ pub fn get_item_clone(path: &str) -> Option<TreeItem> {
     get_item_by_path(&tree_items, path).cloned()
 }
 
-// 获取枚举数据
+/**
+ * 获取枚举数据
+ * @param link_name 链接名称
+ * @param f 回调函数
+ * @return 返回处理结果
+ */
 pub fn get_enum_cells<F, R>(link_name: &str, f: F) -> Option<R>
 where
     F: FnOnce(&GableData) -> R,
@@ -463,6 +507,12 @@ where
     None
 }
 
+/**
+ * 获取本地化数据
+ * @param link_name 链接名称
+ * @param f 回调函数
+ * @return 返回处理结果
+ */
 pub fn get_loc_cells<F, R>(link_name: &str, f: F) -> Option<R>
 where
     F: FnOnce(&GableData) -> R,
@@ -496,7 +546,9 @@ where
     None
 }
 
-/// 项目目录调整好重置数据
+/**
+ * 项目目录调整好重置数据
+ */
 pub fn refresh_gables() {
     let root_path: &Path = &setting::get_workspace();
     let mut tree_items: Vec<TreeItem> = Vec::new();
@@ -506,6 +558,13 @@ pub fn refresh_gables() {
     }
     *TREE_ITEMS.write().unwrap() = tree_items;
 }
+
+/**
+ * 添加新项
+ * @param new_path 新路径
+ * @param new_item 新项类型
+ * @return 是否成功添加
+ */
 pub fn add_new_item(new_path: &Path, new_item: EItemType) -> bool {
     let mut tree_items = TREE_ITEMS.write().unwrap();
     if let Some(file_name) = new_path.file_name() {
@@ -590,6 +649,13 @@ pub fn add_new_item(new_path: &Path, new_item: EItemType) -> bool {
     }
 }
 
+/**
+ * 添加项到父项中
+ * @param items 项列表
+ * @param new_item 新项
+ * @param parent_path 父路径
+ * @return 是否成功添加
+ */
 fn add_item_to_parent(items: &mut [TreeItem], new_item: TreeItem, parent_path: &str) -> bool {
     for item in items.iter_mut() {
         if item.fullpath == parent_path {
@@ -642,7 +708,11 @@ pub fn editor_complete(excel_path: &PathBuf) -> bool {
     return true;
 }
 
-// 重新加载gable文件
+/**
+ * 重新加载gable文件
+ * @param gable_file_paths gable文件路径列表
+ * @return 是否成功加载
+ */
 fn reload_gable(gable_file_paths: Option<Vec<String>>) -> bool {
     let file_paths = match gable_file_paths {
         Some(paths) => paths,
@@ -703,7 +773,10 @@ fn reload_gable(gable_file_paths: Option<Vec<String>>) -> bool {
 /**
  * 刷新节点，重命名后如果去遍历ITEM_TREE去重置full_path比较费劲
  * 这里是把旧的节点删除，然后再重建新的节点方式来实现重命名的刷新操作
-*/
+ * @param old_path 旧路径
+ * @param new_path 新路径
+ * @return 是否成功刷新
+ */
 pub fn refresh_item(old_path: &str, new_path: &str) -> bool {
     let (parent_path, item_type): (String, Option<EItemType>) = {
         let tree_items = TREE_ITEMS.read().unwrap();
@@ -820,7 +893,11 @@ pub fn refresh_item(old_path: &str, new_path: &str) -> bool {
     }
 }
 
-// 删除tree_item对应的文件
+/**
+ * 删除tree_item对应的文件
+ * @param full_path 完整路径
+ * @return 是否成功删除
+ */
 pub fn remove_item_file(full_path: &str) -> bool {
     let item_type = {
         let tree_items = TREE_ITEMS.read().unwrap();
@@ -905,7 +982,10 @@ pub fn remove_item_file(full_path: &str) -> bool {
     result
 }
 
-/// 使用通道或其他机制在下一帧更新，避免锁冲突
+/**
+ * 使用通道或其他机制在下一帧更新，避免锁冲突
+ * @param full_path 完整路径
+ */
 pub fn remove_tree_item(full_path: &str) {
     fn remove_item_from_tree_recursive(items: &mut Vec<TreeItem>, full_path: &str) -> bool {
         // 先尝试直接在当前层级找到并移除
@@ -926,7 +1006,10 @@ pub fn remove_tree_item(full_path: &str) {
     remove_item_from_tree_recursive(&mut tree_items, full_path);
 }
 
-/// 编辑gable文件
+/**
+ * 编辑gable文件
+ * @param item 树项
+ */
 pub fn command_edit_gable(item: &TreeItem) {
     if item.item_type == EItemType::Folder {
         log::error!("文件夹不能进行编辑");

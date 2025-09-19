@@ -1,3 +1,6 @@
+/**
+ * 命令类型
+*/
 #[derive(Debug, Clone)]
 pub enum ECommandType {
     // 编辑
@@ -26,6 +29,9 @@ pub enum ECommandType {
     Refresh,
 }
 
+/**
+ * 命令参数
+*/
 #[derive(Debug, Clone)]
 pub struct ActionCommand {
     pub com_type: ECommandType,

@@ -243,6 +243,21 @@ pub fn get_build_setting_with_name(name: &str) -> Option<BuildSetting> {
     None
 }
 
+pub fn get_build_settings(display_name: Option<String>) -> Vec<BuildSetting> {
+    let settings = APP_SETTINGS.read().unwrap();
+    if let Some(display_name) = display_name {
+        let mut result = Vec::new();
+        for setting in settings.build_settings.iter() {
+            if setting.display_name == display_name {
+                result.push(setting.clone());
+            }
+        }
+        result
+    } else {
+        settings.build_settings.clone()
+    }
+}
+
 /**
  * 更新指定索引的BuildSetting
  * @param index

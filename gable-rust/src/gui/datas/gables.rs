@@ -467,6 +467,35 @@ pub fn get_item_clone(path: &str) -> Option<TreeItem> {
 }
 
 /**
+ * 根据名称查找树节点
+ * @param names 名称列表
+ * @return 找到的树节点列表
+ */
+pub fn get_item_display_name(names: Vec<String>) -> Vec<TreeItem> {
+    let tree_items = TREE_ITEMS.read().unwrap();
+    if names.is_empty() {
+        return tree_items.clone();
+    }
+    // 递归查找匹配display_name的项
+    fn find_items_by_names(items: &[TreeItem], names: &[String]) -> Vec<TreeItem> {
+        let mut result: Vec<TreeItem> = Vec::new();
+        for item in items {
+            // 检查当前项是否匹配任何名称
+            if names.contains(&item.display_name) {
+                result.push(item.clone());
+            }
+
+            // 递归检查子项
+            let child_matches: Vec<TreeItem> = find_items_by_names(&item.children, names);
+            result.extend(child_matches);
+        }
+
+        result
+    }
+    find_items_by_names(&tree_items, &names)
+}
+
+/**
  * 获取枚举数据
  * @param link_name 链接名称
  * @param f 回调函数

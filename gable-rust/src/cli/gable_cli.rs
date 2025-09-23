@@ -14,20 +14,26 @@ enum Commands {
     /// 导入模式
     #[clap(alias = "i")]
     Import {
-        #[clap(trailing_var_arg = true, allow_hyphen_values = true)]
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true, num_args = 0..)]
         args: Vec<String>,
     },
 
     /// 导出模式（默认）
     #[clap(alias = "e")]
     Export {
-        #[clap(trailing_var_arg = true, allow_hyphen_values = true)]
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true, num_args = 0..)]
         args: Vec<String>,
     },
 }
 
 pub fn run(args: Vec<String>) -> Result<(), eframe::Error> {
-    let args_str: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let processed_args = if args.is_empty() {
+        vec!["export".to_string()]
+    } else {
+        args.clone()
+    };
+
+    let args_str: Vec<&str> = processed_args.iter().map(|s| s.as_str()).collect();
     let cli: GableCli = match GableCli::try_parse_from(&args_str) {
         Ok(cli) => cli,
         Err(e) => {
@@ -39,20 +45,12 @@ pub fn run(args: Vec<String>) -> Result<(), eframe::Error> {
     // 根据命令执行相应的操作
     match &cli.command {
         Some(Commands::Import { args }) => {
-            let mut new_args: Vec<String> = vec![
-                args.get(0)
-                    .map(|s| s.to_string())
-                    .unwrap_or("gable".to_string()),
-            ];
+            let mut new_args: Vec<String> = vec!["gable".to_string()];
             new_args.extend(args.iter().cloned());
             cli_import::run_import(new_args)
         }
         Some(Commands::Export { args }) => {
-            let mut new_args = vec![
-                args.get(0)
-                    .map(|s| s.to_string())
-                    .unwrap_or("gable".to_string()),
-            ];
+            let mut new_args = vec!["gable".to_string()];
             new_args.extend(args.iter().cloned());
             cli_export::run_export(new_args)
         }

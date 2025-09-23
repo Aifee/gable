@@ -35,11 +35,7 @@ pub fn from_target(setting: &BuildSetting) {
         return;
     }
     for (_, data) in datas.iter() {
-        match setting.target_type {
-            ETargetType::Json => convert_json::to(setting, data),
-            ETargetType::CSV => convert_csv::to(setting, data),
-            ETargetType::Protobuff => convert_protobuff::to(setting, data),
-        }
+        execute(setting, *data)
     }
 }
 
@@ -57,11 +53,20 @@ pub fn from_items(item: &TreeItem) {
     let settings = setting::APP_SETTINGS.read().unwrap();
     for setting in settings.build_settings.iter() {
         for (_, data) in datas.iter() {
-            match setting.target_type {
-                ETargetType::Json => convert_json::to(setting, data),
-                ETargetType::CSV => convert_csv::to(setting, data),
-                ETargetType::Protobuff => convert_protobuff::to(setting, data),
-            }
+            execute(setting, *data)
         }
+    }
+}
+
+/**
+ * 执行转换
+ * @param build_setting 构建设置
+ * @param data 树数据
+ */
+pub fn execute(build_setting: &BuildSetting, data: &TreeData) {
+    match build_setting.target_type {
+        ETargetType::Json => convert_json::to(build_setting, data),
+        ETargetType::CSV => convert_csv::to(build_setting, data),
+        ETargetType::Protobuff => convert_protobuff::to(build_setting, data),
     }
 }

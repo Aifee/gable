@@ -27,10 +27,13 @@ enum Commands {
 }
 
 pub fn run(args: Vec<String>) -> Result<(), eframe::Error> {
+    // 确保始终有程序名作为第一个参数
     let processed_args = if args.is_empty() {
-        vec!["export".to_string()]
+        vec!["gable".to_string(), "export".to_string()]
     } else {
-        args.clone()
+        let mut new_args = vec!["gable".to_string()];
+        new_args.extend(args.clone());
+        new_args
     };
 
     let args_str: Vec<&str> = processed_args.iter().map(|s| s.as_str()).collect();

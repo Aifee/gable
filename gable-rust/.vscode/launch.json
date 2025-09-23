@@ -9,7 +9,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/gable-rust.exe",
-            "args": [],
+            "args": ["--help"],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
             "environment": [],

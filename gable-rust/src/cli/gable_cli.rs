@@ -1,73 +1,64 @@
 use crate::cli::{cli_export, cli_import};
+use clap::{Parser, Subcommand};
 
-pub fn run(args: Vec<String>) -> Result<(), eframe::Error> {
-    let cli_args: &[String] = &args[1..];
-    if cli_args.is_empty() {
-        _usage();
-        return Ok(());
-    }
-
-    let mut import_mode: bool = false;
-    let mut export_mode: bool = false;
-    let mut show_help: bool = false;
-    let mut i = 0;
-
-    while i < cli_args.len() {
-        let arg: &String = &cli_args[i];
-        match arg.as_str() {
-            "--import" => {
-                import_mode = true;
-            }
-            "--export" => {
-                export_mode = true;
-            }
-            "--help" => {
-                show_help = true;
-            }
-            _ => {
-                if arg.starts_with('-') {
-                    println!("Error: 未知参数 '{}'", arg);
-                    _usage();
-                    return Ok(());
-                }
-            }
-        }
-        i += 1;
-    }
-
-    if show_help {
-        _usage();
-        return Ok(());
-    }
-
-    if import_mode && export_mode {
-        println!("Error: 不能同时指定 --import 和 --export 模式");
-        _usage();
-        return Ok(());
-    }
-
-    if import_mode {
-        return cli_import::run_import(cli_args);
-    } else {
-        return cli_export::run_export(cli_args);
-    }
+#[derive(Parser)]
+#[clap(name = "Gable CLI", version = "1.0.0", author = "Gable")]
+#[clap(about = "Gable 命令行工具", long_about = None)]
+struct GableCli {
+    #[command(subcommand)]
+    command: Option<Commands>,
 }
 
-fn _usage() {
-    println!(
-        r#"Gable CLI 工具
+#[derive(Subcommand)]
+enum Commands {
+    /// 导入模式
+    #[clap(alias = "i")]
+    Import {
+        #[clap(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
 
-用法:
-  gable [选项]
+    /// 导出模式（默认）
+    #[clap(alias = "e")]
+    Export {
+        #[clap(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+}
 
-模式:
-  --import               导入模式
-  --export               导出模式（默认）
+pub fn run(args: Vec<String>) -> Result<(), eframe::Error> {
+    let args_str: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let cli: GableCli = match GableCli::try_parse_from(&args_str) {
+        Ok(cli) => cli,
+        Err(e) => {
+            eprintln!("{}", e);
+            return Ok(());
+        }
+    };
 
-示例:
-  gable --export -i file1.xlsx file2.xlsx
-  gable --import --input data.xlsx -t unity
-  gable --export --script --input config.xlsx
-  gable --help"#
-    );
+    // 根据命令执行相应的操作
+    match &cli.command {
+        Some(Commands::Import { args }) => {
+            let mut new_args: Vec<String> = vec![
+                args.get(0)
+                    .map(|s| s.to_string())
+                    .unwrap_or("gable".to_string()),
+            ];
+            new_args.extend(args.iter().cloned());
+            cli_import::run_import(new_args)
+        }
+        Some(Commands::Export { args }) => {
+            let mut new_args = vec![
+                args.get(0)
+                    .map(|s| s.to_string())
+                    .unwrap_or("gable".to_string()),
+            ];
+            new_args.extend(args.iter().cloned());
+            cli_export::run_export(new_args)
+        }
+        None => {
+            let new_args = vec!["gable".to_string()];
+            cli_export::run_export(new_args)
+        }
+    }
 }

@@ -1,63 +1,49 @@
-pub fn run_export(cli_args: &[String]) -> Result<(), eframe::Error> {
-    let mut input_files: Vec<String> = Vec::new();
-    let mut target_platform: Option<String> = None;
-    let mut generate_script = false;
-    let mut i = 0;
+use clap::Parser;
 
-    while i < cli_args.len() {
-        let arg: &String = &cli_args[i];
-        match arg.as_str() {
-            "-i" | "--input" => {
-                i += 1;
-                if i < cli_args.len() {
-                    while i < cli_args.len() && !cli_args[i].starts_with('-') {
-                        input_files.push(cli_args[i].clone());
-                        i += 1;
-                    }
-                    continue;
-                } else {
-                    println!("Error: {} 参数需要指定输入文件", arg);
-                    _usage();
-                    return Ok(());
-                }
-            }
-            "-t" => {
-                i += 1;
-                if i < cli_args.len() {
-                    target_platform = Some(cli_args[i].clone());
-                } else {
-                    println!("Error: -t 参数需要指定目标平台");
-                    _usage();
-                    return Ok(());
-                }
-            }
-            "--script" => {
-                generate_script = true;
-            }
-            _ => {
-                if !arg.starts_with('-') {
-                    // 如果不是以-开头，可能是输入文件
-                    input_files.push(arg.clone());
-                }
-            }
+#[derive(Parser)]
+#[clap(name = "Gable Export", version = "1.0", author = "Gable")]
+#[clap(about = "Gable 导出工具", long_about = None)]
+pub struct ExportArgs {
+    /// 指定输入文件（可以指定多个）
+    #[clap(short = 'i', long = "input", num_args = 1..)]
+    pub input: Vec<String>,
+
+    /// 指定目标平台
+    #[clap(short = 't', long = "target")]
+    pub target: Option<String>,
+
+    /// 生成脚本
+    #[clap(long = "script")]
+    pub script: bool,
+}
+
+pub fn run_export(args: Vec<String>) -> Result<(), eframe::Error> {
+    let args_str: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let export_args = match ExportArgs::try_parse_from(&args_str) {
+        Ok(cli) => cli,
+        Err(e) => {
+            eprintln!("{}", e);
+            return Ok(());
         }
-        i += 1;
-    }
+    };
 
     // 执行导出操作
-    if input_files.is_empty() {
+    if export_args.input.is_empty() {
         println!("Error: 导出数据需要指定输入文件");
-        _usage();
+        let help_args = vec![args_str[0], "--help"];
+        if let Err(e) = ExportArgs::try_parse_from(&help_args) {
+            eprintln!("{}", e);
+        }
         return Ok(());
     }
 
     println!("正在导出数据...");
-    println!("输入文件: {:?}", input_files);
-    if let Some(platform) = &target_platform {
+    println!("输入文件: {:?}", export_args.input);
+    if let Some(platform) = &export_args.target {
         println!("目标平台: {}", platform);
     }
 
-    if generate_script {
+    if export_args.script {
         println!("正在生成导出脚本...");
         // 这里添加实际的脚本生成逻辑
     }
@@ -66,23 +52,4 @@ pub fn run_export(cli_args: &[String]) -> Result<(), eframe::Error> {
     println!("导出完成");
 
     Ok(())
-}
-
-fn _usage() {
-    println!(
-        r#"Gable CLI 导出工具
-
-用法:
-  gable --export [选项]
-
-选项:
-  -i, --input <文件列表>  指定输入文件（可以指定多个）
-  -t <平台>              指定目标平台
-  --script               生成导出脚本
-  --help                 显示帮助信息
-
-示例:
-  gable --export -i file1.xlsx file2.xlsx
-  gable --export --script --input config.xlsx -t unity"#
-    );
 }

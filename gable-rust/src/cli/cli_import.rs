@@ -1,66 +1,48 @@
-pub fn run_import(cli_args: &[String]) -> Result<(), eframe::Error> {
-    // 解析参数
-    let mut input_files: Vec<String> = Vec::new();
-    let mut target_platform: Option<String> = None;
-    let mut generate_script = false;
-    let mut i = 0;
+use clap::Parser;
 
-    while i < cli_args.len() {
-        let arg: &String = &cli_args[i];
+#[derive(Parser)]
+#[clap(name = "Gable Import", version = "1.0", author = "Gable")]
+#[clap(about = "Gable 导入工具", long_about = None)]
+pub struct ImportArgs {
+    /// 指定输入文件（可以指定多个）
+    #[clap(short = 'i', long = "input", num_args = 1..)]
+    pub input: Vec<String>,
 
-        match arg.as_str() {
-            "-i" | "--input" => {
-                i += 1;
-                if i < cli_args.len() {
-                    // 收集输入文件，支持多个文件
-                    while i < cli_args.len() && !cli_args[i].starts_with('-') {
-                        input_files.push(cli_args[i].clone());
-                        i += 1;
-                    }
-                    continue; // 已经增加了i，所以继续循环
-                } else {
-                    println!("Error: {} 参数需要指定输入文件", arg);
-                    _usage();
-                    return Ok(());
-                }
-            }
-            "-t" => {
-                i += 1;
-                if i < cli_args.len() {
-                    target_platform = Some(cli_args[i].clone());
-                } else {
-                    println!("Error: -t 参数需要指定目标平台");
-                    _usage();
-                    return Ok(());
-                }
-            }
-            "--script" => {
-                generate_script = true;
-            }
-            _ => {
-                if !arg.starts_with('-') {
-                    // 如果不是以-开头，可能是输入文件
-                    input_files.push(arg.clone());
-                }
-            }
+    /// 指定目标平台
+    #[clap(short = 't', long = "target")]
+    pub target: Option<String>,
+
+    /// 生成脚本
+    #[clap(long = "script")]
+    pub script: bool,
+}
+
+pub fn run_import(args: Vec<String>) -> Result<(), eframe::Error> {
+    let args_str: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let import_args = match ImportArgs::try_parse_from(&args_str) {
+        Ok(cli) => cli,
+        Err(e) => {
+            eprintln!("{}", e);
+            return Ok(());
         }
-        i += 1;
-    }
+    };
 
-    // 执行导入操作
-    if input_files.is_empty() {
+    if import_args.input.is_empty() {
         println!("Error: 导入数据需要指定输入文件");
-        _usage();
+        let help_args = vec![args_str[0], "--help"];
+        if let Err(e) = ImportArgs::try_parse_from(&help_args) {
+            eprintln!("{}", e);
+        }
         return Ok(());
     }
 
     println!("正在导入数据...");
-    println!("输入文件: {:?}", input_files);
-    if let Some(platform) = &target_platform {
+    println!("输入文件: {:?}", import_args.input);
+    if let Some(platform) = &import_args.target {
         println!("目标平台: {}", platform);
     }
 
-    if generate_script {
+    if import_args.script {
         println!("正在生成导入脚本...");
         // 这里添加实际的脚本生成逻辑
     }
@@ -69,23 +51,4 @@ pub fn run_import(cli_args: &[String]) -> Result<(), eframe::Error> {
     println!("导入完成");
 
     Ok(())
-}
-
-fn _usage() {
-    println!(
-        r#"Gable CLI 导入工具
-
-用法:
-  gable --import [选项]
-
-选项:
-  -i, --input <文件列表>  指定输入文件（可以指定多个）
-  -t <平台>              指定目标平台
-  --script               生成导入脚本
-  --help                 显示帮助信息
-
-示例:
-  gable --import -i file1.xlsx file2.xlsx
-  gable --import --script --input config.xlsx -t unity"#
-    );
 }

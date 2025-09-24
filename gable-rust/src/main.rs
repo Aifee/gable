@@ -28,18 +28,13 @@ fn main() -> Result<(), eframe::Error> {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn run_cli(args: Vec<String>) -> Result<(), eframe::Error> {
-    // 在VSCode调试环境中，第一个参数是可执行文件路径，我们需要将其移除
     let processed_args = if args.len() <= 1 {
         vec![]
     } else {
-        // 移除第一个参数（可执行文件路径）
-        let mut cli_args = args[1..].to_vec();
-
-        // 处理可能合并在一起的参数
+        let cli_args = args[1..].to_vec();
         let mut expanded_args = Vec::new();
         for arg in cli_args {
             if arg.starts_with("--") && arg.contains(' ') && !arg.contains('=') {
-                // 如果参数以 -- 开头，包含空格但不包含 =，则可能是多个标志参数合并了
                 let parts: Vec<&str> = arg.split_whitespace().collect();
                 expanded_args.extend(parts.iter().map(|s| s.to_string()));
             } else {

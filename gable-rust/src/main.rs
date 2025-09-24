@@ -9,6 +9,8 @@ use std::env;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> Result<(), eframe::Error> {
+    let _ =
+        gui::datas::log::LogTrace::init(Some(common::constant::DIR_LOG), log::LevelFilter::Info);
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 {
         return run_cli(args);
@@ -18,6 +20,8 @@ fn main() -> Result<(), eframe::Error> {
 
 #[cfg(target_arch = "wasm32")]
 fn main() -> Result<(), eframe::Error> {
+    let _ =
+        gui::datas::log::LogTrace::init(Some(common::constant::DIR_LOG), log::LevelFilter::Info);
     // WebAssembly平台只支持GUI模式
     run_gui()
 }
@@ -49,9 +53,6 @@ fn run_cli(args: Vec<String>) -> Result<(), eframe::Error> {
 }
 
 fn run_gui() -> Result<(), eframe::Error> {
-    let _ =
-        gui::datas::log::LogTrace::init(Some(common::constant::DIR_LOG), log::LevelFilter::Info);
-
     let options: eframe::NativeOptions = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_inner_size([1920.0, 1080.0]),
         ..Default::default()

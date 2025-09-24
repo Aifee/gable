@@ -209,7 +209,10 @@ impl GableExplorer {
                 }
                 if ui.button("导入").clicked() {
                     ui.close();
-                    if let Some(files) = FileDialog::new().set_title("选择导入的文件").pick_files()
+                    if let Some(files) = FileDialog::new()
+                        .set_title("选择导入的文件")
+                        .add_filter("Excel Files", &["xlsx", "xls"])
+                        .pick_files()
                     {
                         excel_util::import_excels(&item.fullpath, files);
                     }

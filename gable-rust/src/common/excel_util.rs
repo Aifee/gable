@@ -1180,6 +1180,17 @@ pub fn import_excels(targe_path: &str, files: Vec<PathBuf>) {
     }
     let sheet_type: ESheetType = setting::determine_sheet_type(Path::new(targe_path));
     for file in files {
+        if let Some(extension) = file.extension() {
+            let ext_str = extension.to_string_lossy().to_lowercase();
+            if ext_str != "xlsx" && ext_str != "xls" {
+                // 跳过非Excel文件
+                continue;
+            }
+        } else {
+            // 跳过无扩展名的文件
+            continue;
+        }
+
         match write_gable(&file, targe_path, &sheet_type) {
             Ok(gable_file_paths) => {
                 for gable_file_path in gable_file_paths {

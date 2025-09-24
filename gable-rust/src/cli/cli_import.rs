@@ -1,20 +1,20 @@
+use std::path::PathBuf;
+
 use clap::Parser;
+
+use crate::common::excel_util;
 
 #[derive(Parser)]
 #[clap(name = "Gable Import", version = "1.0", author = "Gable")]
 #[clap(about = "Gable 导入工具", long_about = None)]
 pub struct ImportArgs {
     /// 指定输入文件（可以指定多个）
-    #[clap(short = 'i', long = "input", num_args = 1..)]
-    pub input: Vec<String>,
+    #[clap(short = 'f', long = "files", num_args = 1..)]
+    pub files: Vec<String>,
 
     /// 指定目标平台
-    #[clap(short = 't', long = "target")]
-    pub target: Option<String>,
-
-    /// 生成脚本
-    #[clap(long = "script")]
-    pub script: bool,
+    #[clap(short = 'p', long = "path")]
+    pub path: String,
 }
 
 pub fn run_import(args: Vec<String>) -> Result<(), eframe::Error> {
@@ -27,28 +27,30 @@ pub fn run_import(args: Vec<String>) -> Result<(), eframe::Error> {
         }
     };
 
-    if import_args.input.is_empty() {
-        println!("Error: 导入数据需要指定输入文件");
+    if import_args.files.is_empty() {
+        println!("Error: 需要指定导入的文件");
         let help_args = vec![args_str[0], "--help"];
         if let Err(e) = ImportArgs::try_parse_from(&help_args) {
             eprintln!("{}", e);
         }
         return Ok(());
     }
-
-    println!("正在导入数据...");
-    println!("输入文件: {:?}", import_args.input);
-    if let Some(platform) = &import_args.target {
-        println!("目标平台: {}", platform);
+    let mut files: Vec<PathBuf> = Vec::new();
+    for file in import_args.files.iter() {
+        let path: PathBuf = PathBuf::from(file);
+        if let Some(extension) = path.extension() {
+            let ext_str = extension.to_string_lossy().to_lowercase();
+            if ext_str != "xlsx" && ext_str != "xls" {
+                print!("Error: 文件 {} 不是 Excel 文件", file);
+                continue;
+            }
+        } else {
+            print!("Error: 文件 {} 不是一个有效的文件", file);
+            continue;
+        }
+        files.push(path);
     }
-
-    if import_args.script {
-        println!("正在生成导入脚本...");
-        // 这里添加实际的脚本生成逻辑
-    }
-
-    // 这里添加实际的数据导入逻辑
+    excel_util::import_excels(&import_args.path, files);
     println!("导入完成");
-
     Ok(())
 }

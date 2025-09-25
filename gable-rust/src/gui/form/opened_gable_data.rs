@@ -90,7 +90,7 @@ impl OpenedGableData {
         for (row, cols) in data.cells.iter() {
             let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
             for (col, cell) in cols.iter() {
-                let cell_type: &EDataType = cell_types.get(&col).unwrap();
+                let cell_type: &EDataType = cell_types.get(&col).unwrap_or(&EDataType::String);
                 let value: String = Self::pairs_value(cell_type, cell, &link_cells, false);
                 cols_items.insert(*col, value);
             }

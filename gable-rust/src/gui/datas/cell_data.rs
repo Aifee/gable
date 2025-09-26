@@ -8,8 +8,10 @@ use umya_spreadsheet::Color;
 */
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CellData {
+    #[serde(skip_serializing, default = "default_row")]
     pub row: u32,
-    pub column: u16,
+    #[serde(skip_serializing, default = "default_col")]
+    pub col: u16,
     #[serde(
         default = "default_string",
         deserialize_with = "deserialize_string",
@@ -33,6 +35,13 @@ pub struct CellData {
 }
 fn default_string() -> String {
     String::new()
+}
+fn default_row() -> u32 {
+    0
+}
+
+fn default_col() -> u16 {
+    0
 }
 
 /// 反序列化字符串的自定义函数
@@ -76,7 +85,7 @@ impl CellData {
     pub fn new(r: u32, c: u16, v: String, bc: Option<&Color>, fc: Option<&Color>) -> Self {
         let data = Self {
             row: r,
-            column: c,
+            col: c,
             value: v,
             bg_fill: if let Some(color) = bc {
                 let theme_index: &u32 = color.get_theme_index();

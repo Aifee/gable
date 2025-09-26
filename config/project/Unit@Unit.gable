@@ -1,35 +1,41 @@
 {
-  "max_row": 7,
-  "max_col": 1,
   "heads": {
     "1": {
       "1": {
-        "row": 1,
-        "column": 1,
         "value": "唯一ID",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      "3": {
+        "value": "名字",
         "bg_fill": "theme:9,tint:0.8"
       }
     },
     "2": {
       "1": {
-        "row": 2,
-        "column": 1,
         "value": "id",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      "3": {
+        "value": "name",
         "bg_fill": "theme:7,tint:0.8"
       }
     },
     "3": {
       "1": {
-        "row": 3,
-        "column": 1,
         "value": "int",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      "3": {
+        "value": "string",
         "bg_fill": "theme:9,tint:0.8"
       }
     },
     "4": {
       "1": {
-        "row": 4,
-        "column": 1,
+        "value": "client",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      "3": {
         "value": "client",
         "bg_fill": "theme:7,tint:0.8"
       }
@@ -39,17 +45,35 @@
   "cells": {
     "6": {
       "1": {
-        "row": 6,
-        "column": 1,
         "value": "1"
+      },
+      "3": {
+        "value": "fe"
       }
     },
     "7": {
       "1": {
-        "row": 7,
-        "column": 1,
         "value": "2"
+      },
+      "3": {
+        "value": "liu"
       }
-    }
+    },
+    "8": {
+      "1": {
+        "value": "3"
+      },
+      "3": {
+        "value": "unit"
+      }
+    },
+    "9": {},
+    "10": {},
+    "11": {},
+    "12": {},
+    "13": {},
+    "14": {},
+    "15": {},
+    "16": {}
   }
 }

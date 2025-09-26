@@ -201,7 +201,7 @@ impl OpenedGableData {
             EDataType::Date => cell.convert_date(),
             EDataType::Enum => {
                 let mut enum_value: String = cell.value.clone();
-                let index: u16 = if iskv { cell.row as u16 } else { cell.column };
+                let index: u16 = if iskv { cell.row as u16 } else { cell.col };
                 if let Some(link_name) = link_cells.get(&index) {
                     gables::get_enum_cells(link_name, |cell_data| {
                         for (_, link_data) in cell_data.cells.iter() {
@@ -224,7 +224,7 @@ impl OpenedGableData {
             }
             EDataType::Loc => {
                 let mut loc_value: String = cell.value.clone();
-                let index: u16 = if iskv { cell.row as u16 } else { cell.column };
+                let index: u16 = if iskv { cell.row as u16 } else { cell.col };
                 if let Some(link_name) = link_cells.get(&index) {
                     gables::get_loc_cells(link_name, |loc_item_cells| {
                         let mut link_key_index: &u16 = &0;

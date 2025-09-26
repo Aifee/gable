@@ -912,9 +912,9 @@ fn write_gable_normal(
                     };
                     let cell_data: CellData =
                         CellData::new(row_idx, col_idx as u16, cell_value, bc, fc);
-                    if cell_data.is_empty() {
-                        continue;
-                    }
+                    // if cell_data.is_empty() {
+                    //     continue;
+                    // }
                     row_data.insert(col_idx as u16, cell_data);
                 }
             }
@@ -922,9 +922,10 @@ fn write_gable_normal(
         if row_idx < constant::TABLE_NORMAL_ROW_TOTAL {
             gable_data.heads.insert(row_idx, row_data);
         } else {
-            if row_data.len() > 0 {
-                gable_data.cells.insert(row_idx, row_data);
-            }
+            // if row_data.len() > 0 {
+            //     gable_data.cells.insert(row_idx, row_data);
+            // }
+            gable_data.cells.insert(row_idx, row_data);
         }
     }
 }
@@ -957,9 +958,9 @@ fn write_gable_localize(
                 if !value.is_empty() {
                     let cell_data: CellData =
                         CellData::new(row_idx, col_idx as u16, value.to_string(), bc, fc);
-                    if cell_data.is_empty() {
-                        continue;
-                    }
+                    // if cell_data.is_empty() {
+                    //     continue;
+                    // }
                     row_data.insert(col_idx as u16, cell_data);
                 }
             }
@@ -967,9 +968,10 @@ fn write_gable_localize(
         if row_idx < constant::TABLE_LOCALIZE_ROW_TOTAL {
             gable_data.heads.insert(row_idx, row_data);
         } else {
-            if row_data.len() > 0 {
-                gable_data.cells.insert(row_idx, row_data);
-            }
+            // if row_data.len() > 0 {
+            //     gable_data.cells.insert(row_idx, row_data);
+            // }
+            gable_data.cells.insert(row_idx, row_data);
         }
     }
 }
@@ -1112,9 +1114,9 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
                     if !value.is_empty() {
                         let cell_data: CellData =
                             CellData::new(row_idx, col_idx as u16, value.to_string(), bc, fc);
-                        if cell_data.is_empty() {
-                            continue;
-                        }
+                        // if cell_data.is_empty() {
+                        //     continue;
+                        // }
                         row_data.insert(col_idx as u16, cell_data);
                     }
                 }
@@ -1123,9 +1125,10 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
         if row_idx < constant::TABLE_KV_ROW_TOTAL {
             gable_data.heads.insert(row_idx, row_data);
         } else {
-            if row_data.len() > 0 {
-                gable_data.cells.insert(row_idx, row_data);
-            }
+            // if row_data.len() > 0 {
+            //     gable_data.cells.insert(row_idx, row_data);
+            // }
+            gable_data.cells.insert(row_idx, row_data);
         }
     }
 }
@@ -1154,9 +1157,9 @@ fn write_gable_enum(worksheet: &Worksheet, gable_data: &mut GableData, max_row: 
                 if !value.is_empty() {
                     let cell_data: CellData =
                         CellData::new(row_idx, col_idx as u16, value.to_string(), bc, fc);
-                    if cell_data.is_empty() {
-                        continue;
-                    }
+                    // if cell_data.is_empty() {
+                    //     continue;
+                    // }
                     row_data.insert(col_idx as u16, cell_data);
                 }
             }

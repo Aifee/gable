@@ -7,10 +7,20 @@ use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct GableData {
+    #[serde(skip_serializing, default = "default_max_row")]
     pub max_row: u32,
+    #[serde(skip_serializing, default = "default_max_col")]
     pub max_col: u16,
     pub heads: BTreeMap<u32, BTreeMap<u16, CellData>>,
     pub cells: BTreeMap<u32, BTreeMap<u16, CellData>>,
+}
+
+fn default_max_row() -> u32 {
+    0
+}
+
+fn default_max_col() -> u16 {
+    0
 }
 
 impl GableData {

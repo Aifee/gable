@@ -11,7 +11,7 @@
             "program": "${workspaceRoot}/target/debug/gable-rust.exe",
             // "args": ["export","--data","--script"],
             // "args": ["import","-f","E:/projects/test/config/__Temps/R_任务.xlsx","-p","E:/projects/test/config_temp/Task"],
-            // "args": ["import","-d","E:/projects/test/test_xlsx/整理后文件/验证","-t","E:/projects/test/config_temp/Task"],
+            // "args": ["import","-d","E:/projects/test/test_xlsx/整理后文件/验证","-t","E:/projects/gable_dev/config/project"],
             "args": [""],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",

@@ -873,8 +873,10 @@ fn write_gable_normal(
                 } else {
                     None
                 };
-                if !value.is_empty() {
-                    let cell_value: String = match cell_type {
+                let cell_value: String = if value.is_empty() {
+                    String::new()
+                } else {
+                    match cell_type {
                         EDataType::Permillage => {
                             let permillage_value: f64 = value.parse::<f64>().unwrap() / 1000.0;
                             format!("{:.3}", permillage_value)
@@ -965,10 +967,13 @@ fn write_gable_normal(
                             cell_value
                         }
                         _ => value.to_string(),
-                    };
-                    let cell_data: CellData = CellData::new(cell_value, bc, fc);
-                    row_data.push(cell_data);
-                }
+                    }
+                };
+                let cell_data: CellData = CellData::new(cell_value, bc, fc);
+                row_data.push(cell_data);
+            } else {
+                let cell_data: CellData = CellData::new(String::new(), None, None);
+                row_data.push(cell_data);
             }
         }
         if row_idx < constant::TABLE_NORMAL_ROW_TOTAL {
@@ -1007,6 +1012,9 @@ fn write_gable_localize(
                     None
                 };
                 let cell_data: CellData = CellData::new(value.to_string(), bc, fc);
+                row_data.push(cell_data);
+            } else {
+                let cell_data: CellData = CellData::new(String::new(), None, None);
                 row_data.push(cell_data);
             }
         }
@@ -1064,8 +1072,10 @@ fn write_gable_kv(
                     }
                 }
                 if col_idx == constant::TABLE_KV_COL_VALUE {
-                    if !value.is_empty() {
-                        let cell_value: String = match cell_type {
+                    let cell_value: String = if value.is_empty() {
+                        String::new()
+                    } else {
+                        match cell_type {
                             EDataType::Permillage => {
                                 let permillage_value: f64 = value.parse::<f64>().unwrap() / 1000.0;
                                 format!("{:.3}", permillage_value)
@@ -1155,13 +1165,16 @@ fn write_gable_kv(
                                 cell_value
                             }
                             _ => value.to_string(),
-                        };
-                        let cell_data: CellData = CellData::new(cell_value, bc, fc);
-                        row_data.push(cell_data);
-                    }
+                        }
+                    };
+                    let cell_data: CellData = CellData::new(cell_value, bc, fc);
+                    row_data.push(cell_data);
                 } else {
                     if !value.is_empty() {
                         let cell_data: CellData = CellData::new(value.to_string(), bc, fc);
+                        row_data.push(cell_data);
+                    } else {
+                        let cell_data: CellData = CellData::new(String::new(), bc, fc);
                         row_data.push(cell_data);
                     }
                 }
@@ -1205,6 +1218,9 @@ fn write_gable_enum(
                 };
 
                 let cell_data: CellData = CellData::new(value.to_string(), bc, fc);
+                row_data.push(cell_data);
+            } else {
+                let cell_data: CellData = CellData::new(String::new(), None, None);
                 row_data.push(cell_data);
             }
         }

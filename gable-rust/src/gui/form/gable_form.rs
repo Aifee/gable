@@ -215,7 +215,7 @@ impl GableForm {
                     .cell_layout(Layout::left_to_right(Align::Center))
                     .column(Column::auto())
                     .columns(
-                        Column::initial(100.0).range(40.0..=300.0),
+                        Column::initial(100.0).range(40.0..=1200.0),
                         show_cols as usize,
                     )
                     .header(20.0, |mut header| {

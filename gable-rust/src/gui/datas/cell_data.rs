@@ -415,7 +415,7 @@ impl CellData {
         let mut arr: Vec<Value> = Vec::new();
         let parts: Vec<&str> = self.value.split(';').collect();
         for part in parts.iter() {
-            let value: i64 = part.parse::<i64>().unwrap();
+            let value: i64 = part.parse::<i64>().unwrap_or(0);
             arr.push(Value::from(value));
         }
         return arr;
@@ -444,7 +444,7 @@ impl CellData {
         let mut arr: Vec<Value> = Vec::new();
         let parts: Vec<&str> = self.value.split(';').collect();
         for part in parts.iter() {
-            let value: bool = part.parse::<bool>().unwrap();
+            let value: bool = part.parse::<bool>().unwrap_or(false);
             arr.push(Value::from(value));
         }
         return arr;
@@ -459,7 +459,7 @@ impl CellData {
         let mut arr: Vec<Value> = Vec::new();
         let parts: Vec<&str> = self.value.split(';').collect();
         for part in parts.iter() {
-            let value: f64 = part.parse::<f64>().unwrap();
+            let value: f64 = part.parse::<f64>().unwrap_or(0.0);
             arr.push(Value::from(value));
         }
         return arr;

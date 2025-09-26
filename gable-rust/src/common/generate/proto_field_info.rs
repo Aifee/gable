@@ -94,10 +94,8 @@ impl ProtoFieldInfo {
                     if !field.field_link.is_empty() {
                         if isproto2 {
                             gables::get_enum_cells(&field.field_link, |enum_datas| {
-                                for (_, r_d) in enum_datas.cells.iter() {
-                                    if let Some(r_c) =
-                                        r_d.get(&(constant::TABLE_ENUM_COL_FIELD as u16))
-                                    {
+                                for r_d in enum_datas.cells.iter() {
+                                    if let Some(r_c) = r_d.get(constant::TABLE_ENUM_COL_FIELD) {
                                         if !r_c.value.is_empty() {
                                             field_extend = format!(" [default = {}]", r_c.value);
                                             break;

@@ -2,39 +2,33 @@
   "heads": [
     [
       {
-        "value": "编号",
+        "value": "唯一标识",
         "bg_fill": "theme:7,tint:0.8"
       }
     ],
     [
       {
-        "value": "id",
+        "value": "key",
         "bg_fill": "theme:9,tint:0.8"
       }
     ],
     [
       {
-        "value": "int",
+        "value": "string",
         "bg_fill": "theme:7,tint:0.8"
       }
     ],
-    [],
+    [
+      {
+        "value": "cs"
+      }
+    ],
     []
   ],
   "cells": [
     [
       {
-        "value": "1"
-      }
-    ],
-    [
-      {
-        "value": "2"
-      }
-    ],
-    [
-      {
-        "value": "3"
+        "value": "unity"
       }
     ]
   ]

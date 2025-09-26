@@ -8,12 +8,12 @@ use std::sync::Arc;
  * @param col 列号
  * @return Excel风格的列名
 */
-pub fn column_index_to_name(col: u32) -> String {
+pub fn column_index_to_name(col: &usize) -> String {
     let mut result: String = String::new();
-    let mut num: u32 = col;
+    let mut num = *col;
 
     while num > 0 {
-        let remainder: u32 = (num - 1) % 26;
+        let remainder: usize = (num - 1) % 26;
         result.insert(0, (b'A' + remainder as u8) as char);
         num = (num - 1) / 26;
     }
@@ -29,12 +29,17 @@ pub fn column_index_to_name(col: u32) -> String {
  * @param end_col 结束列号
  * @return 单元格范围
 */
-pub fn cell_range(start_row: u32, start_col: u32, end_row: u32, end_col: u16) -> String {
+pub fn cell_range(
+    start_row: &usize,
+    start_col: &usize,
+    end_row: &usize,
+    end_col: &usize,
+) -> String {
     format!(
         "{}{}:{}{}",
         column_index_to_name(start_col),
         start_row,
-        column_index_to_name(end_col as u32),
+        column_index_to_name(end_col),
         end_row
     )
 }

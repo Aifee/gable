@@ -110,37 +110,43 @@ pub fn write_excel(
 
             // 预先设置单元格格式，百分率，千分率，万分率，时间，枚举类型的单元格，如果按照数据填充的话有可能会设置不到
             // 但又不能全量遍历所有的单元格，故此只针对这几种类型单独设置单元格格式
-            for (row_index, row_data) in &gable_data.heads {
-                for (col_index, cell_data) in row_data {
-                    let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));
-                    cell.set_value(&cell_data.value);
-                    let style: &mut Style = cell.get_style_mut();
-                    let borders = style.get_borders_mut();
-                    borders
-                        .get_left_border_mut()
-                        .set_border_style(Border::BORDER_THIN);
-                    borders
-                        .get_right_border_mut()
-                        .set_border_style(Border::BORDER_THIN);
-                    borders
-                        .get_top_border_mut()
-                        .set_border_style(Border::BORDER_THIN);
-                    borders
-                        .get_bottom_border_mut()
-                        .set_border_style(Border::BORDER_THIN);
-                    let color: &mut Color = style
-                        .get_fill_mut()
-                        .get_pattern_fill_mut()
-                        .set_pattern_type(PatternValues::Solid)
-                        .remove_background_color()
-                        .get_foreground_color_mut();
+            for row_index in 0..gable_data.heads.len() {
+                if let Some(row_data) = gable_data.heads.get(row_index) {
+                    for col_index in 0..row_data.len() {
+                        if let Some(cell_data) = row_data.get(col_index) {
+                            let sheet_row: u32 = (row_index + 1) as u32;
+                            let sheet_col: u32 = (col_index + 1) as u32;
+                            let cell: &mut Cell = worksheet.get_cell_mut((sheet_col, sheet_row));
+                            cell.set_value(&cell_data.value);
+                            let style: &mut Style = cell.get_style_mut();
+                            let borders = style.get_borders_mut();
+                            borders
+                                .get_left_border_mut()
+                                .set_border_style(Border::BORDER_THIN);
+                            borders
+                                .get_right_border_mut()
+                                .set_border_style(Border::BORDER_THIN);
+                            borders
+                                .get_top_border_mut()
+                                .set_border_style(Border::BORDER_THIN);
+                            borders
+                                .get_bottom_border_mut()
+                                .set_border_style(Border::BORDER_THIN);
+                            let color: &mut Color = style
+                                .get_fill_mut()
+                                .get_pattern_fill_mut()
+                                .set_pattern_type(PatternValues::Solid)
+                                .remove_background_color()
+                                .get_foreground_color_mut();
 
-                    if row_index % 2 == 0 {
-                        color.set_theme_index(7);
-                        color.set_tint(0.8);
-                    } else {
-                        color.set_theme_index(9);
-                        color.set_tint(0.8);
+                            if row_index % 2 == 0 {
+                                color.set_theme_index(7);
+                                color.set_tint(0.8);
+                            } else {
+                                color.set_theme_index(9);
+                                color.set_tint(0.8);
+                            }
+                        }
                     }
                 }
             }
@@ -170,15 +176,15 @@ pub fn write_excel(
  * @param gable_data Gable数据
 */
 fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
-    let max_row: u32 = gable_data.max_row + 1;
-    let max_col: u16 = gable_data.max_col + 1;
+    let max_row: usize = gable_data.get_max_row();
+    let max_col: usize = gable_data.get_max_col();
 
     // 数据类型下拉框
     let range: String = utils::cell_range(
-        constant::TABLE_NORMAL_ROW_TYPE,
-        1,
-        constant::TABLE_NORMAL_ROW_TYPE,
-        gable_data.max_col,
+        &(constant::TABLE_NORMAL_ROW_TYPE + 1),
+        &1,
+        &(constant::TABLE_NORMAL_ROW_TYPE + 1),
+        &(max_col + 1),
     );
     let mut data_validation: DataValidation = DataValidation::default();
     data_validation.set_formula1(format!("\"{}\"", constant::DATA_TYPE_KEYS.join(",")));
@@ -189,14 +195,14 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
     let mut data_validations = DataValidations::default();
     data_validations.add_data_validation_list(data_validation);
 
-    let mut enum_cells: BTreeMap<u16, &String> = BTreeMap::new();
-    let mut loc_cells: BTreeMap<u16, &String> = BTreeMap::new();
+    let mut enum_cells: BTreeMap<usize, &String> = BTreeMap::new();
+    let mut loc_cells: BTreeMap<usize, &String> = BTreeMap::new();
     // 数据类型数据
-    for col_index in 1..max_col {
+    for col_index in 0..max_col {
         let cell_type_data: Option<&CellData> = gable_data
             .heads
-            .get(&constant::TABLE_NORMAL_ROW_TYPE)
-            .and_then(|row| row.get(&col_index));
+            .get(constant::TABLE_NORMAL_ROW_TYPE)
+            .and_then(|row| row.get(col_index));
         let cell_type: EDataType = if let Some(data) = cell_type_data {
             EDataType::convert(&data.value)
         } else {
@@ -217,23 +223,23 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
         if cell_type == EDataType::Enum {
             let cell_link_data: Option<&CellData> = gable_data
                 .heads
-                .get(&constant::TABLE_NORMAL_ROW_LINK)
-                .and_then(|row| row.get(&col_index));
+                .get(constant::TABLE_NORMAL_ROW_LINK)
+                .and_then(|row| row.get(col_index));
             if let Some(cell_link_data) = cell_link_data {
                 gables::get_enum_cells(&cell_link_data.value, |enum_datas| {
                     let mut formula_vec: Vec<String> = Vec::new();
-                    for (_, r_d) in enum_datas.cells.iter() {
-                        if let Some(r_c) = r_d.get(&constant::TABLE_ENUM_COL_DESC) {
+                    for r_d in enum_datas.cells.iter() {
+                        if let Some(r_c) = r_d.get(constant::TABLE_ENUM_COL_DESC) {
                             if !r_c.value.is_empty() {
                                 formula_vec.push(r_c.value.clone());
                             }
                         }
                     }
                     let range: String = utils::cell_range(
-                        constant::TABLE_NORMAL_ROW_TOTAL,
-                        col_index as u32,
-                        max_col as u32,
-                        col_index,
+                        &(constant::TABLE_NORMAL_ROW_TOTAL + 1),
+                        &(col_index + 1),
+                        &(max_col + 1),
+                        &(col_index + 1),
                     );
                     let mut enum_validation: DataValidation = DataValidation::default();
                     enum_validation.set_formula1(format!("\"{}\"", formula_vec.join(",")));
@@ -251,14 +257,16 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
         if cell_type == EDataType::Loc {
             let cell_link_data: Option<&CellData> = gable_data
                 .heads
-                .get(&constant::TABLE_NORMAL_ROW_LINK)
-                .and_then(|row| row.get(&col_index));
+                .get(constant::TABLE_NORMAL_ROW_LINK)
+                .and_then(|row| row.get(col_index));
             if let Some(cell_link_data) = cell_link_data {
                 loc_cells.insert(col_index, &cell_link_data.value);
             }
         }
         for row_index in constant::TABLE_NORMAL_ROW_TOTAL..max_row {
-            let cell: &mut Cell = worksheet.get_cell_mut((&(col_index as u32), &row_index));
+            let sheet_row: u32 = (row_index + 1) as u32;
+            let sheet_col: u32 = (col_index + 1) as u32;
+            let cell: &mut Cell = worksheet.get_cell_mut((sheet_col, sheet_row));
             match cell_type {
                 EDataType::Percentage => {
                     cell.get_style_mut()
@@ -294,90 +302,106 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
     worksheet.set_data_validations(data_validations);
 
     // 数据内容处理
-    for (row_index, row_data) in &gable_data.cells {
-        for (col_index, cell_data) in row_data {
-            let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));
-            if let Some(row_data) = &gable_data.heads.get(&constant::TABLE_NORMAL_ROW_TYPE) {
-                if let Some(cell_type_data) = row_data.get(&col_index) {
-                    match EDataType::convert(&cell_type_data.value) {
-                        EDataType::Int => cell.set_value_number(cell_data.parse_int() as f64),
-                        EDataType::Boolean => cell.set_value_bool(cell_data.parse_bool()),
-                        EDataType::Float => cell.set_value_number(cell_data.parse_float()),
-                        EDataType::Percentage => cell.set_value_number(cell_data.parse_float()),
-                        EDataType::Permillage => {
-                            cell.set_value_number(cell_data.parse_float() * 1000.0)
-                        }
-                        EDataType::Permian => {
-                            cell.set_value_number(cell_data.parse_float() * 10000.0)
-                        }
-                        EDataType::Time => cell.set_value_number(cell_data.parse_time()),
-                        EDataType::Date => cell.set_value_number(cell_data.parse_date()),
-                        EDataType::Enum => {
-                            let mut cell_value = cell_data.value.clone();
-                            if let Some(enum_item_key) = enum_cells.get(&col_index) {
-                                gables::get_enum_cells(enum_item_key, |enum_item_cells| {
-                                    for (_, enum_row_cell) in enum_item_cells.cells.iter() {
-                                        if let Some(enum_value_cell) =
-                                            enum_row_cell.get(&constant::TABLE_ENUM_COL_VALUE)
-                                        {
-                                            if enum_value_cell.value == cell_data.value {
-                                                if let Some(enum_desc_cell) = enum_row_cell
-                                                    .get(&constant::TABLE_ENUM_COL_DESC)
+    for row_index in 0..gable_data.cells.len() {
+        if let Some(row_data) = gable_data.cells.get(row_index) {
+            for col_index in 0..row_data.len() {
+                if let Some(cell_data) = row_data.get(col_index) {
+                    let sheet_row: u32 = (row_index + 1 + constant::TABLE_NORMAL_ROW_TOTAL) as u32;
+                    let sheet_col: u32 = (col_index + 1) as u32;
+                    let cell: &mut Cell = worksheet.get_cell_mut((sheet_col, sheet_row));
+                    if let Some(row_data) = &gable_data.heads.get(constant::TABLE_NORMAL_ROW_TYPE) {
+                        if let Some(cell_type_data) = row_data.get(col_index) {
+                            match EDataType::convert(&cell_type_data.value) {
+                                EDataType::Int => {
+                                    cell.set_value_number(cell_data.parse_int() as f64)
+                                }
+                                EDataType::Boolean => cell.set_value_bool(cell_data.parse_bool()),
+                                EDataType::Float => cell.set_value_number(cell_data.parse_float()),
+                                EDataType::Percentage => {
+                                    cell.set_value_number(cell_data.parse_float())
+                                }
+                                EDataType::Permillage => {
+                                    cell.set_value_number(cell_data.parse_float() * 1000.0)
+                                }
+                                EDataType::Permian => {
+                                    cell.set_value_number(cell_data.parse_float() * 10000.0)
+                                }
+                                EDataType::Time => cell.set_value_number(cell_data.parse_time()),
+                                EDataType::Date => cell.set_value_number(cell_data.parse_date()),
+                                EDataType::Enum => {
+                                    let mut cell_value = cell_data.value.clone();
+                                    if let Some(enum_item_key) = enum_cells.get(&col_index) {
+                                        gables::get_enum_cells(enum_item_key, |enum_item_cells| {
+                                            for enum_row_cell in enum_item_cells.cells.iter() {
+                                                if let Some(enum_value_cell) = enum_row_cell
+                                                    .get(constant::TABLE_ENUM_COL_VALUE)
                                                 {
-                                                    cell_value = enum_desc_cell.value.clone();
+                                                    if enum_value_cell.value == cell_data.value {
+                                                        if let Some(enum_desc_cell) = enum_row_cell
+                                                            .get(constant::TABLE_ENUM_COL_DESC)
+                                                        {
+                                                            cell_value =
+                                                                enum_desc_cell.value.clone();
+                                                        }
+                                                        break;
+                                                    }
                                                 }
-                                                break;
                                             }
-                                        }
+                                        });
                                     }
-                                });
-                            }
-                            cell.set_value(cell_value)
-                        }
-                        EDataType::Loc => {
-                            let mut cell_value = cell_data.value.clone();
-                            if let Some(loc_item_key) = loc_cells.get(&col_index) {
-                                gables::get_loc_cells(loc_item_key, |loc_item_cells| {
-                                    let mut link_key_index: &u16 = &0;
-                                    let mut link_value_index: &u16 = &0;
-                                    if let Some(link_key_cell) = loc_item_cells
-                                        .heads
-                                        .get(&constant::TABLE_LOCALIZE_ROW_FIELD)
-                                    {
-                                        for (col_index, col_cell) in link_key_cell.iter() {
-                                            if col_cell.value.contains("*") {
-                                                link_key_index = col_index;
+                                    cell.set_value(cell_value)
+                                }
+                                EDataType::Loc => {
+                                    let mut cell_value = cell_data.value.clone();
+                                    if let Some(loc_item_key) = loc_cells.get(&col_index) {
+                                        gables::get_loc_cells(loc_item_key, |loc_item_cells| {
+                                            let mut link_key_index: usize = 0;
+                                            let mut link_value_index: usize = 0;
+                                            if let Some(link_key_cell) = loc_item_cells
+                                                .heads
+                                                .get(constant::TABLE_LOCALIZE_ROW_FIELD)
+                                            {
+                                                for link_index in 0..link_key_cell.len() {
+                                                    if let Some(col_cell) =
+                                                        link_key_cell.get(link_index)
+                                                    {
+                                                        if col_cell.value.contains("*") {
+                                                            link_key_index = col_index;
+                                                        }
+                                                        if col_cell.value.contains("#") {
+                                                            link_value_index = col_index;
+                                                        }
+                                                    }
+                                                }
                                             }
-                                            if col_cell.value.contains("#") {
-                                                link_value_index = col_index;
-                                            }
-                                        }
-                                    }
 
-                                    for (_, loc_row_cell) in loc_item_cells.cells.iter() {
-                                        if let Some(loc_value_cell) =
-                                            loc_row_cell.get(link_key_index)
-                                        {
-                                            if loc_value_cell.value == cell_data.value {
-                                                if let Some(loc_desc_cell) =
-                                                    loc_row_cell.get(link_value_index)
+                                            for loc_row_cell in loc_item_cells.cells.iter() {
+                                                if let Some(loc_value_cell) =
+                                                    loc_row_cell.get(link_key_index)
                                                 {
-                                                    cell_value = loc_desc_cell.value.clone();
+                                                    if loc_value_cell.value == cell_data.value {
+                                                        if let Some(loc_desc_cell) =
+                                                            loc_row_cell.get(link_value_index)
+                                                        {
+                                                            cell_value =
+                                                                loc_desc_cell.value.clone();
+                                                        }
+                                                        break;
+                                                    }
                                                 }
-                                                break;
                                             }
-                                        }
+                                        });
                                     }
-                                });
-                            }
-                            cell.set_value(cell_value)
+                                    cell.set_value(cell_value)
+                                }
+                                _ => cell.set_value(&cell_data.value),
+                            };
                         }
-                        _ => cell.set_value(&cell_data.value),
-                    };
+                    }
+
+                    write_excel_cell_style(cell, &cell_data);
                 }
             }
-
-            write_excel_cell_style(cell, &cell_data);
         }
     }
 }
@@ -388,12 +412,13 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
  * @param gable_data Gable数据
 */
 fn write_excel_localize(worksheet: &mut Worksheet, gable_data: &GableData) {
+    let max_col = gable_data.get_max_col();
     // 数据类型下拉框
     let range: String = utils::cell_range(
-        constant::TABLE_LOCALIZE_ROW_TYPE,
-        1,
-        constant::TABLE_LOCALIZE_ROW_TYPE,
-        gable_data.max_col,
+        &(constant::TABLE_LOCALIZE_ROW_TYPE + 1),
+        &1,
+        &(constant::TABLE_LOCALIZE_ROW_TYPE + 1),
+        &(max_col + 1),
     );
     let mut data_validation: DataValidation = DataValidation::default();
     data_validation.set_formula1(format!(
@@ -410,14 +435,20 @@ fn write_excel_localize(worksheet: &mut Worksheet, gable_data: &GableData) {
     worksheet.set_data_validations(data_validations);
 
     // 数据内容处理
-    for (row_index, row_data) in &gable_data.cells {
-        for (col_index, cell_data) in row_data {
-            if cell_data.is_empty() {
-                continue;
+    for row_index in 0..gable_data.cells.len() {
+        if let Some(row_data) = gable_data.cells.get(row_index) {
+            for col_index in 0..row_data.len() {
+                if let Some(cell_data) = row_data.get(col_index) {
+                    if cell_data.is_empty() {
+                        continue;
+                    }
+                    let sheet_row = (row_index + 1 + constant::TABLE_LOCALIZE_ROW_TOTAL) as u32;
+                    let sheet_col = (col_index + 1) as u32;
+                    let cell: &mut Cell = worksheet.get_cell_mut((sheet_col, sheet_row));
+                    cell.set_value(&cell_data.value);
+                    write_excel_cell_style(cell, &cell_data);
+                }
             }
-            let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));
-            cell.set_value(&cell_data.value);
-            write_excel_cell_style(cell, &cell_data);
         }
     }
 }
@@ -428,14 +459,14 @@ fn write_excel_localize(worksheet: &mut Worksheet, gable_data: &GableData) {
  * @param gable_data Gable数据
 */
 fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
-    let max_row: u32 = gable_data.max_row + 1;
+    let max_row = gable_data.get_max_row() + 1;
 
     // 数据类型下拉框
     let range: String = utils::cell_range(
-        constant::TABLE_KV_ROW_TOTAL,
-        constant::TABLE_KV_COL_TYPE,
-        max_row,
-        constant::TABLE_KV_COL_TYPE as u16,
+        &(constant::TABLE_KV_ROW_TOTAL + 1),
+        &(constant::TABLE_KV_COL_TYPE + 1),
+        &(max_row + 1),
+        &(constant::TABLE_KV_COL_TYPE + 1),
     );
     let mut data_validation: DataValidation = DataValidation::default();
     data_validation.set_formula1(format!("\"{}\"", constant::DATA_TYPE_KEYS.join(",")));
@@ -446,19 +477,20 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
     let mut data_validations = DataValidations::default();
     data_validations.add_data_validation_list(data_validation);
 
-    let mut enum_cell_links: BTreeMap<u32, &String> = BTreeMap::new();
-    let mut loc_cell_links: BTreeMap<u32, &String> = BTreeMap::new();
+    let mut enum_cell_links: BTreeMap<usize, &String> = BTreeMap::new();
+    let mut loc_cell_links: BTreeMap<usize, &String> = BTreeMap::new();
     // 数据类型处理
     for row_index in constant::TABLE_KV_ROW_TOTAL..max_row {
         if let Some(cell_type_data) = gable_data
             .cells
-            .get(&row_index)
-            .and_then(|row| row.get(&(constant::TABLE_KV_COL_TYPE as u16)))
+            .get(row_index)
+            .and_then(|row| row.get(constant::TABLE_KV_COL_TYPE))
         {
             let cell_type_value = &cell_type_data.value;
             let cell_type: EDataType = EDataType::convert(&cell_type_value);
-            let cell: &mut Cell =
-                worksheet.get_cell_mut((&constant::TABLE_KV_COL_VALUE, &row_index));
+            let sheet_row = (row_index + 1) as u32;
+            let sheet_col = (constant::TABLE_KV_COL_VALUE + 1) as u32;
+            let cell: &mut Cell = worksheet.get_cell_mut((sheet_col, sheet_row));
             match cell_type {
                 EDataType::Percentage => {
                     cell.get_style_mut()
@@ -488,13 +520,13 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
                 EDataType::Enum => {
                     let cell_link_data: Option<&CellData> = gable_data
                         .cells
-                        .get(&row_index)
-                        .and_then(|row| row.get(&(constant::TABLE_KV_COL_LINK as u16)));
+                        .get(row_index)
+                        .and_then(|row| row.get(constant::TABLE_KV_COL_LINK));
                     if let Some(cell_link_data) = cell_link_data {
                         gables::get_enum_cells(&cell_link_data.value, |cell_gable| {
                             let mut formula_vec = Vec::new();
-                            for (_, r_d) in cell_gable.cells.iter() {
-                                if let Some(r_c) = r_d.get(&constant::TABLE_ENUM_COL_DESC) {
+                            for r_d in cell_gable.cells.iter() {
+                                if let Some(r_c) = r_d.get(constant::TABLE_ENUM_COL_DESC) {
                                     if !r_c.value.is_empty() {
                                         formula_vec.push(r_c.value.clone());
                                     }
@@ -502,10 +534,10 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
                             }
 
                             let range: String = utils::cell_range(
-                                row_index,
-                                constant::TABLE_KV_COL_VALUE,
-                                row_index,
-                                constant::TABLE_KV_COL_VALUE as u16,
+                                &(row_index + 1),
+                                &(constant::TABLE_KV_COL_VALUE + 1),
+                                &(row_index + 1),
+                                &(constant::TABLE_KV_COL_VALUE + 1),
                             );
                             let mut enum_validation = DataValidation::default();
                             enum_validation.set_formula1(format!("\"{}\"", formula_vec.join(",")));
@@ -521,8 +553,8 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
                 EDataType::Loc => {
                     let cell_link_data: Option<&CellData> = gable_data
                         .cells
-                        .get(&row_index)
-                        .and_then(|row| row.get(&(constant::TABLE_KV_COL_LINK as u16)));
+                        .get(row_index)
+                        .and_then(|row| row.get(constant::TABLE_KV_COL_LINK));
                     if let Some(cell_link_data) = cell_link_data {
                         loc_cell_links.insert(row_index, &cell_link_data.value);
                     }
@@ -535,94 +567,110 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
     worksheet.set_data_validations(data_validations);
     let mut cell_type_data_temp: Option<&CellData> = None;
     // 数据内容处理
-    for (row_index, row_data) in &gable_data.cells {
-        for (col_index, cell_data) in row_data {
-            let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));
-            if *col_index == constant::TABLE_KV_COL_TYPE as u16 {
-                cell_type_data_temp = Some(cell_data);
-            }
-            if *col_index == constant::TABLE_KV_COL_VALUE as u16 {
-                if let Some(cell_type_data) = cell_type_data_temp {
-                    match EDataType::convert(&cell_type_data.value) {
-                        EDataType::Int => cell.set_value_number(cell_data.parse_int() as f64),
-                        EDataType::Boolean => cell.set_value_bool(cell_data.parse_bool()),
-                        EDataType::Float => cell.set_value_number(cell_data.parse_float()),
-                        EDataType::Percentage => cell.set_value_number(cell_data.parse_float()),
-                        EDataType::Permillage => {
-                            cell.set_value_number(cell_data.parse_float() * 1000.0)
-                        }
-                        EDataType::Permian => {
-                            cell.set_value_number(cell_data.parse_float() * 10000.0)
-                        }
-                        EDataType::Time => cell.set_value_number(cell_data.parse_time()),
-                        EDataType::Date => cell.set_value_number(cell_data.parse_date()),
-                        EDataType::Enum => {
-                            let mut cell_value: String = cell_data.value.clone();
-                            if let Some(link_name) = enum_cell_links.get(row_index) {
-                                gables::get_enum_cells(link_name, |link_cell| {
-                                    for (_, enum_row_cell) in link_cell.cells.iter() {
-                                        if let Some(enum_value_cell) =
-                                            enum_row_cell.get(&constant::TABLE_ENUM_COL_VALUE)
-                                        {
-                                            if enum_value_cell.value == cell_data.value {
-                                                if let Some(enum_desc_cell) = enum_row_cell
-                                                    .get(&constant::TABLE_ENUM_COL_DESC)
+    for row_index in 0..gable_data.cells.len() {
+        if let Some(row_data) = gable_data.cells.get(row_index) {
+            for col_index in 0..row_data.len() {
+                if let Some(cell_data) = row_data.get(col_index) {
+                    let sheet_row = (row_index + 1 + constant::TABLE_KV_ROW_TOTAL) as u32;
+                    let sheet_col = (col_index + 1) as u32;
+                    let cell: &mut Cell = worksheet.get_cell_mut((sheet_col, sheet_row));
+                    if col_index == constant::TABLE_KV_COL_TYPE {
+                        cell_type_data_temp = Some(cell_data);
+                    }
+                    if col_index == constant::TABLE_KV_COL_VALUE {
+                        if let Some(cell_type_data) = cell_type_data_temp {
+                            match EDataType::convert(&cell_type_data.value) {
+                                EDataType::Int => {
+                                    cell.set_value_number(cell_data.parse_int() as f64)
+                                }
+                                EDataType::Boolean => cell.set_value_bool(cell_data.parse_bool()),
+                                EDataType::Float => cell.set_value_number(cell_data.parse_float()),
+                                EDataType::Percentage => {
+                                    cell.set_value_number(cell_data.parse_float())
+                                }
+                                EDataType::Permillage => {
+                                    cell.set_value_number(cell_data.parse_float() * 1000.0)
+                                }
+                                EDataType::Permian => {
+                                    cell.set_value_number(cell_data.parse_float() * 10000.0)
+                                }
+                                EDataType::Time => cell.set_value_number(cell_data.parse_time()),
+                                EDataType::Date => cell.set_value_number(cell_data.parse_date()),
+                                EDataType::Enum => {
+                                    let mut cell_value: String = cell_data.value.clone();
+                                    if let Some(link_name) = enum_cell_links.get(&row_index) {
+                                        gables::get_enum_cells(link_name, |link_cell| {
+                                            for enum_row_cell in link_cell.cells.iter() {
+                                                if let Some(enum_value_cell) = enum_row_cell
+                                                    .get(constant::TABLE_ENUM_COL_VALUE)
                                                 {
-                                                    cell_value = enum_desc_cell.value.clone();
+                                                    if enum_value_cell.value == cell_data.value {
+                                                        if let Some(enum_desc_cell) = enum_row_cell
+                                                            .get(constant::TABLE_ENUM_COL_DESC)
+                                                        {
+                                                            cell_value =
+                                                                enum_desc_cell.value.clone();
+                                                        }
+                                                        break;
+                                                    }
                                                 }
-                                                break;
                                             }
-                                        }
+                                        });
                                     }
-                                });
-                            }
-                            cell.set_value(cell_value)
-                        }
-                        EDataType::Loc => {
-                            let mut cell_value = cell_data.value.clone();
-                            if let Some(link_name) = loc_cell_links.get(&row_index) {
-                                gables::get_loc_cells(link_name, |loc_item_cells| {
-                                    let mut link_key_index: &u16 = &0;
-                                    let mut link_value_index: &u16 = &0;
-                                    if let Some(link_key_cell) = loc_item_cells
-                                        .heads
-                                        .get(&constant::TABLE_LOCALIZE_ROW_FIELD)
-                                    {
-                                        for (col_index, col_cell) in link_key_cell.iter() {
-                                            if col_cell.value.contains("*") {
-                                                link_key_index = col_index;
+                                    cell.set_value(cell_value)
+                                }
+                                EDataType::Loc => {
+                                    let mut cell_value = cell_data.value.clone();
+                                    if let Some(link_name) = loc_cell_links.get(&row_index) {
+                                        gables::get_loc_cells(link_name, |loc_item_cells| {
+                                            let mut link_key_index: usize = 0;
+                                            let mut link_value_index: usize = 0;
+                                            if let Some(link_key_cell) = loc_item_cells
+                                                .heads
+                                                .get(constant::TABLE_LOCALIZE_ROW_FIELD)
+                                            {
+                                                for link_index in 0..link_key_cell.len() {
+                                                    if let Some(col_cell) =
+                                                        link_key_cell.get(link_index)
+                                                    {
+                                                        if col_cell.value.contains("*") {
+                                                            link_key_index = col_index;
+                                                        }
+                                                        if col_cell.value.contains("#") {
+                                                            link_value_index = col_index;
+                                                        }
+                                                    }
+                                                }
                                             }
-                                            if col_cell.value.contains("#") {
-                                                link_value_index = col_index;
-                                            }
-                                        }
-                                    }
 
-                                    for (_, loc_row_cell) in loc_item_cells.cells.iter() {
-                                        if let Some(loc_value_cell) =
-                                            loc_row_cell.get(link_key_index)
-                                        {
-                                            if loc_value_cell.value == cell_data.value {
-                                                if let Some(loc_desc_cell) =
-                                                    loc_row_cell.get(link_value_index)
+                                            for loc_row_cell in loc_item_cells.cells.iter() {
+                                                if let Some(loc_value_cell) =
+                                                    loc_row_cell.get(link_key_index)
                                                 {
-                                                    cell_value = loc_desc_cell.value.clone();
+                                                    if loc_value_cell.value == cell_data.value {
+                                                        if let Some(loc_desc_cell) =
+                                                            loc_row_cell.get(link_value_index)
+                                                        {
+                                                            cell_value =
+                                                                loc_desc_cell.value.clone();
+                                                        }
+                                                        break;
+                                                    }
                                                 }
-                                                break;
                                             }
-                                        }
+                                        });
                                     }
-                                });
-                            }
-                            cell.set_value(cell_value)
+                                    cell.set_value(cell_value)
+                                }
+                                _ => cell.set_value(&cell_data.value),
+                            };
                         }
-                        _ => cell.set_value(&cell_data.value),
-                    };
+                    } else {
+                        cell.set_value(&cell_data.value);
+                    }
+                    write_excel_cell_style(cell, &cell_data);
                 }
-            } else {
-                cell.set_value(&cell_data.value);
             }
-            write_excel_cell_style(cell, &cell_data);
         }
     }
 }
@@ -634,11 +682,17 @@ fn write_excel_kv(worksheet: &mut Worksheet, gable_data: &GableData) {
 */
 fn write_excel_enum(worksheet: &mut Worksheet, gable_data: &GableData) {
     // 数据内容处理
-    for (row_index, row_data) in &gable_data.cells {
-        for (col_index, cell_data) in row_data {
-            let cell: &mut Cell = worksheet.get_cell_mut((*col_index as u32, *row_index));
-            cell.set_value(&cell_data.value);
-            write_excel_cell_style(cell, &cell_data);
+    for row_index in 0..gable_data.cells.len() {
+        if let Some(row_data) = gable_data.cells.get(row_index) {
+            for col_index in 0..row_data.len() {
+                if let Some(cell_data) = row_data.get(col_index) {
+                    let sheet_row = (row_index + 1 + constant::TABLE_ENUM_ROW_TOTAL) as u32;
+                    let sheet_col = (col_index + 1) as u32;
+                    let cell: &mut Cell = worksheet.get_cell_mut((sheet_col, sheet_row));
+                    cell.set_value(&cell_data.value);
+                    write_excel_cell_style(cell, &cell_data);
+                }
+            }
         }
     }
 }
@@ -745,14 +799,12 @@ pub fn write_gable(
         let sheet_name: String = worksheet.get_name().to_string();
         let (max_col, max_row) = worksheet.get_highest_column_and_row();
         let mut gable_data: GableData = GableData {
-            max_row: max_row,
-            max_col: max_col as u16,
-            heads: BTreeMap::new(),
-            cells: BTreeMap::new(),
+            heads: Vec::new(),
+            cells: Vec::new(),
         };
 
-        let max_row: u32 = max_row + 1;
-        let max_col: u32 = max_col + 1;
+        let max_row: usize = max_row as usize;
+        let max_col: usize = max_col as usize;
         match sheet_type {
             ESheetType::Normal => write_gable_normal(worksheet, &mut gable_data, max_row, max_col),
             ESheetType::Localize => {
@@ -781,35 +833,38 @@ pub fn write_gable(
 fn write_gable_normal(
     worksheet: &Worksheet,
     gable_data: &mut GableData,
-    max_row: u32,
-    max_col: u32,
+    max_row: usize,
+    max_col: usize,
 ) {
     // 收集所有enum的link信息
-    let mut links: BTreeMap<u32, String> = BTreeMap::new();
+    let mut links: BTreeMap<usize, String> = BTreeMap::new();
     if max_row >= constant::TABLE_NORMAL_ROW_TOTAL {
         for col_idx in 0..max_col {
-            if let Some(cell_link_cell) =
-                worksheet.get_cell((&col_idx, &constant::TABLE_NORMAL_ROW_LINK))
-            {
+            let sheet_row = (constant::TABLE_NORMAL_ROW_LINK + 1) as u32;
+            let sheet_col = (col_idx + 1) as u32;
+            if let Some(cell_link_cell) = worksheet.get_cell((sheet_col, sheet_row)) {
                 links.insert(col_idx, cell_link_cell.get_value().to_string());
             }
         }
     }
 
-    for row_idx in 1..max_row {
-        let mut row_data: BTreeMap<u16, CellData> = BTreeMap::new();
+    for row_idx in 0..max_row {
+        let mut row_data: Vec<CellData> = Vec::new();
         let mut cell_type: EDataType = EDataType::String;
         for col_idx in 0..max_col {
             if row_idx >= constant::TABLE_NORMAL_ROW_TOTAL {
-                cell_type = if let Some(cell_type_data) =
-                    worksheet.get_cell((&col_idx, &constant::TABLE_NORMAL_ROW_TYPE))
+                let sheet_row = (constant::TABLE_NORMAL_ROW_TYPE + 1) as u32;
+                let sheet_col = (col_idx + 1) as u32;
+                cell_type = if let Some(cell_type_data) = worksheet.get_cell((sheet_col, sheet_row))
                 {
                     EDataType::convert(&cell_type_data.get_value())
                 } else {
                     EDataType::String
                 };
             }
-            if let Some(cell) = worksheet.get_cell((&col_idx, &row_idx)) {
+            let sheet_row = (row_idx + 1) as u32;
+            let sheet_col = (col_idx + 1) as u32;
+            if let Some(cell) = worksheet.get_cell((sheet_col, sheet_row)) {
                 let value: Cow<'static, str> = cell.get_value();
                 let style: &Style = cell.get_style();
                 let bc: Option<&Color> = style.get_background_color();
@@ -852,13 +907,13 @@ fn write_gable_normal(
                             let mut cell_value: String = value.to_string();
                             if let Some(link_name) = links.get(&col_idx) {
                                 gables::get_enum_cells(link_name, |link_cell| {
-                                    for (_, data_row) in link_cell.cells.iter() {
+                                    for data_row in link_cell.cells.iter() {
                                         if let Some(data) =
-                                            data_row.get(&constant::TABLE_ENUM_COL_DESC)
+                                            data_row.get(constant::TABLE_ENUM_COL_DESC)
                                         {
                                             if data.value == value {
                                                 if let Some(value_data) =
-                                                    data_row.get(&constant::TABLE_ENUM_COL_VALUE)
+                                                    data_row.get(constant::TABLE_ENUM_COL_VALUE)
                                                 {
                                                     cell_value = value_data.value.clone();
                                                 }
@@ -874,23 +929,24 @@ fn write_gable_normal(
                             let mut cell_value: String = value.to_string();
                             if let Some(link_name) = links.get(&col_idx) {
                                 gables::get_loc_cells(link_name, |loc_item_cells| {
-                                    let mut link_key_index: &u16 = &0;
-                                    let mut link_value_index: &u16 = &0;
-                                    if let Some(link_key_cell) = loc_item_cells
-                                        .heads
-                                        .get(&constant::TABLE_LOCALIZE_ROW_FIELD)
+                                    let mut link_key_index: usize = 0;
+                                    let mut link_value_index: usize = 0;
+                                    if let Some(link_key_cell) =
+                                        loc_item_cells.heads.get(constant::TABLE_LOCALIZE_ROW_FIELD)
                                     {
-                                        for (col_index, col_cell) in link_key_cell.iter() {
-                                            if col_cell.value.contains("*") {
-                                                link_key_index = col_index;
-                                            }
-                                            if col_cell.value.contains("#") {
-                                                link_value_index = col_index;
+                                        for link_index in 0..link_key_cell.len() {
+                                            if let Some(col_cell) = link_key_cell.get(link_index) {
+                                                if col_cell.value.contains("*") {
+                                                    link_key_index = link_index;
+                                                }
+                                                if col_cell.value.contains("#") {
+                                                    link_value_index = link_index;
+                                                }
                                             }
                                         }
                                     }
 
-                                    for (_, loc_row_cell) in loc_item_cells.cells.iter() {
+                                    for loc_row_cell in loc_item_cells.cells.iter() {
                                         if let Some(loc_desc_cell) =
                                             loc_row_cell.get(link_value_index)
                                         {
@@ -910,22 +966,15 @@ fn write_gable_normal(
                         }
                         _ => value.to_string(),
                     };
-                    let cell_data: CellData =
-                        CellData::new(row_idx, col_idx as u16, cell_value, bc, fc);
-                    // if cell_data.is_empty() {
-                    //     continue;
-                    // }
-                    row_data.insert(col_idx as u16, cell_data);
+                    let cell_data: CellData = CellData::new(cell_value, bc, fc);
+                    row_data.push(cell_data);
                 }
             }
         }
         if row_idx < constant::TABLE_NORMAL_ROW_TOTAL {
-            gable_data.heads.insert(row_idx, row_data);
+            gable_data.heads.push(row_data);
         } else {
-            // if row_data.len() > 0 {
-            //     gable_data.cells.insert(row_idx, row_data);
-            // }
-            gable_data.cells.insert(row_idx, row_data);
+            gable_data.cells.push(row_data);
         }
     }
 }
@@ -940,13 +989,15 @@ fn write_gable_normal(
 fn write_gable_localize(
     worksheet: &Worksheet,
     gable_data: &mut GableData,
-    max_row: u32,
-    max_col: u32,
+    max_row: usize,
+    max_col: usize,
 ) {
-    for row_idx in 1..max_row {
-        let mut row_data: BTreeMap<u16, CellData> = BTreeMap::new();
+    for row_idx in 0..max_row {
+        let mut row_data: Vec<CellData> = Vec::new();
         for col_idx in 0..max_col {
-            if let Some(cell) = worksheet.get_cell((&col_idx, &row_idx)) {
+            let sheet_row = (row_idx + 1) as u32;
+            let sheet_col = (col_idx + 1) as u32;
+            if let Some(cell) = worksheet.get_cell((sheet_col, sheet_row)) {
                 let value: Cow<'static, str> = cell.get_value();
                 let style: &Style = cell.get_style();
                 let bc: Option<&Color> = style.get_background_color();
@@ -955,23 +1006,14 @@ fn write_gable_localize(
                 } else {
                     None
                 };
-                if !value.is_empty() {
-                    let cell_data: CellData =
-                        CellData::new(row_idx, col_idx as u16, value.to_string(), bc, fc);
-                    // if cell_data.is_empty() {
-                    //     continue;
-                    // }
-                    row_data.insert(col_idx as u16, cell_data);
-                }
+                let cell_data: CellData = CellData::new(value.to_string(), bc, fc);
+                row_data.push(cell_data);
             }
         }
         if row_idx < constant::TABLE_LOCALIZE_ROW_TOTAL {
-            gable_data.heads.insert(row_idx, row_data);
+            gable_data.heads.push(row_data);
         } else {
-            // if row_data.len() > 0 {
-            //     gable_data.cells.insert(row_idx, row_data);
-            // }
-            gable_data.cells.insert(row_idx, row_data);
+            gable_data.cells.push(row_data);
         }
     }
 }
@@ -983,14 +1025,19 @@ fn write_gable_localize(
  * @param max_row 最大行数
  * @param max_col 最大列数
 */
-fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u32, max_col: u32) {
+fn write_gable_kv(
+    worksheet: &Worksheet,
+    gable_data: &mut GableData,
+    max_row: usize,
+    max_col: usize,
+) {
     // 读取数据并填充到GableData中
-    for row_idx in 1..max_row {
-        let mut row_data: BTreeMap<u16, CellData> = BTreeMap::new();
+    for row_idx in 0..max_row {
+        let mut row_data: Vec<CellData> = Vec::new();
         let cell_type: EDataType = if row_idx >= constant::TABLE_KV_ROW_TOTAL {
-            if let Some(cell_type_data) =
-                worksheet.get_cell((&constant::TABLE_KV_COL_TYPE, &row_idx))
-            {
+            let sheet_row = (row_idx + 1) as u32;
+            let sheet_col = (constant::TABLE_KV_COL_TYPE + 1) as u32;
+            if let Some(cell_type_data) = worksheet.get_cell((sheet_col, sheet_row)) {
                 EDataType::convert(&cell_type_data.get_value())
             } else {
                 EDataType::String
@@ -1000,7 +1047,9 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
         };
         let mut link_name: Option<String> = None;
         for col_idx in 0..max_col {
-            if let Some(cell) = worksheet.get_cell((&col_idx, &row_idx)) {
+            let sheet_row = (row_idx + 1) as u32;
+            let sheet_col = (col_idx + 1) as u32;
+            if let Some(cell) = worksheet.get_cell((sheet_col, sheet_row)) {
                 let value: Cow<'static, str> = cell.get_value();
                 let style: &Style = cell.get_style();
                 let bc: Option<&Color> = style.get_background_color();
@@ -1046,13 +1095,13 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
                                 let mut cell_value: String = value.to_string();
                                 if let Some(link_name) = &link_name {
                                     gables::get_enum_cells(link_name, |link_cell| {
-                                        for (_, enum_row) in link_cell.cells.iter() {
+                                        for enum_row in link_cell.cells.iter() {
                                             if let Some(enum_cell) =
-                                                enum_row.get(&constant::TABLE_ENUM_COL_DESC)
+                                                enum_row.get(constant::TABLE_ENUM_COL_DESC)
                                             {
                                                 if enum_cell.value == value {
-                                                    if let Some(value_data) = enum_row
-                                                        .get(&constant::TABLE_ENUM_COL_VALUE)
+                                                    if let Some(value_data) =
+                                                        enum_row.get(constant::TABLE_ENUM_COL_VALUE)
                                                     {
                                                         cell_value = value_data.value.clone();
                                                     }
@@ -1067,23 +1116,27 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
                                 let mut cell_value: String = value.to_string();
                                 if let Some(link_name) = &link_name {
                                     gables::get_loc_cells(link_name, |loc_item_cells| {
-                                        let mut link_key_index: &u16 = &0;
-                                        let mut link_value_index: &u16 = &0;
+                                        let mut link_key_index: usize = 0;
+                                        let mut link_value_index: usize = 0;
                                         if let Some(link_key_cell) = loc_item_cells
                                             .heads
-                                            .get(&constant::TABLE_LOCALIZE_ROW_FIELD)
+                                            .get(constant::TABLE_LOCALIZE_ROW_FIELD)
                                         {
-                                            for (col_index, col_cell) in link_key_cell.iter() {
-                                                if col_cell.value.contains("*") {
-                                                    link_key_index = col_index;
-                                                }
-                                                if col_cell.value.contains("#") {
-                                                    link_value_index = col_index;
+                                            for link_index in 0..link_key_cell.len() {
+                                                if let Some(col_cell) =
+                                                    link_key_cell.get(link_index)
+                                                {
+                                                    if col_cell.value.contains("*") {
+                                                        link_key_index = link_index;
+                                                    }
+                                                    if col_cell.value.contains("#") {
+                                                        link_value_index = link_index;
+                                                    }
                                                 }
                                             }
                                         }
 
-                                        for (_, loc_row_cell) in loc_item_cells.cells.iter() {
+                                        for loc_row_cell in loc_item_cells.cells.iter() {
                                             if let Some(loc_desc_cell) =
                                                 loc_row_cell.get(link_value_index)
                                             {
@@ -1103,32 +1156,21 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
                             }
                             _ => value.to_string(),
                         };
-                        let cell_data: CellData =
-                            CellData::new(row_idx, col_idx as u16, cell_value, bc, fc);
-                        if cell_data.is_empty() {
-                            continue;
-                        }
-                        row_data.insert(col_idx as u16, cell_data);
+                        let cell_data: CellData = CellData::new(cell_value, bc, fc);
+                        row_data.push(cell_data);
                     }
                 } else {
                     if !value.is_empty() {
-                        let cell_data: CellData =
-                            CellData::new(row_idx, col_idx as u16, value.to_string(), bc, fc);
-                        // if cell_data.is_empty() {
-                        //     continue;
-                        // }
-                        row_data.insert(col_idx as u16, cell_data);
+                        let cell_data: CellData = CellData::new(value.to_string(), bc, fc);
+                        row_data.push(cell_data);
                     }
                 }
             }
         }
         if row_idx < constant::TABLE_KV_ROW_TOTAL {
-            gable_data.heads.insert(row_idx, row_data);
+            gable_data.heads.push(row_data);
         } else {
-            // if row_data.len() > 0 {
-            //     gable_data.cells.insert(row_idx, row_data);
-            // }
-            gable_data.cells.insert(row_idx, row_data);
+            gable_data.cells.push(row_data);
         }
     }
 }
@@ -1140,12 +1182,19 @@ fn write_gable_kv(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u3
  * @param max_row 最大行数
  * @param max_col 最大列数
 */
-fn write_gable_enum(worksheet: &Worksheet, gable_data: &mut GableData, max_row: u32, max_col: u32) {
+fn write_gable_enum(
+    worksheet: &Worksheet,
+    gable_data: &mut GableData,
+    max_row: usize,
+    max_col: usize,
+) {
     // 读取数据并填充到GableData中
-    for row_idx in 1..max_row {
-        let mut row_data: BTreeMap<u16, CellData> = BTreeMap::new();
+    for row_idx in 0..max_row {
+        let mut row_data: Vec<CellData> = Vec::new();
         for col_idx in 0..max_col {
-            if let Some(cell) = worksheet.get_cell((&col_idx, &row_idx)) {
+            let sheet_row = (row_idx + 1) as u32;
+            let sheet_col = (col_idx + 1) as u32;
+            if let Some(cell) = worksheet.get_cell((sheet_col, sheet_row)) {
                 let value: Cow<'static, str> = cell.get_value();
                 let style: &Style = cell.get_style();
                 let bc: Option<&Color> = style.get_background_color();
@@ -1154,20 +1203,15 @@ fn write_gable_enum(worksheet: &Worksheet, gable_data: &mut GableData, max_row: 
                 } else {
                     None
                 };
-                if !value.is_empty() {
-                    let cell_data: CellData =
-                        CellData::new(row_idx, col_idx as u16, value.to_string(), bc, fc);
-                    // if cell_data.is_empty() {
-                    //     continue;
-                    // }
-                    row_data.insert(col_idx as u16, cell_data);
-                }
+
+                let cell_data: CellData = CellData::new(value.to_string(), bc, fc);
+                row_data.push(cell_data);
             }
         }
         if row_idx < constant::TABLE_ENUM_ROW_TOTAL {
-            gable_data.heads.insert(row_idx, row_data);
+            gable_data.heads.push(row_data);
         } else {
-            gable_data.cells.insert(row_idx, row_data);
+            gable_data.cells.push(row_data);
         }
     }
 }

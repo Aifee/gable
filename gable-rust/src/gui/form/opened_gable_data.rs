@@ -9,26 +9,28 @@ use std::collections::{BTreeMap, HashMap};
 
 #[derive(Debug, Clone)]
 pub struct OpenedGableData {
-    pub max_row: u32,
-    pub max_col: u16,
+    pub max_row: usize,
+    pub max_col: usize,
     pub column_headers: Vec<String>,
-    pub items: BTreeMap<u32, BTreeMap<u16, String>>,
+    pub items: BTreeMap<usize, BTreeMap<usize, String>>,
 }
 
 impl OpenedGableData {
     pub fn new(sheet_type: &ESheetType, data: &GableData) -> Self {
+        let max_row: usize = data.get_max_row();
+        let max_col: usize = data.get_max_col();
         Self {
-            max_row: data.max_row,
-            max_col: data.max_col,
-            column_headers: Self::pairs_headers(data.max_col as u32),
+            max_row: max_row,
+            max_col: max_col,
+            column_headers: Self::pairs_headers(&max_col),
             items: Self::pairs_items(sheet_type, data),
         }
     }
 
-    fn pairs_headers(col: u32) -> Vec<String> {
+    fn pairs_headers(col: &usize) -> Vec<String> {
         let mut header: Vec<String> = Vec::new();
-        for index in 1..=col {
-            header.push(utils::column_index_to_name(index));
+        for index in 1..=*col {
+            header.push(utils::column_index_to_name(&index));
         }
         header
     }
@@ -36,7 +38,7 @@ impl OpenedGableData {
     fn pairs_items(
         sheet_type: &ESheetType,
         data: &GableData,
-    ) -> BTreeMap<u32, BTreeMap<u16, String>> {
+    ) -> BTreeMap<usize, BTreeMap<usize, String>> {
         match sheet_type {
             ESheetType::Normal => Self::pairs_items_normal(data),
             ESheetType::Localize => Self::pairs_items_localize(data),
@@ -45,25 +47,23 @@ impl OpenedGableData {
         }
     }
 
-    fn pairs_items_normal(data: &GableData) -> BTreeMap<u32, BTreeMap<u16, String>> {
-        let total_rows: u32 = data.max_row;
-        let total_cols: u16 = data.max_col;
-        let mut cell_types: HashMap<u16, EDataType> = HashMap::<u16, EDataType>::new();
-        let mut link_cells: HashMap<u16, &String> = HashMap::new();
+    fn pairs_items_normal(data: &GableData) -> BTreeMap<usize, BTreeMap<usize, String>> {
+        let mut cell_types: HashMap<usize, EDataType> = HashMap::<usize, EDataType>::new();
+        let mut link_cells: HashMap<usize, &String> = HashMap::new();
+        let max_row = data.get_max_row();
         // 通过预先获取的行数据查找列数据
-        if total_rows >= constant::TABLE_NORMAL_ROW_TOTAL {
-            for col_index in 1..total_cols + 1 {
-                let row_type_data: Option<&BTreeMap<u16, CellData>> =
-                    data.heads.get(&constant::TABLE_NORMAL_ROW_TYPE);
+        if max_row >= constant::TABLE_NORMAL_ROW_TOTAL {
+            let max_col = data.get_max_col();
+            for col_index in 0..max_col {
+                let row_type_data: Option<&Vec<CellData>> =
+                    data.heads.get(constant::TABLE_NORMAL_ROW_TYPE);
                 if let Some(row_type_data) = row_type_data {
-                    let type_cell = row_type_data.get(&col_index);
-                    if let Some(type_cell) = type_cell {
+                    if let Some(type_cell) = row_type_data.get(col_index) {
                         let cell_type: EDataType = EDataType::convert(&type_cell.value);
                         if cell_type == EDataType::Enum || cell_type == EDataType::Loc {
-                            let row_link_data: Option<&BTreeMap<u16, CellData>> =
-                                data.heads.get(&constant::TABLE_NORMAL_ROW_LINK);
+                            let row_link_data = data.heads.get(constant::TABLE_NORMAL_ROW_LINK);
                             if let Some(row_link_data) = row_link_data {
-                                let link_cell = row_link_data.get(&col_index);
+                                let link_cell = row_link_data.get(col_index);
                                 if let Some(link_cell) = link_cell {
                                     if !link_cell.value.is_empty() {
                                         link_cells.insert(col_index, &link_cell.value);
@@ -77,106 +77,154 @@ impl OpenedGableData {
             }
         }
 
-        let mut items: BTreeMap<u32, BTreeMap<u16, String>> = BTreeMap::new();
-        for (row, cols) in data.heads.iter() {
-            let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
-            for (col, cell) in cols.iter() {
-                let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells, false);
-                cols_items.insert(*col, value);
-            }
-            items.insert(*row, cols_items);
-        }
-
-        for (row, cols) in data.cells.iter() {
-            let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
-            for (col, cell) in cols.iter() {
-                let cell_type: &EDataType = cell_types.get(&col).unwrap_or(&EDataType::String);
-                let value: String = Self::pairs_value(cell_type, cell, &link_cells, false);
-                cols_items.insert(*col, value);
-            }
-            items.insert(*row, cols_items);
-        }
-        items
-    }
-
-    fn pairs_items_localize(data: &GableData) -> BTreeMap<u32, BTreeMap<u16, String>> {
-        let mut items: BTreeMap<u32, BTreeMap<u16, String>> = BTreeMap::new();
-        for (row, cols) in data.heads.iter() {
-            let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
-            for (col, cell) in cols.iter() {
-                cols_items.insert(*col, cell.value.clone());
-            }
-            items.insert(*row, cols_items);
-        }
-
-        for (row, cols) in data.cells.iter() {
-            let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
-            for (col, cell) in cols.iter() {
-                cols_items.insert(*col, cell.value.clone());
-            }
-            items.insert(*row, cols_items);
-        }
-        items
-    }
-
-    fn pairs_items_kv(data: &GableData) -> BTreeMap<u32, BTreeMap<u16, String>> {
-        let mut link_cells: HashMap<u16, &String> = HashMap::new();
-        let mut items: BTreeMap<u32, BTreeMap<u16, String>> = BTreeMap::new();
-        for (row, cols) in data.heads.iter() {
-            let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
-            for (col, cell) in cols.iter() {
-                let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells, true);
-                cols_items.insert(*col, value);
-            }
-            items.insert(*row, cols_items);
-        }
-        for (row, cols) in data.cells.iter() {
-            let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
-            let mut cell_type: EDataType = EDataType::String;
-            link_cells.clear();
-            for (col, cell) in cols.iter() {
-                if col == &(constant::TABLE_KV_COL_TYPE as u16) {
-                    cell_type = EDataType::convert(&cell.value);
-                }
-                if col == &(constant::TABLE_KV_COL_LINK as u16)
-                    && (cell_type == EDataType::Enum || cell_type == EDataType::Loc)
-                {
-                    let cell_link_value: Option<&String> = Some(&cell.value);
-                    if let Some(link_value) = cell_link_value {
-                        link_cells.insert(*row as u16, link_value);
+        let mut items: BTreeMap<usize, BTreeMap<usize, String>> = BTreeMap::new();
+        for row_index in 0..data.heads.len() {
+            if let Some(cols) = data.heads.get(row_index) {
+                let mut cols_items: BTreeMap<usize, String> = BTreeMap::new();
+                for col_index in 0..cols.len() {
+                    if let Some(cell) = cols.get(col_index) {
+                        let value: String =
+                            Self::pairs_value(&EDataType::String, cell, &link_cells, &col_index);
+                        cols_items.insert(col_index, value);
                     }
                 }
-                if col == &(constant::TABLE_KV_COL_VALUE as u16) {
-                    let value: String = Self::pairs_value(&cell_type, cell, &link_cells, true);
-                    cols_items.insert(*col, value);
-                } else {
-                    let value: String =
-                        Self::pairs_value(&EDataType::String, cell, &link_cells, true);
-                    cols_items.insert(*col, value);
-                }
+                items.insert(row_index, cols_items);
             }
-            items.insert(*row, cols_items);
+        }
+
+        for row_index in 0..data.cells.len() {
+            if let Some(cols) = data.cells.get(row_index) {
+                let mut cols_items: BTreeMap<usize, String> = BTreeMap::new();
+                for col_index in 0..cols.len() {
+                    if let Some(cell) = cols.get(col_index) {
+                        let cell_type: &EDataType =
+                            cell_types.get(&col_index).unwrap_or(&EDataType::String);
+                        let value: String =
+                            Self::pairs_value(cell_type, cell, &link_cells, &col_index);
+                        cols_items.insert(col_index, value);
+                    }
+                }
+                let index = row_index + constant::TABLE_NORMAL_ROW_TOTAL;
+                items.insert(index, cols_items);
+            }
         }
         items
     }
-    fn pairs_items_enum(data: &GableData) -> BTreeMap<u32, BTreeMap<u16, String>> {
-        let mut items: BTreeMap<u32, BTreeMap<u16, String>> = BTreeMap::new();
-        let link_cells: HashMap<u16, &String> = HashMap::new();
-        for (row, cols) in data.heads.iter() {
-            let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
-            for (col, cell) in cols.iter() {
-                let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells, false);
-                cols_items.insert(*col, value);
+
+    fn pairs_items_localize(data: &GableData) -> BTreeMap<usize, BTreeMap<usize, String>> {
+        let mut items: BTreeMap<usize, BTreeMap<usize, String>> = BTreeMap::new();
+        for row_index in 0..data.heads.len() {
+            if let Some(cols) = data.heads.get(row_index) {
+                let mut cols_items: BTreeMap<usize, String> = BTreeMap::new();
+                for col_index in 0..cols.len() {
+                    if let Some(cell) = cols.get(col_index) {
+                        cols_items.insert(col_index, cell.value.clone());
+                    }
+                }
+                items.insert(row_index, cols_items);
             }
-            items.insert(*row, cols_items);
         }
-        for (row, cols) in data.cells.iter() {
-            let mut cols_items: BTreeMap<u16, String> = BTreeMap::new();
-            for (col, cell) in cols.iter() {
-                let value: String = Self::pairs_value(&EDataType::String, cell, &link_cells, false);
-                cols_items.insert(*col, value);
+
+        for row_index in 0..data.cells.len() {
+            if let Some(cols) = data.cells.get(row_index) {
+                let mut cols_items: BTreeMap<usize, String> = BTreeMap::new();
+                for col_index in 0..cols.len() {
+                    if let Some(cell) = cols.get(col_index) {
+                        cols_items.insert(col_index, cell.value.clone());
+                    }
+                }
+                let index = row_index + constant::TABLE_LOCALIZE_ROW_TOTAL;
+                items.insert(index, cols_items);
             }
-            items.insert(*row, cols_items);
+        }
+        items
+    }
+
+    fn pairs_items_kv(data: &GableData) -> BTreeMap<usize, BTreeMap<usize, String>> {
+        let mut link_cells: HashMap<usize, &String> = HashMap::new();
+        let mut items: BTreeMap<usize, BTreeMap<usize, String>> = BTreeMap::new();
+        for row_index in 0..data.heads.len() {
+            if let Some(cols) = data.heads.get(row_index) {
+                let mut cols_items: BTreeMap<usize, String> = BTreeMap::new();
+                for col_index in 0..cols.len() {
+                    if let Some(cell) = cols.get(col_index) {
+                        let value: String =
+                            Self::pairs_value(&EDataType::String, cell, &link_cells, &row_index);
+                        cols_items.insert(col_index, value);
+                    }
+                }
+                items.insert(row_index, cols_items);
+            }
+        }
+        for row_index in 0..data.cells.len() {
+            if let Some(cols) = data.cells.get(row_index) {
+                let mut cols_items: BTreeMap<usize, String> = BTreeMap::new();
+                let mut cell_type: EDataType = EDataType::String;
+                link_cells.clear();
+                for col_index in 0..cols.len() {
+                    if let Some(cell) = cols.get(col_index) {
+                        if col_index == constant::TABLE_KV_COL_TYPE {
+                            cell_type = EDataType::convert(&cell.value);
+                        }
+                        if col_index == constant::TABLE_KV_COL_LINK
+                            && (cell_type == EDataType::Enum || cell_type == EDataType::Loc)
+                        {
+                            let cell_link_value: Option<&String> = Some(&cell.value);
+                            if let Some(link_value) = cell_link_value {
+                                link_cells.insert(row_index, link_value);
+                            }
+                        }
+                        if col_index == constant::TABLE_KV_COL_VALUE {
+                            let value: String =
+                                Self::pairs_value(&cell_type, cell, &link_cells, &row_index);
+                            cols_items.insert(col_index, value);
+                        } else {
+                            let value: String = Self::pairs_value(
+                                &EDataType::String,
+                                cell,
+                                &link_cells,
+                                &row_index,
+                            );
+                            cols_items.insert(col_index, value);
+                        }
+                    }
+                }
+                let index = row_index + constant::TABLE_KV_ROW_TOTAL;
+                items.insert(index, cols_items);
+            }
+        }
+        items
+    }
+
+    fn pairs_items_enum(data: &GableData) -> BTreeMap<usize, BTreeMap<usize, String>> {
+        let mut items: BTreeMap<usize, BTreeMap<usize, String>> = BTreeMap::new();
+        let link_cells: HashMap<usize, &String> = HashMap::new();
+        for row_index in 0..data.heads.len() {
+            if let Some(cols) = data.heads.get(row_index) {
+                let mut cols_items: BTreeMap<usize, String> = BTreeMap::new();
+                for col_index in 0..cols.len() {
+                    if let Some(cell) = cols.get(col_index) {
+                        let value: String =
+                            Self::pairs_value(&EDataType::String, cell, &link_cells, &col_index);
+                        cols_items.insert(col_index, value);
+                    }
+                }
+                items.insert(row_index, cols_items);
+            }
+        }
+        for row_index in 0..data.cells.len() {
+            if let Some(cols) = data.cells.get(row_index) {
+                let mut cols_items: BTreeMap<usize, String> = BTreeMap::new();
+                for col_index in 0..cols.len() {
+                    if let Some(cell) = cols.get(col_index) {
+                        let value: String =
+                            Self::pairs_value(&EDataType::String, cell, &link_cells, &col_index);
+                        cols_items.insert(col_index, value);
+                    }
+                }
+                let index = row_index + constant::TABLE_ENUM_ROW_TOTAL;
+                items.insert(index, cols_items);
+            }
         }
         items
     }
@@ -184,8 +232,8 @@ impl OpenedGableData {
     fn pairs_value(
         data_type: &EDataType,
         cell: &CellData,
-        link_cells: &HashMap<u16, &String>,
-        iskv: bool,
+        link_cells: &HashMap<usize, &String>,
+        index: &usize,
     ) -> String {
         match data_type {
             EDataType::Percentage => {
@@ -201,16 +249,15 @@ impl OpenedGableData {
             EDataType::Date => cell.convert_date(),
             EDataType::Enum => {
                 let mut enum_value: String = cell.value.clone();
-                let index: u16 = if iskv { cell.row as u16 } else { cell.col };
-                if let Some(link_name) = link_cells.get(&index) {
+                if let Some(link_name) = link_cells.get(index) {
                     gables::get_enum_cells(link_name, |cell_data| {
-                        for (_, link_data) in cell_data.cells.iter() {
+                        for link_data in cell_data.cells.iter() {
                             if let Some(enum_value_cell) =
-                                link_data.get(&constant::TABLE_ENUM_COL_VALUE)
+                                link_data.get(constant::TABLE_ENUM_COL_VALUE)
                             {
                                 if enum_value_cell.value == cell.value {
                                     if let Some(enum_desc_cell) =
-                                        link_data.get(&constant::TABLE_ENUM_COL_DESC)
+                                        link_data.get(constant::TABLE_ENUM_COL_DESC)
                                     {
                                         enum_value = enum_desc_cell.value.clone();
                                     }
@@ -224,26 +271,26 @@ impl OpenedGableData {
             }
             EDataType::Loc => {
                 let mut loc_value: String = cell.value.clone();
-                let index: u16 = if iskv { cell.row as u16 } else { cell.col };
                 if let Some(link_name) = link_cells.get(&index) {
                     gables::get_loc_cells(link_name, |loc_item_cells| {
-                        let mut link_key_index: &u16 = &0;
-                        let mut link_value_index: &u16 = &0;
-                        if let Some(link_key_cell) = loc_item_cells
-                            .heads
-                            .get(&constant::TABLE_LOCALIZE_ROW_FIELD)
+                        let mut link_key_index: usize = 0;
+                        let mut link_value_index: usize = 0;
+                        if let Some(link_key_cell) =
+                            loc_item_cells.heads.get(constant::TABLE_LOCALIZE_ROW_FIELD)
                         {
-                            for (col_index, col_cell) in link_key_cell.iter() {
-                                if col_cell.value.contains("*") {
-                                    link_key_index = col_index;
-                                }
-                                if col_cell.value.contains("#") {
-                                    link_value_index = col_index;
+                            for col_index in 0..link_key_cell.len() {
+                                if let Some(col_cell) = link_key_cell.get(col_index) {
+                                    if col_cell.value.contains("*") {
+                                        link_key_index = col_index;
+                                    }
+                                    if col_cell.value.contains("#") {
+                                        link_value_index = col_index;
+                                    }
                                 }
                             }
                         }
 
-                        for (_, loc_row_cell) in loc_item_cells.cells.iter() {
+                        for loc_row_cell in loc_item_cells.cells.iter() {
                             if let Some(loc_value_cell) = loc_row_cell.get(link_key_index) {
                                 if loc_value_cell.value == cell.value {
                                     if let Some(loc_desc_cell) = loc_row_cell.get(link_value_index)

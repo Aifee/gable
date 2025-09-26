@@ -66,105 +66,107 @@ lazy_static! {
 /**
  * 表单最小行数
 */
-pub const FORM_MIN_ROW: u32 = 47;
+pub const FORM_MIN_ROW: usize = 47;
 /**
  * 表单最小列数
 */
-pub const FORM_MIN_COL: u16 = 25;
+pub const FORM_MIN_COL: usize = 25;
 
 /**
  * [数据表单]描述行
 */
-pub const TABLE_NORMAL_ROW_DESC: u32 = 1;
+pub const TABLE_NORMAL_ROW_DESC: usize = 0;
 /**
  * [数据表单]字段行
 */
-pub const TABLE_NORMAL_ROW_FIELD: u32 = 2;
+pub const TABLE_NORMAL_ROW_FIELD: usize = 1;
 /**
  * [数据表单]类型行
 */
-pub const TABLE_NORMAL_ROW_TYPE: u32 = 3;
+pub const TABLE_NORMAL_ROW_TYPE: usize = 2;
 /**
  * [数据表单]平台行
 */
-pub const TABLE_NORMAL_ROW_KEYWORD: u32 = 4;
+pub const TABLE_NORMAL_ROW_KEYWORD: usize = 3;
 /**
  * [数据表单]关联信息行
 */
-pub const TABLE_NORMAL_ROW_LINK: u32 = 5;
-/// [数据表单]有效数据起始行数
-pub const TABLE_NORMAL_ROW_TOTAL: u32 = 6;
+pub const TABLE_NORMAL_ROW_LINK: usize = 4;
+/**
+ * [数据表单]有效数据起始行数
+ */
+pub const TABLE_NORMAL_ROW_TOTAL: usize = 5;
 
 /**
  * [本地化表单]描述行
 */
-pub const TABLE_LOCALIZE_ROW_DESC: u32 = 1;
+pub const TABLE_LOCALIZE_ROW_DESC: usize = 0;
 /**
  * [本地化表单]字段行
 */
-pub const TABLE_LOCALIZE_ROW_FIELD: u32 = 2;
+pub const TABLE_LOCALIZE_ROW_FIELD: usize = 1;
 /**
  * [本地化表单]类型行
 */
-pub const TABLE_LOCALIZE_ROW_TYPE: u32 = 3;
+pub const TABLE_LOCALIZE_ROW_TYPE: usize = 2;
 /**
  * [本地化表单]平台行
 */
-// pub const TABLE_LOCALIZE_ROW_KEYWORD: u32 = 4;
+// pub const TABLE_LOCALIZE_ROW_KEYWORD: usize = 3;
 /**
  * [本地化表单]关联信息行
 */
-// pub const TABLE_LOCALIZE_ROW_LINK: u32 = 5;
+// pub const TABLE_LOCALIZE_ROW_LINK: usize = 4;
 /**
  * [本地化表单]有效数据起始行数
 */
-pub const TABLE_LOCALIZE_ROW_TOTAL: u32 = 6;
+pub const TABLE_LOCALIZE_ROW_TOTAL: usize = 5;
 
 /**
  * [KV表单]字段行
 */
-pub const TABLE_KV_COL_FIELD: u32 = 1;
+pub const TABLE_KV_COL_FIELD: usize = 0;
 /**
  * [KV表单]类型列
 */
-pub const TABLE_KV_COL_TYPE: u32 = 2;
+pub const TABLE_KV_COL_TYPE: usize = 1;
 /**
  * [KV表单]平台行
 */
-pub const TABLE_KV_COL_KEYWORD: u32 = 3;
+pub const TABLE_KV_COL_KEYWORD: usize = 2;
 /**
  * [KV表单]关联信息列
 */
-pub const TABLE_KV_COL_LINK: u32 = 4;
+pub const TABLE_KV_COL_LINK: usize = 3;
 /**
  * [KV表单]值列
 */
-pub const TABLE_KV_COL_VALUE: u32 = 5;
+pub const TABLE_KV_COL_VALUE: usize = 4;
 /**
  * [数据表单]描述行
 */
-pub const TABLE_KV_COL_DESC: u32 = 6;
+pub const TABLE_KV_COL_DESC: usize = 5;
 /**
  * [KV表单]有效数据起始行数
 */
-pub const TABLE_KV_ROW_TOTAL: u32 = 2;
+pub const TABLE_KV_ROW_TOTAL: usize = 1;
 
 /**
  * [枚举表单]字段行
 */
-pub const TABLE_ENUM_COL_FIELD: u32 = 1;
+pub const TABLE_ENUM_COL_FIELD: usize = 0;
 /**
  * [枚举表单]值列
 */
-pub const TABLE_ENUM_COL_VALUE: u16 = 2;
+pub const TABLE_ENUM_COL_VALUE: usize = 1;
 /**
  * [枚举表单]描述列
 */
-pub const TABLE_ENUM_COL_DESC: u16 = 3;
+pub const TABLE_ENUM_COL_DESC: usize = 2;
 /**
  * [枚举表单]有效数据起始行数
 */
-pub const TABLE_ENUM_ROW_TOTAL: u32 = 2;
+pub const TABLE_ENUM_ROW_TOTAL: usize = 1;
 
 pub const DATA_TYPE_KEY_INT: &str = "int";
 pub const DATA_TYPE_KEY_STRING: &str = "string";

@@ -3,7 +3,6 @@ use crate::{
     gui::datas::{cell_data::CellData, esheet_type::ESheetType, tree_data::TreeData},
 };
 use std::{
-    collections::BTreeMap,
     fs::File,
     io::{BufWriter, Error, Write},
     path::PathBuf,
@@ -141,19 +140,18 @@ fn normal_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
     items.push(field_row_item);
     items.push(type_row_item);
 
-    let max_row: u32 = tree_data.content.max_row + 1;
+    let max_row = tree_data.content.get_max_row() + 1;
     for row_index in constant::TABLE_NORMAL_ROW_TOTAL..=max_row {
-        let row_data: &BTreeMap<u16, CellData> =
-            if let Some(row_data) = tree_data.content.cells.get(&row_index) {
-                row_data
-            } else {
-                continue;
-            };
+        let row_data = if let Some(row_data) = tree_data.content.cells.get(row_index) {
+            row_data
+        } else {
+            continue;
+        };
         let mut row_valid: bool = true;
         let mut item_data: Vec<String> = Vec::new();
         // 检测行数据是否有效，主键没有数据，行数据无效则跳过
         for (col_index, _) in valids_main.iter() {
-            let value_cell: &CellData = if let Some(value_cell) = row_data.get(col_index) {
+            let value_cell: &CellData = if let Some(value_cell) = row_data.get(*col_index) {
                 value_cell
             } else {
                 row_valid = false;
@@ -171,7 +169,7 @@ fn normal_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
         }
 
         for (col_index, _) in valids.iter() {
-            let value_cell = if let Some(value_cell) = row_data.get(col_index) {
+            let value_cell = if let Some(value_cell) = row_data.get(*col_index) {
                 value_cell.value.clone()
             } else {
                 String::new()
@@ -190,22 +188,22 @@ fn normal_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
 */
 fn kv_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
     let mut items: Vec<Vec<String>> = Vec::new();
-    for row_data in tree_data.content.heads.values() {
+    for row_data in tree_data.content.heads.iter() {
         let mut head_item: Vec<String> = Vec::new();
         let field_value: String =
-            if let Some(field_cell) = row_data.get(&(constant::TABLE_KV_COL_FIELD as u16)) {
+            if let Some(field_cell) = row_data.get(constant::TABLE_KV_COL_FIELD) {
                 field_cell.value.clone()
             } else {
                 String::new()
             };
-        let type_value: String =
-            if let Some(type_cell) = row_data.get(&(constant::TABLE_KV_COL_TYPE as u16)) {
-                type_cell.value.clone()
-            } else {
-                String::new()
-            };
+        let type_value: String = if let Some(type_cell) = row_data.get(constant::TABLE_KV_COL_TYPE)
+        {
+            type_cell.value.clone()
+        } else {
+            String::new()
+        };
         let value_value: String =
-            if let Some(value_cell) = row_data.get(&(constant::TABLE_KV_COL_VALUE as u16)) {
+            if let Some(value_cell) = row_data.get(constant::TABLE_KV_COL_VALUE) {
                 value_cell.value.clone()
             } else {
                 String::new()
@@ -215,28 +213,28 @@ fn kv_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
         head_item.push(value_value);
         items.push(head_item);
     }
-    for (_, row_data) in tree_data.content.cells.iter() {
+    for row_data in tree_data.content.cells.iter() {
         let mut row_item: Vec<String> = Vec::new();
         let field_cell: &CellData =
-            if let Some(field_cell) = row_data.get(&(constant::TABLE_KV_COL_FIELD as u16)) {
+            if let Some(field_cell) = row_data.get(constant::TABLE_KV_COL_FIELD) {
                 field_cell
             } else {
                 continue;
             };
         let type_cell: &CellData =
-            if let Some(type_cell) = row_data.get(&(constant::TABLE_KV_COL_TYPE as u16)) {
+            if let Some(type_cell) = row_data.get(constant::TABLE_KV_COL_TYPE) {
                 type_cell
             } else {
                 continue;
             };
         let keyword_cell: &CellData =
-            if let Some(keyword_cell) = row_data.get(&(constant::TABLE_KV_COL_KEYWORD as u16)) {
+            if let Some(keyword_cell) = row_data.get(constant::TABLE_KV_COL_KEYWORD) {
                 keyword_cell
             } else {
                 continue;
             };
         let value_cell: &CellData =
-            if let Some(value_cell) = row_data.get(&(constant::TABLE_KV_COL_VALUE as u16)) {
+            if let Some(value_cell) = row_data.get(constant::TABLE_KV_COL_VALUE) {
                 value_cell
             } else {
                 continue;
@@ -316,19 +314,18 @@ fn localize_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
     items.push(field_row_item);
     items.push(type_row_item);
 
-    let max_row: u32 = tree_data.content.max_row + 1;
+    let max_row: usize = tree_data.content.get_max_row() + 1;
     for row_index in constant::TABLE_LOCALIZE_ROW_TOTAL..=max_row {
-        let row_data: &BTreeMap<u16, CellData> =
-            if let Some(row_data) = tree_data.content.cells.get(&row_index) {
-                row_data
-            } else {
-                continue;
-            };
+        let row_data = if let Some(row_data) = tree_data.content.cells.get(row_index) {
+            row_data
+        } else {
+            continue;
+        };
         let mut row_valid: bool = true;
         let mut item_data: Vec<String> = Vec::new();
         // 检测行数据是否有效，主键没有数据，行数据无效则跳过
         for (col_index, _) in valids_main.iter() {
-            let value_cell: &CellData = if let Some(value_cell) = row_data.get(col_index) {
+            let value_cell: &CellData = if let Some(value_cell) = row_data.get(*col_index) {
                 value_cell
             } else {
                 row_valid = false;
@@ -346,7 +343,7 @@ fn localize_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
         }
 
         for (col_index, _) in valids.iter() {
-            let value_cell = if let Some(value_cell) = row_data.get(col_index) {
+            let value_cell = if let Some(value_cell) = row_data.get(*col_index) {
                 value_cell.value.clone()
             } else {
                 String::new()

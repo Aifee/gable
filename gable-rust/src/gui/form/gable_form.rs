@@ -10,7 +10,6 @@ use eframe::egui::{
     scroll_area::ScrollBarVisibility, scroll_area::ScrollSource,
 };
 use egui_extras::{Column, TableBuilder};
-use std::collections::BTreeMap;
 
 #[derive(Debug, Clone)]
 pub struct GableForm {
@@ -197,12 +196,12 @@ impl GableForm {
         // let sheet_type: &ESheetType = &sheet.gable_type;
         let gable_data: &OpenedGableData = &sheet.data;
 
-        let show_rows: u32 = if gable_data.max_row < constant::FORM_MIN_ROW {
+        let show_rows: usize = if gable_data.max_row < constant::FORM_MIN_ROW {
             constant::FORM_MIN_ROW
         } else {
             gable_data.max_row
         };
-        let show_cols: u16 = if gable_data.max_col < constant::FORM_MIN_COL {
+        let show_cols: usize = if gable_data.max_col < constant::FORM_MIN_COL {
             constant::FORM_MIN_COL
         } else {
             gable_data.max_col
@@ -232,14 +231,13 @@ impl GableForm {
                         }
                     })
                     .body(|body| {
-                        body.rows(20.0, show_rows as usize, |mut row| {
-                            let row_index: u32 = (row.index() + 1) as u32;
+                        body.rows(20.0, show_rows, |mut row| {
+                            let row_index: usize = row.index();
                             row.col(|ui| {
                                 ui.label(&row_index.to_string());
                             });
-                            let row_data: Option<&BTreeMap<u16, String>> =
-                                gable_data.items.get(&row_index);
-                            for col_index in 1..show_cols + 1 {
+                            let row_data = gable_data.items.get(&row_index);
+                            for col_index in 0..show_cols {
                                 row.col(|ui| {
                                     if let Some(row_data) = row_data {
                                         if let Some(cell_data) = row_data.get(&col_index) {

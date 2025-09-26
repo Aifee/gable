@@ -5,7 +5,6 @@ use crate::{
     },
 };
 use serde_json::{Map, Value};
-use std::collections::BTreeMap;
 
 // #[derive(serde::Serialize)]
 pub struct FieldInfo {
@@ -70,19 +69,19 @@ impl TreeData {
     fn normal_data(&self, keyword: &str) -> Vec<Map<String, Value>> {
         let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
         let mut items: Vec<Map<String, Value>> = Vec::new();
-        let max_row: u32 = self.content.max_row + 1;
+        let max_row: usize = self.content.get_max_row();
         for row_index in constant::TABLE_NORMAL_ROW_TOTAL..=max_row {
-            let row_data: &BTreeMap<u16, CellData> =
-                if let Some(row_data) = self.content.cells.get(&row_index) {
-                    row_data
-                } else {
-                    continue;
-                };
+            let row_data: &Vec<CellData> = if let Some(row_data) = self.content.cells.get(row_index)
+            {
+                row_data
+            } else {
+                continue;
+            };
             let mut row_valid: bool = true;
             let mut item_data: Map<String, Value> = Map::new();
             // 检测行数据是否有效，主键没有数据，行数据无效则跳过
             for (col_index, head_data) in valids_main.iter() {
-                let value_cell: &CellData = if let Some(value_cell) = row_data.get(col_index) {
+                let value_cell: &CellData = if let Some(value_cell) = row_data.get(*col_index) {
                     value_cell
                 } else {
                     row_valid = false;
@@ -114,7 +113,7 @@ impl TreeData {
             }
 
             for (col_index, head_data) in valids.iter() {
-                let value_cell: &CellData = if let Some(value_cell) = row_data.get(col_index) {
+                let value_cell: &CellData = if let Some(value_cell) = row_data.get(*col_index) {
                     value_cell
                 } else {
                     continue;
@@ -150,19 +149,18 @@ impl TreeData {
     fn localize_data(&self, keyword: &str) -> Vec<Map<String, Value>> {
         let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
         let mut items: Vec<Map<String, Value>> = Vec::new();
-        let max_row: u32 = self.content.max_row + 1;
+        let max_row: usize = self.content.get_max_row();
         for row_index in constant::TABLE_LOCALIZE_ROW_TOTAL..=max_row {
-            let row_data: &BTreeMap<u16, CellData> =
-                if let Some(row_data) = self.content.cells.get(&row_index) {
-                    row_data
-                } else {
-                    continue;
-                };
+            let row_data = if let Some(row_data) = self.content.cells.get(row_index) {
+                row_data
+            } else {
+                continue;
+            };
             let mut row_valid: bool = true;
             let mut item_data: Map<String, Value> = Map::new();
             // 检测行数据是否有效，主键没有数据，行数据无效则跳过
             for (col_index, head_data) in valids_main.iter() {
-                let value_cell: &CellData = if let Some(value_cell) = row_data.get(col_index) {
+                let value_cell: &CellData = if let Some(value_cell) = row_data.get(*col_index) {
                     value_cell
                 } else {
                     row_valid = false;
@@ -194,7 +192,7 @@ impl TreeData {
             }
 
             for (col_index, head_data) in valids.iter() {
-                let value_cell: &CellData = if let Some(value_cell) = row_data.get(col_index) {
+                let value_cell: &CellData = if let Some(value_cell) = row_data.get(*col_index) {
                     value_cell
                 } else {
                     continue;
@@ -229,28 +227,27 @@ impl TreeData {
      */
     fn kv_data(&self, keyword: &str) -> Vec<Map<String, Value>> {
         let mut items: Map<String, Value> = Map::new();
-        for (_, row_data) in self.content.cells.iter() {
+        for row_data in self.content.cells.iter() {
             let field_cell: &CellData =
-                if let Some(field_cell) = row_data.get(&(constant::TABLE_KV_COL_FIELD as u16)) {
+                if let Some(field_cell) = row_data.get(constant::TABLE_KV_COL_FIELD) {
                     field_cell
                 } else {
                     continue;
                 };
             let type_cell: &CellData =
-                if let Some(type_cell) = row_data.get(&(constant::TABLE_KV_COL_TYPE as u16)) {
+                if let Some(type_cell) = row_data.get(constant::TABLE_KV_COL_TYPE) {
                     type_cell
                 } else {
                     continue;
                 };
-            let keyword_celldata: &CellData = if let Some(keyword_celldata) =
-                row_data.get(&(constant::TABLE_KV_COL_KEYWORD as u16))
-            {
-                keyword_celldata
-            } else {
-                continue;
-            };
+            let keyword_celldata: &CellData =
+                if let Some(keyword_celldata) = row_data.get(constant::TABLE_KV_COL_KEYWORD) {
+                    keyword_celldata
+                } else {
+                    continue;
+                };
             let value_cell: &CellData =
-                if let Some(value_cell) = row_data.get(&(constant::TABLE_KV_COL_VALUE as u16)) {
+                if let Some(value_cell) = row_data.get(constant::TABLE_KV_COL_VALUE) {
                     value_cell
                 } else {
                     continue;
@@ -523,26 +520,25 @@ impl TreeData {
     fn kv_fields(&self, keyword: &str) -> Vec<FieldInfo> {
         let mut fields: Vec<FieldInfo> = Vec::new();
         let mut field_index: i32 = 1;
-        for (_, head_data) in self.content.cells.iter() {
+        for head_data in self.content.cells.iter() {
             let field_cell: &CellData =
-                if let Some(field_cell) = head_data.get(&(constant::TABLE_KV_COL_FIELD as u16)) {
+                if let Some(field_cell) = head_data.get(constant::TABLE_KV_COL_FIELD) {
                     field_cell
                 } else {
                     continue;
                 };
             let type_cell: &CellData =
-                if let Some(type_cell) = head_data.get(&(constant::TABLE_KV_COL_TYPE as u16)) {
+                if let Some(type_cell) = head_data.get(constant::TABLE_KV_COL_TYPE) {
                     type_cell
                 } else {
                     continue;
                 };
-            let keyword_cell: &CellData = if let Some(keyword_cell) =
-                head_data.get(&(constant::TABLE_KV_COL_KEYWORD as u16))
-            {
-                keyword_cell
-            } else {
-                continue;
-            };
+            let keyword_cell: &CellData =
+                if let Some(keyword_cell) = head_data.get(constant::TABLE_KV_COL_KEYWORD) {
+                    keyword_cell
+                } else {
+                    continue;
+                };
             if !field_cell.verify_lawful() {
                 continue;
             };
@@ -560,13 +556,13 @@ impl TreeData {
             }
 
             let data_type: EDataType = EDataType::convert(&type_cell.value);
-            let link_cell: Option<&CellData> = head_data.get(&(constant::TABLE_KV_COL_LINK as u16));
+            let link_cell: Option<&CellData> = head_data.get(constant::TABLE_KV_COL_LINK);
             let link_value: String = if let Some(link_cell) = link_cell {
                 link_cell.value.clone()
             } else {
                 String::new()
             };
-            let desc_cell: Option<&CellData> = head_data.get(&(constant::TABLE_KV_COL_DESC as u16));
+            let desc_cell: Option<&CellData> = head_data.get(constant::TABLE_KV_COL_DESC);
             let desc_value: String = if let Some(desc_cell) = desc_cell {
                 desc_cell.value.clone()
             } else {
@@ -594,21 +590,20 @@ impl TreeData {
      */
     fn enum_fields(&self) -> Vec<FieldInfo> {
         let mut fields: Vec<FieldInfo> = Vec::new();
-        for (_, row_data) in self.content.cells.iter() {
+        for row_data in self.content.cells.iter() {
             let field_cell: &CellData =
-                if let Some(field_cell) = row_data.get(&(constant::TABLE_ENUM_COL_FIELD as u16)) {
+                if let Some(field_cell) = row_data.get(constant::TABLE_ENUM_COL_FIELD) {
                     field_cell
                 } else {
                     continue;
                 };
             let value_cell: &CellData =
-                if let Some(value_cell) = row_data.get(&(constant::TABLE_ENUM_COL_VALUE as u16)) {
+                if let Some(value_cell) = row_data.get(constant::TABLE_ENUM_COL_VALUE) {
                     value_cell
                 } else {
                     continue;
                 };
-            let desc_cell: Option<&CellData> =
-                row_data.get(&(constant::TABLE_ENUM_COL_DESC as u16));
+            let desc_cell: Option<&CellData> = row_data.get(constant::TABLE_ENUM_COL_DESC);
             // 验证字段是否合法
             if !field_cell.verify_lawful() {
                 continue;

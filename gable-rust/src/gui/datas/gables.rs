@@ -471,7 +471,7 @@ pub fn get_item_clone(path: &str) -> Option<TreeItem> {
  * @param names 名称列表
  * @return 找到的树节点列表
  */
-pub fn get_item_display_name(names: Vec<String>) -> Vec<TreeItem> {
+pub fn get_item_display_name(names: &[String]) -> Vec<TreeItem> {
     let tree_items = TREE_ITEMS.read().unwrap();
     if names.is_empty() {
         return tree_items.clone();
@@ -492,7 +492,7 @@ pub fn get_item_display_name(names: Vec<String>) -> Vec<TreeItem> {
 
         result
     }
-    find_items_by_names(&tree_items, &names)
+    find_items_by_names(&tree_items, names)
 }
 
 /**

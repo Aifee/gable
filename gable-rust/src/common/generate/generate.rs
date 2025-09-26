@@ -47,24 +47,7 @@ pub fn from_target(build_setting: &BuildSetting) {
         return;
     }
     for (_, data) in datas.iter() {
-        if build_setting.target_type == ETargetType::Protobuff {
-            generate_protobuff::to(build_setting, data);
-        } else {
-            match build_setting.dev {
-                EDevelopType::Cpp => generate_cpp::to(build_setting, data),
-                EDevelopType::Csharp => generate_csharp::to(build_setting, data),
-                EDevelopType::Cangjie => generate_cangjie::to(build_setting, data),
-                EDevelopType::Golang => generate_golang::to(build_setting, data),
-                EDevelopType::Java => generate_java::to(build_setting, data),
-                EDevelopType::JavaScript => generate_javascript::to(build_setting, data),
-                EDevelopType::Lua => generate_lua::to(build_setting, data),
-                EDevelopType::Python => generate_python::to(build_setting, data),
-                EDevelopType::TypeScript => generate_typescript::to(build_setting, data),
-                // _ => {
-                //     log::error!("当前开发环境不支持导出配置:{:?}", build_setting.dev);
-                // }
-            }
-        }
+        execute(build_setting, *data);
     }
     if !build_setting.postprocessing.is_empty() {
         let target_path: PathBuf = utils::get_absolute_path(&setting::get_workspace());
@@ -89,28 +72,34 @@ pub fn from_items(item: &TreeItem) {
             continue;
         }
         for (_, data) in datas.iter() {
-            if build_setting.target_type == ETargetType::Protobuff {
-                generate_protobuff::to(build_setting, data);
-            } else {
-                match build_setting.dev {
-                    EDevelopType::Cpp => generate_cpp::to(build_setting, data),
-                    EDevelopType::Csharp => generate_csharp::to(build_setting, data),
-                    EDevelopType::Cangjie => generate_cangjie::to(build_setting, data),
-                    EDevelopType::Golang => generate_golang::to(build_setting, data),
-                    EDevelopType::Java => generate_java::to(build_setting, data),
-                    EDevelopType::JavaScript => generate_javascript::to(build_setting, data),
-                    EDevelopType::Lua => generate_lua::to(build_setting, data),
-                    EDevelopType::Python => generate_python::to(build_setting, data),
-                    EDevelopType::TypeScript => generate_typescript::to(build_setting, data),
-                    // _ => {
-                    //     log::error!("当前开发环境不支持导出配置:{:?}", build_setting.dev);
-                    // }
-                }
-            }
+            execute(build_setting, *data);
         }
         if !build_setting.postprocessing.is_empty() {
             let target_path: PathBuf = utils::get_absolute_path(&setting::get_workspace());
             system_command(&build_setting.postprocessing, &target_path);
+        }
+    }
+}
+
+/**
+ * 执行生成代码
+ * @param build_setting 构建设置
+ * @param data 树数据
+*/
+pub fn execute(build_setting: &BuildSetting, data: &TreeData) {
+    if build_setting.target_type == ETargetType::Protobuff {
+        generate_protobuff::to(build_setting, data);
+    } else {
+        match build_setting.dev {
+            EDevelopType::Cpp => generate_cpp::to(build_setting, data),
+            EDevelopType::Csharp => generate_csharp::to(build_setting, data),
+            EDevelopType::Cangjie => generate_cangjie::to(build_setting, data),
+            EDevelopType::Golang => generate_golang::to(build_setting, data),
+            EDevelopType::Java => generate_java::to(build_setting, data),
+            EDevelopType::JavaScript => generate_javascript::to(build_setting, data),
+            EDevelopType::Lua => generate_lua::to(build_setting, data),
+            EDevelopType::Python => generate_python::to(build_setting, data),
+            EDevelopType::TypeScript => generate_typescript::to(build_setting, data),
         }
     }
 }

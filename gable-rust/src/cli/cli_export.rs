@@ -5,6 +5,7 @@ use clap::Parser;
 use crate::{
     common::{
         convert::convert,
+        generate::generate,
         setting::{self, BuildSetting},
     },
     gui::datas::{gables, tree_data::TreeData, tree_item::TreeItem},
@@ -48,20 +49,20 @@ pub fn run_export(args: Vec<String>) -> Result<(), eframe::Error> {
         }
         return Ok(());
     }
+    setting::init();
+    gables::refresh_gables();
     if export_args.data {
-        execute_command(export_args.files, export_args.target);
+        execute_convert_command(&export_args.files, &export_args.target);
     }
     if export_args.script {
-        println!("脚本生成功能尚未实现");
+        execute_script_command(&export_args.files, &export_args.target);
     }
     println!("导出完成");
     Ok(())
 }
 
-fn execute_command(files: Vec<String>, target: Option<String>) {
-    setting::init();
+fn execute_convert_command(files: &[String], target: &Option<String>) {
     let build_settings: Vec<BuildSetting> = setting::get_build_settings(target);
-    gables::refresh_gables();
     let items: Vec<TreeItem> = gables::get_item_display_name(files);
     for setting in build_settings.iter() {
         for item in items.iter() {
@@ -71,6 +72,21 @@ fn execute_command(files: Vec<String>, target: Option<String>) {
             }
             for (_, data) in datas.iter() {
                 convert::execute(setting, *data)
+            }
+        }
+    }
+}
+fn execute_script_command(files: &[String], target: &Option<String>) {
+    let build_settings: Vec<BuildSetting> = setting::get_build_settings(target);
+    let items: Vec<TreeItem> = gables::get_item_display_name(files);
+    for setting in build_settings.iter() {
+        for item in items.iter() {
+            let datas: HashMap<String, &TreeData> = item.get_datas();
+            if datas.len() <= 0 {
+                continue;
+            }
+            for (_, data) in datas.iter() {
+                generate::execute(setting, *data)
             }
         }
     }

@@ -4,11 +4,11 @@ use crate::gui::datas::tree_item::TreeItem;
 use crate::gui::form::opened_excel::OpenedExcel;
 use crate::gui::form::opened_gable_data::OpenedGableData;
 use crate::gui::form::opened_sheet::OpenedSheet;
-use eframe::egui::Response;
 use eframe::egui::{
     Align, CentralPanel, Context, Label, Layout, ScrollArea, Ui, Vec2,
     scroll_area::ScrollBarVisibility, scroll_area::ScrollSource,
 };
+use eframe::egui::{Color32, Response};
 use egui_extras::{Column, TableBuilder};
 
 #[derive(Debug, Clone)]
@@ -225,7 +225,7 @@ impl GableForm {
                         for header_index in gable_data.column_headers.iter() {
                             header.col(|ui| {
                                 ui.centered_and_justified(|ui| {
-                                    ui.label(header_index);
+                                    ui.colored_label(Color32::GRAY, header_index);
                                 });
                             });
                         }
@@ -234,7 +234,7 @@ impl GableForm {
                         body.rows(20.0, show_rows, |mut row| {
                             let row_index: usize = row.index();
                             row.col(|ui| {
-                                ui.label(&row_index.to_string());
+                                ui.colored_label(Color32::GRAY, row_index.to_string());
                             });
                             let row_data = gable_data.items.get(&row_index);
                             for col_index in 0..show_cols {

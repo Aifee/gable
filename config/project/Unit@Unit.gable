@@ -1,0 +1,39 @@
+{
+  "max_row": 4,
+  "max_col": 1,
+  "heads": {
+    "1": {
+      "1": {
+        "row": 1,
+        "column": 1,
+        "value": "唯一ID",
+        "bg_fill": "theme:9,tint:0.8"
+      }
+    },
+    "2": {
+      "1": {
+        "row": 2,
+        "column": 1,
+        "value": "id",
+        "bg_fill": "theme:7,tint:0.8"
+      }
+    },
+    "3": {
+      "1": {
+        "row": 3,
+        "column": 1,
+        "value": "int",
+        "bg_fill": "theme:9,tint:0.8"
+      }
+    },
+    "4": {
+      "1": {
+        "row": 4,
+        "column": 1,
+        "value": "client",
+        "bg_fill": "theme:7,tint:0.8"
+      }
+    }
+  },
+  "cells": {}
+}

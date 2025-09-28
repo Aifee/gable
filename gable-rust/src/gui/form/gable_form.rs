@@ -8,7 +8,7 @@ use eframe::egui::{
     Align, CentralPanel, Context, Label, Layout, ScrollArea, Ui, Vec2,
     scroll_area::ScrollBarVisibility, scroll_area::ScrollSource,
 };
-use eframe::egui::{Color32, Id, Pos2, Rect, Response};
+use eframe::egui::{Color32, Pos2, Rect, Response, TextEdit};
 use egui_table::{AutoSizeMode, CellInfo, Column, HeaderCellInfo, HeaderRow, Table, TableDelegate};
 
 #[derive(Debug, Clone)]
@@ -20,6 +20,11 @@ pub struct GableForm {
     first_column: Column,
     default_column: Column,
     auto_size_mode: AutoSizeMode,
+    show_goto_window: bool,
+    goto_row_input: String,
+    goto_col_input: String,
+    scroll_to_column: Option<usize>,
+    scroll_to_row: Option<u64>,
 }
 
 impl GableForm {
@@ -30,6 +35,11 @@ impl GableForm {
             first_column: Column::new(30.0).resizable(false),
             default_column: Column::new(100.0).range(80.0..=1200.0).resizable(true),
             auto_size_mode: AutoSizeMode::OnParentResize,
+            show_goto_window: false,
+            goto_row_input: String::new(),
+            goto_col_input: String::new(),
+            scroll_to_column: None,
+            scroll_to_row: None,
         }
     }
 
@@ -53,6 +63,56 @@ impl GableForm {
     }
 
     pub fn ongui(&mut self, ctx: &Context) {
+        if ctx.input(|i| i.key_pressed(eframe::egui::Key::G) && i.modifiers.ctrl) {
+            if let Some(_) = self.get_sheet() {
+                self.show_goto_window = !self.show_goto_window;
+                self.goto_row_input.clear();
+                self.goto_col_input.clear();
+            }
+        }
+        if self.show_goto_window {
+            let mut show_goto_window = self.show_goto_window;
+            let mut input_applied = false;
+            let title_size: Vec2 = Vec2::new(60.0, 18.0);
+            eframe::egui::Window::new("")
+                .open(&mut show_goto_window)
+                .resizable(false)
+                .title_bar(false)
+                .anchor(
+                    eframe::egui::Align2::CENTER_CENTER,
+                    eframe::egui::Vec2::ZERO,
+                )
+                .show(ctx, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.label("定位:");
+                        ui.add_sized(title_size, TextEdit::singleline(&mut self.goto_row_input))
+                            .on_hover_text("行");
+
+                        ui.label(":");
+                        ui.add_sized(title_size, TextEdit::singleline(&mut self.goto_col_input))
+                            .on_hover_text("列");
+                        if ui.button("确定").clicked() {
+                            if let Ok(row) = self.goto_row_input.parse::<u64>() {
+                                self.scroll_to_row = Some(row.saturating_sub(1));
+                            }
+                            if let Ok(col) = self.goto_col_input.parse::<usize>() {
+                                self.scroll_to_column = Some(col.saturating_sub(1));
+                            }
+                            self.show_goto_window = false;
+                            input_applied = true;
+                        }
+
+                        if ui.button("X").clicked() {
+                            self.show_goto_window = false;
+                            input_applied = true;
+                        }
+                    });
+                });
+            if !input_applied {
+                self.show_goto_window = show_goto_window;
+            }
+        }
+
         CentralPanel::default().show(ctx, |ui| {
             ui.set_min_height(100.0);
             if self.excels.is_empty() {
@@ -261,13 +321,11 @@ impl GableForm {
             ])
             .auto_size_mode(self.auto_size_mode);
 
-        let mut scroll_to_column: Option<u64> = None;
-        if let Some(scroll_to_column) = scroll_to_column {
-            table = table.scroll_to_column(0, None);
+        if let Some(scroll_to_column) = self.scroll_to_column {
+            table = table.scroll_to_column(scroll_to_column, None);
         }
-        let mut scroll_to_row: Option<u64> = None;
-        if let Some(scroll_to_row) = scroll_to_row {
-            table = table.scroll_to_row(0, None);
+        if let Some(scroll_to_row) = self.scroll_to_row {
+            table = table.scroll_to_row(scroll_to_row, None);
         }
 
         table.show(ui, self);

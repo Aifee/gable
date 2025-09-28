@@ -9,8 +9,7 @@ use eframe::egui::{
     scroll_area::ScrollBarVisibility, scroll_area::ScrollSource,
 };
 use eframe::egui::{Color32, Id, Pos2, Rect, Response};
-use egui_extras::{Column, TableBuilder};
-use egui_table::{CellInfo, HeaderCellInfo, TableDelegate};
+use egui_table::{AutoSizeMode, CellInfo, Column, HeaderCellInfo, HeaderRow, Table, TableDelegate};
 
 #[derive(Debug, Clone)]
 pub struct GableForm {
@@ -18,8 +17,9 @@ pub struct GableForm {
     excels: Vec<OpenedExcel>,
     /// 当前选中excel索引
     selected_excel_index: Option<usize>,
-    default_column: egui_table::Column,
-    auto_size_mode: egui_table::AutoSizeMode,
+    first_column: Column,
+    default_column: Column,
+    auto_size_mode: AutoSizeMode,
 }
 
 impl GableForm {
@@ -27,10 +27,9 @@ impl GableForm {
         Self {
             excels: Vec::new(),
             selected_excel_index: None,
-            default_column: egui_table::Column::new(100.0)
-                .range(80.0..=1200.0)
-                .resizable(true),
-            auto_size_mode: egui_table::AutoSizeMode::OnParentResize,
+            first_column: Column::new(30.0).resizable(false),
+            default_column: Column::new(100.0).range(80.0..=1200.0).resizable(true),
+            auto_size_mode: AutoSizeMode::OnParentResize,
         }
     }
 
@@ -245,18 +244,20 @@ impl GableForm {
             gable_data.max_col
         };
 
-        let id_salt = Id::new("gable_table");
-        let mut table = egui_table::Table::new()
-            .id_salt(id_salt)
+        let mut columns = vec![self.first_column];
+        columns.extend(vec![self.default_column; show_cols]);
+
+        let mut table: Table = Table::new()
+            .id_salt("gable_table")
             .num_rows(show_rows)
-            .columns(vec![self.default_column; show_cols])
+            .columns(columns)
             .num_sticky_cols(1)
             .headers([
-                egui_table::HeaderRow {
+                HeaderRow {
                     height: 20.0,
                     groups: vec![],
                 },
-                egui_table::HeaderRow::new(20.0),
+                HeaderRow::new(20.0),
             ])
             .auto_size_mode(self.auto_size_mode);
 
@@ -282,13 +283,10 @@ impl TableDelegate for GableForm {
         let sheet: &OpenedSheet = sheet.unwrap();
         let gable_data: &OpenedGableData = &sheet.data;
 
-        // 第一个表头行显示列标题
         if cell.row_nr == 0 {
             if cell.group_index == 0 {
-                // 左上角空白单元格
                 ui.label("");
             } else {
-                // 显示列标题，需要减1因为第0列是行号列
                 let col_index = cell.group_index - 1;
                 if col_index < gable_data.column_headers.len() {
                     ui.centered_and_justified(|ui| {
@@ -314,14 +312,10 @@ impl TableDelegate for GableForm {
         let gable_data: &OpenedGableData = &sheet.data;
 
         if cell.col_nr == 0 {
-            // 显示行号，egui_table的行号从0开始，我们需要显示从1开始的行号
             ui.colored_label(Color32::GRAY, (cell.row_nr + 1).to_string());
         } else {
-            // 显示数据内容，需要减1因为第0列是行号列
             let col_index = cell.col_nr - 1;
             let row_index = cell.row_nr as usize;
-
-            // 获取对应单元格的数据
             if let Some(row_data) = gable_data.items.get(&row_index) {
                 if let Some(cell_data) = row_data.get(&col_index) {
                     ui.add(Label::new(cell_data).truncate());

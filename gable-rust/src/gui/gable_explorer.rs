@@ -39,7 +39,9 @@ impl GableExplorer {
         }
     }
 
-    /// 绘制 treeview
+    /**
+     * 绘制 treeview
+     */
     pub fn ongui(&mut self, ctx: &Context) {
         SidePanel::left("m_gables_panel")
             .min_width(150.0) // 设置最小宽度
@@ -85,7 +87,9 @@ impl GableExplorer {
             });
     }
 
-    /// 带右键菜单的树形结构绘制
+    /**
+     * 带右键菜单的树形结构绘制
+     */
     fn gui_tree_item(&mut self, ui: &mut Ui, item: &TreeItem) {
         let icon: &'static str = match item.item_type {
             EItemType::Folder => "📁",
@@ -195,7 +199,9 @@ impl GableExplorer {
         }
     }
 
-    /// 显示右键菜单
+    /**
+     * 显示右键菜单
+     */
     fn show_context_menu(ui: &mut Ui, item: &mut TreeItem) {
         match item.item_type {
             EItemType::Folder => {
@@ -249,8 +255,6 @@ impl GableExplorer {
                 }
                 ui.separator();
                 if ui.button("重命名").clicked() {
-                    // *renaming_item = Some(item.fullpath.clone());
-                    // *renaming_text = item.display_name.clone();
                     GableApp::editname_command(item.fullpath.clone());
                     ui.close();
                 }
@@ -284,8 +288,6 @@ impl GableExplorer {
                 }
                 ui.separator();
                 if ui.button("重命名").clicked() {
-                    // *renaming_item = Some(item.fullpath.clone());
-                    // *renaming_text = item.display_name.clone();
                     GableApp::editname_command(item.fullpath.clone());
                     ui.close();
                 }
@@ -303,7 +305,9 @@ impl GableExplorer {
             }
         }
     }
-    // 创建文件夹
+    /**
+     * 创建文件夹
+     */
     pub fn create_folder(&mut self, full_path: String) {
         let tree_items = gables::TREE_ITEMS.read().unwrap();
         let (is_folder, target_path) =
@@ -349,7 +353,9 @@ impl GableExplorer {
             }
         }
     }
-    // 创建excel
+    /**
+     * 创建excel
+     */
     pub fn create_excel(&mut self, full_path: String) {
         let tree_items = gables::TREE_ITEMS.read().unwrap();
         let (is_folder, target_path) =
@@ -409,7 +415,9 @@ impl GableExplorer {
             }
         }
     }
-    // 创建Excel文件
+    /**
+     * 创建Excel文件
+     */
     pub fn create_sheet(&mut self, full_path: String) {
         let tree_items = gables::TREE_ITEMS.read().unwrap();
         let is_excel = if let Some(parent_item) = gables::find_item_by_path(&tree_items, &full_path)
@@ -475,7 +483,9 @@ impl GableExplorer {
         }
     }
 
-    /// 重命名
+    /**
+     * 重命名
+     */
     pub fn rename(&mut self, full_path: String, new_name: String) {
         if new_name.is_empty() {
             return;
@@ -525,7 +535,9 @@ impl GableExplorer {
             }
         }
     }
-    /// 重命名文件夹项
+    /**
+     * 重命名文件夹项
+     */
     fn rename_folder_item(&self, item: &TreeItem, new_name: &str) -> Result<Option<String>, Error> {
         let path: &Path = Path::new(&item.fullpath);
         if let Some(parent_path) = path.parent() {
@@ -544,7 +556,9 @@ impl GableExplorer {
         }
         Ok(None)
     }
-    /// 重命名Excel项及所有相关sheet文件
+    /**
+     * 重命名Excel项及所有相关sheet文件
+     */
     fn rename_excel_item(&self, item: &TreeItem, new_name: &str) -> Result<Option<String>, Error> {
         let mut new_path: Option<String> = None;
         // 获取Excel文件所在目录
@@ -611,7 +625,9 @@ impl GableExplorer {
         }
         Ok(new_path)
     }
-    /// 重命名单个sheet项
+    /**
+     * 重命名单个sheet项
+     */
     fn rename_sheet_item(&self, item: &TreeItem, new_name: &str) -> Result<Option<String>, Error> {
         let path: &Path = Path::new(&item.fullpath);
         if let Some(parent_path) = path.parent() {

@@ -8,8 +8,9 @@ use eframe::egui::{
     Align, CentralPanel, Context, Label, Layout, ScrollArea, Ui, Vec2,
     scroll_area::ScrollBarVisibility, scroll_area::ScrollSource,
 };
-use eframe::egui::{Color32, Response};
+use eframe::egui::{Color32, Id, Response};
 use egui_extras::{Column, TableBuilder};
+use egui_table::{CellInfo, HeaderCellInfo, TableDelegate};
 
 #[derive(Debug, Clone)]
 pub struct GableForm {
@@ -17,6 +18,8 @@ pub struct GableForm {
     excels: Vec<OpenedExcel>,
     /// 当前选中excel索引
     selected_excel_index: Option<usize>,
+    default_column: egui_table::Column,
+    auto_size_mode: egui_table::AutoSizeMode,
 }
 
 impl GableForm {
@@ -24,6 +27,10 @@ impl GableForm {
         Self {
             excels: Vec::new(),
             selected_excel_index: None,
+            default_column: egui_table::Column::new(100.0)
+                .range(80.0..=1200.0)
+                .resizable(true),
+            auto_size_mode: egui_table::AutoSizeMode::OnParentResize,
         }
     }
 
@@ -55,28 +62,40 @@ impl GableForm {
             }
             ui.vertical(|ui| {
                 let tab_height: f32 = 30.0;
+
+                // 绘制上方的Excel标签页
                 self.ongui_excel_tab(ui, tab_height);
-                let table_height: f32 =
-                    ui.available_height() - tab_height - ui.spacing().item_spacing.y;
-                // 表格区域填充剩余空间
+
+                // 为表格和下方的Sheet标签页分配空间
+                let available_height: f32 = ui.available_height();
+                let table_height: f32 = available_height - tab_height - ui.spacing().item_spacing.y;
+
+                // 表格区域填充大部分空间（保留底部标签页空间）
                 ui.allocate_ui_with_layout(
                     Vec2::new(ui.available_width(), table_height),
                     Layout::top_down(Align::Min),
                     |ui| {
-                        self.ongui_table(ui);
+                        // self.ongui_table(ui);
+                        self.ongui_scroll_table(ui);
                     },
                 );
+
+                // 绘制下方的Sheet标签页
                 self.ongui_sheet_tab(ui, tab_height);
             });
         });
     }
 
-    /// 设置选中当前的excel
+    /**
+     * 设置选中当前的excel
+     */
     fn set_excel_index(&mut self, index: usize) {
         self.selected_excel_index = Some(index);
     }
 
-    /// 获取选中的excel
+    /**
+     * 获取选中的excel
+     */
     fn get_selected_excel(&mut self) -> Option<&mut OpenedExcel> {
         if let Some(index) = self.selected_excel_index {
             if index < self.excels.len() {
@@ -85,7 +104,9 @@ impl GableForm {
         }
         None
     }
-    /// 删除指定的excel
+    /**
+     * 删除指定的excel
+     */
     fn remove_item(&mut self, index: usize) {
         if index < self.excels.len() {
             self.excels.remove(index);
@@ -103,7 +124,9 @@ impl GableForm {
         }
     }
 
-    /// 获取选中的Sheet
+    /**
+     * 获取选中的Sheet
+     */
     fn get_sheet(&mut self) -> Option<&OpenedSheet> {
         if let Some(oe) = self.get_selected_excel() {
             if oe.selected_sheet_index < oe.sheets.len() {
@@ -185,7 +208,9 @@ impl GableForm {
         }
     }
 
-    /// 数据表 绘制
+    /**
+     * 数据表 绘制
+     */
     fn ongui_table(&mut self, ui: &mut Ui) {
         let sheet: Option<&OpenedSheet> = self.get_sheet();
         if sheet.is_none() {
@@ -254,5 +279,114 @@ impl GableForm {
                     });
             });
         });
+    }
+
+    fn ongui_scroll_table(&mut self, ui: &mut Ui) {
+        let sheet: Option<&OpenedSheet> = self.get_sheet();
+        if sheet.is_none() {
+            ui.centered_and_justified(|ui| ui.label("请选择要浏览的页签"));
+            return;
+        }
+        let sheet: &OpenedSheet = sheet.unwrap();
+        let gable_data: &OpenedGableData = &sheet.data;
+        let show_rows: u64 = if gable_data.max_row < constant::FORM_MIN_ROW {
+            constant::FORM_MIN_ROW as u64
+        } else {
+            gable_data.max_row as u64
+        };
+        let show_cols: usize = if gable_data.max_col < constant::FORM_MIN_COL {
+            constant::FORM_MIN_COL
+        } else {
+            gable_data.max_col
+        };
+
+        let id_salt = Id::new("gable_table");
+        let mut table = egui_table::Table::new()
+            .id_salt(id_salt)
+            .num_rows(show_rows)
+            .columns(vec![self.default_column; show_cols])
+            .num_sticky_cols(1)
+            .headers([
+                egui_table::HeaderRow {
+                    height: 20.0,
+                    groups: vec![],
+                },
+                egui_table::HeaderRow::new(20.0),
+            ])
+            .auto_size_mode(self.auto_size_mode);
+
+        let mut scroll_to_column: Option<u64> = None;
+        if let Some(scroll_to_column) = scroll_to_column {
+            table = table.scroll_to_column(0, None);
+        }
+        let mut scroll_to_row: Option<u64> = None;
+        if let Some(scroll_to_row) = scroll_to_row {
+            table = table.scroll_to_row(0, None);
+        }
+
+        table.show(ui, self);
+    }
+}
+
+impl TableDelegate for GableForm {
+    fn header_cell_ui(&mut self, ui: &mut Ui, cell: &HeaderCellInfo) {
+        let sheet: Option<&OpenedSheet> = self.get_sheet();
+        if sheet.is_none() {
+            return;
+        }
+        let sheet: &OpenedSheet = sheet.unwrap();
+        let gable_data: &OpenedGableData = &sheet.data;
+
+        // 第一个表头行显示列标题
+        if cell.row_nr == 0 {
+            if cell.group_index == 0 {
+                // 左上角空白单元格
+                ui.label("");
+            } else {
+                // 显示列标题，需要减1因为第0列是行号列
+                let col_index = cell.group_index - 1;
+                if col_index < gable_data.column_headers.len() {
+                    ui.centered_and_justified(|ui| {
+                        ui.colored_label(Color32::GRAY, &gable_data.column_headers[col_index]);
+                    });
+                } else {
+                    ui.centered_and_justified(|ui| {
+                        ui.colored_label(Color32::GRAY, "");
+                    });
+                }
+            }
+        } else {
+            // 其他表头行可以按需实现
+            ui.label("");
+        }
+    }
+
+    fn cell_ui(&mut self, ui: &mut Ui, cell: &CellInfo) {
+        let sheet: Option<&OpenedSheet> = self.get_sheet();
+        if sheet.is_none() {
+            return;
+        }
+        let sheet: &OpenedSheet = sheet.unwrap();
+        let gable_data: &OpenedGableData = &sheet.data;
+
+        if cell.col_nr == 0 {
+            // 显示行号，egui_table的行号从0开始，我们需要显示从1开始的行号
+            ui.colored_label(Color32::GRAY, (cell.row_nr + 1).to_string());
+        } else {
+            // 显示数据内容，需要减1因为第0列是行号列
+            let col_index = cell.col_nr - 1;
+            let row_index = cell.row_nr as usize;
+
+            // 获取对应单元格的数据
+            if let Some(row_data) = gable_data.items.get(&row_index) {
+                if let Some(cell_data) = row_data.get(&col_index) {
+                    ui.add(Label::new(cell_data).truncate());
+                } else {
+                    ui.label("");
+                }
+            } else {
+                ui.label("");
+            }
+        }
     }
 }

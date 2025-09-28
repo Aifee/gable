@@ -8,7 +8,7 @@ use eframe::egui::{
     Align, CentralPanel, Context, Label, Layout, ScrollArea, Ui, Vec2,
     scroll_area::ScrollBarVisibility, scroll_area::ScrollSource,
 };
-use eframe::egui::{Color32, Id, Response};
+use eframe::egui::{Color32, Id, Pos2, Rect, Response};
 use egui_extras::{Column, TableBuilder};
 use egui_table::{CellInfo, HeaderCellInfo, TableDelegate};
 
@@ -60,29 +60,44 @@ impl GableForm {
                 ui.centered_and_justified(|ui| ui.label("双击左侧文件树中的项目以打开"));
                 return;
             }
-            ui.vertical(|ui| {
-                let tab_height: f32 = 30.0;
 
-                // 绘制上方的Excel标签页
-                self.ongui_excel_tab(ui, tab_height);
+            let tab_height: f32 = 30.0;
 
-                // 为表格和下方的Sheet标签页分配空间
-                let available_height: f32 = ui.available_height();
-                let table_height: f32 = available_height - tab_height - ui.spacing().item_spacing.y;
+            // 获取可用区域的尺寸
+            let rect = ui.available_rect_before_wrap();
+            let top_tab_rect = Rect::from_min_size(rect.min, Vec2::new(rect.width(), tab_height));
 
-                // 表格区域填充大部分空间（保留底部标签页空间）
-                ui.allocate_ui_with_layout(
-                    Vec2::new(ui.available_width(), table_height),
-                    Layout::top_down(Align::Min),
-                    |ui| {
-                        // self.ongui_table(ui);
-                        self.ongui_scroll_table(ui);
-                    },
-                );
+            let bottom_pos = rect.max.y;
+            let bottom_tab_rect = Rect::from_min_size(
+                Pos2::new(rect.min.x, bottom_pos - tab_height),
+                Vec2::new(rect.width(), tab_height),
+            );
 
-                // 绘制下方的Sheet标签页
-                self.ongui_sheet_tab(ui, tab_height);
+            let table_rect = Rect::from_min_max(
+                Pos2::new(rect.min.x, rect.min.y + tab_height),
+                Pos2::new(rect.max.x, rect.max.y - tab_height),
+            );
+
+            // 绘制顶部标签页
+            ui.scope_builder(
+                eframe::egui::UiBuilder::new().max_rect(top_tab_rect),
+                |ui| {
+                    self.ongui_excel_tab(ui, tab_height);
+                },
+            );
+
+            // 绘制表格
+            ui.scope_builder(eframe::egui::UiBuilder::new().max_rect(table_rect), |ui| {
+                self.ongui_scroll_table(ui);
             });
+
+            // 绘制底部标签页
+            ui.scope_builder(
+                eframe::egui::UiBuilder::new().max_rect(bottom_tab_rect),
+                |ui| {
+                    self.ongui_sheet_tab(ui, tab_height);
+                },
+            );
         });
     }
 
@@ -211,76 +226,6 @@ impl GableForm {
     /**
      * 数据表 绘制
      */
-    fn ongui_table(&mut self, ui: &mut Ui) {
-        let sheet: Option<&OpenedSheet> = self.get_sheet();
-        if sheet.is_none() {
-            ui.centered_and_justified(|ui| ui.label("请选择要浏览的页签"));
-            return;
-        }
-        let sheet: &OpenedSheet = sheet.unwrap();
-        // let sheet_type: &ESheetType = &sheet.gable_type;
-        let gable_data: &OpenedGableData = &sheet.data;
-
-        let show_rows: usize = if gable_data.max_row < constant::FORM_MIN_ROW {
-            constant::FORM_MIN_ROW
-        } else {
-            gable_data.max_row
-        };
-        let show_cols: usize = if gable_data.max_col < constant::FORM_MIN_COL {
-            constant::FORM_MIN_COL
-        } else {
-            gable_data.max_col
-        };
-
-        ui.push_id("table_scroll", |ui| {
-            ScrollArea::both().auto_shrink(false).show(ui, |ui| {
-                TableBuilder::new(ui)
-                    .striped(true)
-                    .resizable(true)
-                    .cell_layout(Layout::left_to_right(Align::Center))
-                    .column(Column::auto())
-                    .columns(
-                        Column::initial(100.0).range(40.0..=1200.0),
-                        show_cols as usize,
-                    )
-                    .header(20.0, |mut header| {
-                        header.col(|ui| {
-                            ui.label("");
-                        });
-                        for header_index in gable_data.column_headers.iter() {
-                            header.col(|ui| {
-                                ui.centered_and_justified(|ui| {
-                                    ui.colored_label(Color32::GRAY, header_index);
-                                });
-                            });
-                        }
-                    })
-                    .body(|body| {
-                        body.rows(20.0, show_rows, |mut row| {
-                            let row_index: usize = row.index();
-                            row.col(|ui| {
-                                ui.colored_label(Color32::GRAY, row_index.to_string());
-                            });
-                            let row_data = gable_data.items.get(&row_index);
-                            for col_index in 0..show_cols {
-                                row.col(|ui| {
-                                    if let Some(row_data) = row_data {
-                                        if let Some(cell_data) = row_data.get(&col_index) {
-                                            ui.add(Label::new(cell_data).truncate());
-                                        } else {
-                                            ui.label("");
-                                        }
-                                    } else {
-                                        ui.label("");
-                                    }
-                                });
-                            }
-                        });
-                    });
-            });
-        });
-    }
-
     fn ongui_scroll_table(&mut self, ui: &mut Ui) {
         let sheet: Option<&OpenedSheet> = self.get_sheet();
         if sheet.is_none() {
@@ -356,7 +301,6 @@ impl TableDelegate for GableForm {
                 }
             }
         } else {
-            // 其他表头行可以按需实现
             ui.label("");
         }
     }

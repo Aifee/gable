@@ -12,7 +12,9 @@ impl GableNavigation {
         }
     }
 
-    /// 绘制 导航栏
+    /**
+     * 绘制 导航栏
+     */
     pub fn ongui(&mut self, ctx: &Context) {
         SidePanel::left("my_left_panel")
             .default_width(40.0)
@@ -46,15 +48,15 @@ impl GableNavigation {
                         }
                     });
 
-                    ui.with_layout(Layout::bottom_up(Align::Center), |ui| {
-                        let button_size: Vec2 = Vec2::new(40.0, 40.0);
-                        let bottom_button: Button<'_> =
-                            Button::new(RichText::new("⚙").size(24.0)) // 增大字体大小
-                                .fill(Color32::TRANSPARENT);
-                        if ui.add_sized(button_size, bottom_button).clicked() {
-                            // 底部按钮点击处理逻辑
-                        }
-                    });
+                    // ui.with_layout(Layout::bottom_up(Align::Center), |ui| {
+                    //     let button_size: Vec2 = Vec2::new(40.0, 40.0);
+                    //     let bottom_button: Button<'_> =
+                    //         Button::new(RichText::new("⚙").size(24.0)) // 增大字体大小
+                    //             .fill(Color32::TRANSPARENT);
+                    //     if ui.add_sized(button_size, bottom_button).clicked() {
+                    //         // 底部按钮点击处理逻辑
+                    //     }
+                    // });
                 });
             });
     }

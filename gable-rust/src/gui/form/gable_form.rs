@@ -311,6 +311,11 @@ impl TableDelegate for GableForm {
         let sheet: &OpenedSheet = sheet.unwrap();
         let gable_data: &OpenedGableData = &sheet.data;
 
+        if cell.row_nr % 2 == 1 {
+            ui.painter()
+                .rect_filled(ui.max_rect(), 0.0, ui.visuals().faint_bg_color);
+        }
+
         if cell.col_nr == 0 {
             ui.colored_label(Color32::GRAY, (cell.row_nr + 1).to_string());
         } else {

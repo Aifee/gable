@@ -312,13 +312,7 @@ impl GableForm {
             .num_rows(show_rows)
             .columns(columns)
             .num_sticky_cols(1)
-            .headers([
-                HeaderRow {
-                    height: 20.0,
-                    groups: vec![],
-                },
-                HeaderRow::new(20.0),
-            ])
+            .headers([HeaderRow::new(20.0)])
             .auto_size_mode(self.auto_size_mode);
 
         if let Some(scroll_to_column) = self.scroll_to_column {

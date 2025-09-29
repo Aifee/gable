@@ -1,8 +1,5 @@
 use eframe::egui::TextBuffer;
-use notify::{
-    Config, Error, Event, EventKind, ReadDirectoryChangesWatcher, RecommendedWatcher,
-    RecursiveMode, Result, Watcher,
-};
+use notify::{Config, Error, Event, EventKind, RecommendedWatcher, RecursiveMode, Result, Watcher};
 use std::{
     path::{Path, PathBuf},
     sync::{
@@ -25,7 +22,7 @@ impl FileWatcher {
         let (tx, rx) = channel();
 
         // 创建推荐的文件监控器
-        let watcher: ReadDirectoryChangesWatcher = RecommendedWatcher::new(tx, Config::default())?;
+        let watcher = RecommendedWatcher::new(tx, Config::default())?;
         Ok(FileWatcher {
             watcher,
             rx: Arc::new(Mutex::new(rx)),

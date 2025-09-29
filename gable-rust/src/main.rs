@@ -3,6 +3,7 @@
 mod cli;
 mod common;
 mod gui;
+use crate::gui::localization;
 use eframe::egui;
 use gui::gable_app::GableApp;
 use std::env;
@@ -31,7 +32,7 @@ fn run_cli(args: Vec<String>) -> Result<(), eframe::Error> {
     let processed_args = if args.len() <= 1 {
         vec![]
     } else {
-        let cli_args = args[1..].to_vec();
+        let cli_args: Vec<String> = args[1..].to_vec();
         let mut expanded_args = Vec::new();
         for arg in cli_args {
             if arg.starts_with("--") && arg.contains(' ') && !arg.contains('=') {

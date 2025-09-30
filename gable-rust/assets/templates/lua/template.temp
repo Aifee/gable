@@ -11,7 +11,7 @@ local {{CLASS_NAME}} = {
     {% endfor %}
 }
 
---- 创建一个新的 {{CLASS_NAME}} 实例
+--- Create a new instance of {{CLASS_NAME}}
 function {{CLASS_NAME}}:new()
     local instance = {}
     setmetatable(instance, { __index = {{CLASS_NAME}} })

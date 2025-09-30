@@ -88,10 +88,5 @@
     "key": "select_project_directory",
     "zh": "选择工程目录",
     "en": "Select Project Directory"
-  },
-  {
-    "key": "failed_to_set_workspace",
-    "zh": "设置工作空间失败: {}",
-    "en": "Failed to set workspace: {}"
   }
 ]

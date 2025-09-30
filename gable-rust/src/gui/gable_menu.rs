@@ -79,14 +79,7 @@ impl GableMenu {
                         {
                             let path_str: String = path.to_string_lossy().to_string();
                             if let Err(e) = setting::set_workspace(path_str) {
-                                log::error!(
-                                    "{}",
-                                    localization_manager::t_with_args(
-                                        "failed_to_set_workspace",
-                                        &[("error", &e.to_string())]
-                                    )
-                                    .as_str()
-                                );
+                                log::error!("Failed to set workspace: {}", e.to_string());
                             } else {
                                 gables::refresh_gables();
                             }

@@ -11,12 +11,12 @@ pub enum {{STRUCT_NAME}} {
 }
 
 impl {{STRUCT_NAME}} {
-    /// 将枚举转换为整数值
+    ///Convert the enumeration to an integer value
     pub fn to_i32(self) -> i32 {
         self as i32
     }
 
-    /// 从整数值创建枚举
+    /// Create an enumeration from integer values
     pub fn from_i32(value: i32) -> Option<Self> {
         match value {
             {% for field in fields %}

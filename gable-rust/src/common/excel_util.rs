@@ -1,5 +1,5 @@
 use crate::{
-    common::{constant, localization_manager, setting, utils},
+    common::{constant, setting, utils},
     gui::{
         datas::{
             cell_data::CellData, edata_type::EDataType, esheet_type::ESheetType,
@@ -65,7 +65,7 @@ pub fn write_excel(
             "Excel file '{}' is already open, unable to write",
             excel_file_path
         );
-        return Err("Excel文件已经打开，无法写入".into());
+        return Err("Excel file is already open, unable to write".into());
     }
     if Path::new(&excel_file_path).exists() {
         match fs::remove_file(&excel_file_path) {
@@ -86,7 +86,7 @@ pub fn write_excel(
         match workbook.remove_sheet(0) {
             Ok(_) => {}
             Err(_) => {
-                log::error!("无法删除工作表");
+                log::error!("Unable to delete worksheet");
             }
         }
     }
@@ -101,13 +101,13 @@ pub fn write_excel(
                 if let Some((excel_name, sheet_name)) = utils::parse_gable_filename(filename) {
                     (excel_name, sheet_name.unwrap_or_default())
                 } else {
-                    log::error!("无法解析文件名: {}", filename);
+                    log::error!("Unable to parse filename: {}", filename);
                     continue;
                 };
             let worksheet: &mut Worksheet = match workbook.new_sheet(&sheet_name) {
                 Ok(sheet) => sheet,
                 Err(e) => {
-                    log::error!("无法添加工作表到Excel文件: {}", e);
+                    log::error!("Unable to add worksheet to Excel file: {}", e);
                     continue;
                 }
             };
@@ -161,7 +161,7 @@ pub fn write_excel(
                 ESheetType::Enum => write_excel_enum(worksheet, &gable_data),
             }
         } else {
-            log::error!("无法读取或解析文件: {}", file_path);
+            log::error!("Unable to read or parse file: {}", file_path);
         }
     }
     match writer::xlsx::write(&workbook, &excel_file_path) {

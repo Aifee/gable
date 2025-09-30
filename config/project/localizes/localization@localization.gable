@@ -269,17 +269,6 @@
       {
         "value": "Select Project Directory"
       }
-    ],
-    [
-      {
-        "value": "failed_to_set_workspace"
-      },
-      {
-        "value": "设置工作空间失败: {}"
-      },
-      {
-        "value": "Failed to set workspace: {}"
-      }
     ]
   ]
 }

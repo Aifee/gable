@@ -141,7 +141,7 @@ fn build_tree_from_path(path: &Path) -> Vec<TreeItem> {
     // 处理 .gable 文件
     for (excel_name, sheets) in gable_files {
         if sheets.len() == 1 && sheets[0].1.is_empty() {
-            log::warn!("不应该存在空sheet的excel{}", excel_name);
+            log::warn!("There should be no empty sheets in Excel.{}", excel_name);
         } else {
             let excel_fullpath: String = path.join(&excel_name).to_string_lossy().to_string();
             let mut children: Vec<TreeItem> = Vec::new();
@@ -669,7 +669,10 @@ pub fn add_new_item(new_path: &Path, new_item: EItemType) -> bool {
             if add_item_to_parent(&mut tree_items, new_item, &parent_path) {
                 true
             } else {
-                log::warn!("无法将新项添加到父项中: {}", parent_path);
+                log::warn!(
+                    "Cannot add the new item to the parent item: {}",
+                    parent_path
+                );
                 false
             }
         }
@@ -723,7 +726,10 @@ pub fn editor_complete(excel_path: &PathBuf) -> bool {
             Err(_) => (false, None),
         }
     } else {
-        log::error!("无法获取文件 '{:?}' 的 sheet 类型", excel_path);
+        log::error!(
+            "Unable to obtain the sheet type of the file '{:?}'",
+            excel_path
+        );
         (false, None)
     };
     if !result {
@@ -763,7 +769,7 @@ fn reload_gable(gable_file_paths: Option<Vec<String>>) -> bool {
                     let file_name = if let Some(file_name) = path.file_name() {
                         file_name.to_string_lossy().to_string()
                     } else {
-                        log::error!("无法解析Excel文件名: {}", file_path);
+                        log::error!("Unable to parse the Excel file name: {}", file_path);
                         return false;
                     };
                     let sheet_name: String;
@@ -771,11 +777,14 @@ fn reload_gable(gable_file_paths: Option<Vec<String>>) -> bool {
                         if let Some(s_n) = s_n {
                             sheet_name = s_n;
                         } else {
-                            log::error!("无法解析Sheet文件名: {}", file_name);
+                            log::error!(
+                                "Unable to parse the file name of the Sheet.: {}",
+                                file_name
+                            );
                             return false;
                         }
                     } else {
-                        log::error!("无法解析Sheet文件名: {}", file_name);
+                        log::error!("Unable to parse the file name of the Sheet.: {}", file_name);
                         return false;
                     };
                     item.data = new_data.map(|data: GableData| TreeData {
@@ -933,7 +942,7 @@ pub fn remove_item_file(full_path: &str) -> bool {
         if let Some(item) = find_item_by_path(&tree_items, full_path) {
             item.item_type.clone()
         } else {
-            log::error!("未找到要删除的文件: {}", full_path);
+            log::error!("No file to be deleted was found.: {}", full_path);
             return false;
         }
     };
@@ -942,10 +951,10 @@ pub fn remove_item_file(full_path: &str) -> bool {
         EItemType::Folder => {
             // 删除整个文件夹及其内容
             if let Err(e) = std::fs::remove_dir_all(full_path) {
-                log::error!("删除文件夹失败: {} - {}", full_path, e);
+                log::error!("Failed to delete the folder: {} - {}", full_path, e);
                 false
             } else {
-                log::info!("成功删除文件夹: {}", full_path);
+                log::info!("Successfully deleted folder: {}", full_path);
                 true
             }
         }
@@ -953,10 +962,10 @@ pub fn remove_item_file(full_path: &str) -> bool {
         EItemType::Sheet => {
             // 删除文件
             if let Err(e) = std::fs::remove_file(full_path) {
-                log::error!("删除sheet文件失败: {}", e);
+                log::error!("Failed to delete the sheet file: {}", e);
                 false
             } else {
-                log::info!("成功删除sheet文件: {}", full_path);
+                log::info!("Successfully deleted the sheet file: {}", full_path);
                 true
             }
         }
@@ -966,14 +975,17 @@ pub fn remove_item_file(full_path: &str) -> bool {
             let parent_path = match path.parent() {
                 Some(parent) => parent,
                 None => {
-                    log::error!("无法获取Excel文件的父目录: {}", full_path);
+                    log::error!(
+                        "Unable to obtain the parent directory of the Excel file: {}",
+                        full_path
+                    );
                     return false;
                 }
             };
             let excel_name = if let Some(file_name) = path.file_name() {
                 file_name.to_string_lossy().to_string()
             } else {
-                log::error!("无法解析Excel文件名: {}", full_path);
+                log::error!("Unable to parse the Excel file name: {}", full_path);
                 return false;
             };
 
@@ -988,19 +1000,22 @@ pub fn remove_item_file(full_path: &str) -> bool {
                             let entry_path = entry.path();
                             if let Err(e) = std::fs::remove_file(&entry_path) {
                                 log::error!(
-                                    "删除Excel相关文件失败: {} - {}",
+                                    "Failed to delete Excel-related files: {} - {}",
                                     entry_path.display(),
                                     e
                                 );
                                 delete_success = false;
                             } else {
-                                log::info!("成功删除Excel相关文件: {}", entry_path.display());
+                                log::info!(
+                                    "Successfully deleted Excel-related files: {}",
+                                    entry_path.display()
+                                );
                             }
                         }
                     }
                 }
             } else {
-                log::error!("无法读取目录: {}", parent_path.display());
+                log::error!("Unable to read the directory: {}", parent_path.display());
                 return false;
             }
 
@@ -1102,7 +1117,7 @@ pub fn command_edit_gable(item: &TreeItem) {
             // 如果仍然没有找到，则使用默认值
             found_type.unwrap_or_else(|| {
                 log::warn!(
-                    "无法从 {} 或其子项中获取 sheet 类型，使用默认类型 DATA",
+                    "It is impossible to obtain the 'sheet' type from {} or its sub-items. The default type 'DATA' will be used instead.",
                     item.fullpath
                 );
                 ESheetType::Normal
@@ -1119,7 +1134,7 @@ pub fn command_edit_gable(item: &TreeItem) {
                     .args(&["/C", "start", "", &excel_file_path])
                     .spawn()
                 {
-                    log::error!("无法打开Excel文件: {}", e);
+                    log::error!("Unable to open the Excel file: {}", e);
                 }
             }
 
@@ -1129,7 +1144,7 @@ pub fn command_edit_gable(item: &TreeItem) {
                     .arg(&excel_file_path)
                     .spawn()
                 {
-                    log::error!("无法打开Excel文件: {}", e);
+                    log::error!("Unable to open the Excel file: {}", e);
                 }
             }
 
@@ -1139,12 +1154,12 @@ pub fn command_edit_gable(item: &TreeItem) {
                     .arg(&excel_file_path)
                     .spawn()
                 {
-                    log::error!("无法打开Excel文件: {}", e);
+                    log::error!("Unable to open the Excel file: {}", e);
                 }
             }
         }
         Err(e) => {
-            log::error!("写入Excel文件时出错: {}", e);
+            log::error!("Error occurred while writing to Excel file: {}", e);
         }
     }
 }

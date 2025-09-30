@@ -167,7 +167,7 @@ pub fn write_excel(
     match writer::xlsx::write(&workbook, &excel_file_path) {
         Ok(_) => {}
         Err(e) => {
-            log::error!("无法写入Excel文件 '{}': {}", excel_file_path, e);
+            log::error!("Failed to write to Excel file '{}': {}", excel_file_path, e);
             return Err(e.into());
         }
     };
@@ -797,7 +797,7 @@ pub fn write_gable(
         let worksheet: &Worksheet = if let Some(sheet) = workbook.get_sheet(&sheet_index) {
             sheet
         } else {
-            log::error!("无法获取工作表索引: {}", sheet_index);
+            log::error!("Unable to obtain the worksheet index: {}", sheet_index);
             continue;
         };
         let sheet_name: String = worksheet.get_name().to_string();

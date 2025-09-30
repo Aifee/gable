@@ -30,7 +30,10 @@ impl FileWatcher {
     }
 
     pub fn watch_temp_directory(&mut self, path: PathBuf) -> Result<()> {
-        log::info!("开始监控目录: {}", &path.to_string_lossy().to_string());
+        log::info!(
+            "Start monitoring directory: {}",
+            &path.to_string_lossy().to_string()
+        );
         // 监控临时目录，非递归模式
         self.watcher.watch(&path, RecursiveMode::NonRecursive)?;
 
@@ -50,12 +53,12 @@ impl FileWatcher {
                         Ok(receiver) => match receiver.recv() {
                             Ok(event) => Some(event),
                             Err(e) => {
-                                log::error!("接收事件错误: {:?}", e);
+                                log::error!("Receiving event error: {:?}", e);
                                 None
                             }
                         },
                         Err(e) => {
-                            log::error!("获取接收器锁失败: {:?}", e);
+                            log::error!("Failed to acquire the receiver lock: {:?}", e);
                             None
                         }
                     }
@@ -129,7 +132,7 @@ impl FileWatcher {
                                 }
                             }
                             Err(e) => {
-                                log::error!("文件监控错误: {:?}", e);
+                                log::error!("File monitoring error: {:?}", e);
                             }
                         }
                     }
@@ -143,7 +146,7 @@ impl FileWatcher {
                 thread::sleep(Duration::from_millis(10));
             }
 
-            log::info!("文件监控线程已退出");
+            log::info!("The file monitoring thread has exited.");
         });
     }
 }

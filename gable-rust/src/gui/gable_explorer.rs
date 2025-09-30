@@ -77,7 +77,7 @@ impl GableExplorer {
                             if ui.button("在资源管理器中显示").clicked() {
                                 if let Some(path) = setting::get_workspace().to_str() {
                                     if let Err(e) = utils::open_in_explorer(path) {
-                                        log::error!("无法打开资源管理器: {}", e);
+                                        log::error!("Cannot open the Resource Manager: {}", e);
                                     }
                                 }
                                 ui.close();
@@ -230,7 +230,7 @@ impl GableExplorer {
                 }
                 if ui.button("在资源管理器中显示").clicked() {
                     if let Err(e) = utils::open_in_explorer(&item.fullpath) {
-                        log::error!("无法打开资源管理器: {}", e);
+                        log::error!("Cannot open the Resource Manager: {}", e);
                     }
                     ui.close();
                 }
@@ -266,7 +266,7 @@ impl GableExplorer {
                 if ui.button("在资源管理器中显示").clicked() {
                     if let Some(path) = &item.parent {
                         if let Err(e) = utils::open_in_explorer(&path) {
-                            log::error!("无法打开资源管理器: {}", e);
+                            log::error!("Cannot open the Resource Manager: {}", e);
                         }
                     }
                     ui.close();
@@ -298,7 +298,7 @@ impl GableExplorer {
                 ui.separator();
                 if ui.button("在资源管理器中显示").clicked() {
                     if let Err(e) = utils::open_in_explorer(&item.fullpath) {
-                        log::error!("无法打开资源管理器: {}", e);
+                        log::error!("Cannot open the Resource Manager: {}", e);
                     }
                     ui.close();
                 }
@@ -348,7 +348,7 @@ impl GableExplorer {
                     }
                 }
                 Err(e) => {
-                    log::error!("创建文件夹失败:{}", e);
+                    log::error!("Failed to create the folder:{}", e);
                 }
             }
         }
@@ -379,9 +379,9 @@ impl GableExplorer {
         if is_folder {
             let parent_path: PathBuf = PathBuf::from(&target_path.unwrap());
             let mut counter: i32 = 1;
-            let mut new_excel_path: PathBuf = parent_path.join("新建Excel@新建Sheet.gable");
+            let mut new_excel_path: PathBuf = parent_path.join("Excel_New@Sheet_New.gable");
             while new_excel_path.exists() {
-                let new_name: String = format!("新建Excel_{}@新建Sheet.gable", counter);
+                let new_name: String = format!("Excel_New{}@Sheet_New.gable", counter);
                 new_excel_path = parent_path.join(new_name);
                 counter += 1;
             }
@@ -400,7 +400,7 @@ impl GableExplorer {
                     {
                         excel_name
                     } else {
-                        "新建Excel".to_string()
+                        "Excel_New".to_string()
                     };
                     let excel_virtual_path = Path::new(&parent_path)
                         .join(&excel_name)
@@ -410,7 +410,7 @@ impl GableExplorer {
                     self.renaming_text = excel_name;
                 }
                 Err(e) => {
-                    log::error!("创建Excel文件失败: {}", e);
+                    log::error!("Failed to create the Excel file: {}", e);
                 }
             }
         }
@@ -441,13 +441,13 @@ impl GableExplorer {
 
             let mut counter: i32 = 1;
             let mut new_sheet_path: PathBuf = parent_path.join(format!(
-                "{}@新建Sheet{}",
+                "{}@Sheet_New{}",
                 excel_name,
                 constant::GABLE_FILE_TYPE
             ));
             while new_sheet_path.exists() {
                 let new_name: String = format!(
-                    "{}@新建Sheet_{}{}",
+                    "{}@Sheet_New{}{}",
                     excel_name,
                     counter,
                     constant::GABLE_FILE_TYPE
@@ -460,10 +460,10 @@ impl GableExplorer {
                 Ok(_) => {
                     gables::add_new_item(&new_sheet_path, EItemType::Sheet);
                     self.renaming_item = Some(new_sheet_path.to_string_lossy().to_string());
-                    self.renaming_text = "新建Sheet".to_string();
+                    self.renaming_text = "Sheet_New".to_string();
                 }
                 Err(e) => {
-                    log::error!("创建Sheet文件失败: {}", e);
+                    log::error!("Failed to create the Sheet file: {}", e);
                 }
             }
         }
@@ -492,7 +492,7 @@ impl GableExplorer {
         }
         // 进行合法性校验
         if !utils::is_valid_filename(&new_name) {
-            log::error!("文件名包含非法字符:{}", &new_name);
+            log::error!("The file name contains illegal characters.:{}", &new_name);
             return;
         }
         // 先获取item信息，然后释放锁
@@ -514,7 +514,10 @@ impl GableExplorer {
         if let Some(item) = item_info {
             // 检查同名文件/文件夹是否已存在
             if utils::is_name_exists(&item.fullpath, &new_name) {
-                log::error!("同名文件或文件夹已存在:{}", &new_name);
+                log::error!(
+                    "A file or folder with the same name already exists:{}",
+                    &new_name
+                );
                 return;
             }
 
@@ -526,7 +529,7 @@ impl GableExplorer {
 
             match result {
                 Err(e) => {
-                    log::error!("重命名失败:{}", e);
+                    log::error!("Renaming failed:{}", e);
                 }
                 Ok(new_path) => {
                     let new_fullpath: String = new_path.unwrap_or(item.fullpath.clone());
@@ -545,7 +548,10 @@ impl GableExplorer {
 
             // 检查目标文件夹是否已存在
             if new_path.exists() && path != new_path {
-                return Err(Error::new(ErrorKind::AlreadyExists, "目标文件夹已存在"));
+                return Err(Error::new(
+                    ErrorKind::AlreadyExists,
+                    "The target folder already exists.",
+                ));
             }
 
             // 重命名文件夹
@@ -599,7 +605,7 @@ impl GableExplorer {
                                         if new_excel_path.exists() && entry_path != new_excel_path {
                                             return Err(Error::new(
                                                 ErrorKind::AlreadyExists,
-                                                "目标文件已存在",
+                                                "The target file already exists.",
                                             ));
                                         }
 
@@ -643,7 +649,10 @@ impl GableExplorer {
 
                     // 检查目标文件是否已存在
                     if new_path.exists() && path != new_path {
-                        return Err(Error::new(ErrorKind::AlreadyExists, "目标文件已存在"));
+                        return Err(Error::new(
+                            ErrorKind::AlreadyExists,
+                            "The target file already exists.",
+                        ));
                     }
 
                     // 重命名文件

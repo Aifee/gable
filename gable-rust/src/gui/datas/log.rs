@@ -32,7 +32,7 @@ pub struct LogTrace {
 impl Clone for LogTrace {
     fn clone(&self) -> Self {
         LogTrace {
-            file: Mutex::new(None), // 不克隆文件句柄
+            file: Mutex::new(None),
             level: self.level,
         }
     }

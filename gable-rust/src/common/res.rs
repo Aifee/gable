@@ -34,7 +34,8 @@ pub const CONFIG_LOCALIZATION: &str = "assets/locales/localization.json";
  * 加载图片
 */
 pub fn load_texture(ctx: &Context, data: &[u8], name: &str) -> TextureHandle {
-    let img: DynamicImage = image::load_from_memory(data).expect("无法从内存加载图像");
+    let img: DynamicImage =
+        image::load_from_memory(data).expect("Unable to load the image from memory");
     let size: [usize; 2] = [img.width() as usize, img.height() as usize];
     let image_buffer: ImageBuffer<Rgba<u8>, Vec<u8>> = img.to_rgba8();
     let pixels: Vec<Color32> = image_buffer

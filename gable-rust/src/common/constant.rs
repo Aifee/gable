@@ -55,10 +55,10 @@ lazy_static! {
      * 当前运行目录
     */
     pub static ref EXE_DIR: PathBuf = {
-        let exe_path = std::env::current_exe().expect("无法获取当前可执行文件路径");
+        let exe_path = std::env::current_exe().expect("Unable to obtain the path of the current executable file");
         exe_path
             .parent()
-            .expect("无法获取可执行文件所在目录")
+            .expect("Unable to obtain the directory where the executable file is located")
             .to_path_buf()
     };
 }

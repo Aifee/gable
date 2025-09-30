@@ -30,7 +30,11 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
         ESheetType::Normal | ESheetType::Localize => {
             if let Ok(encoded) = encode_normal_data(&value_data, &proto_fields) {
                 if let Err(e) = std::fs::write(&target_path, &encoded) {
-                    log::error!("Normal表{}，写入二进制文件失败: {}", tree_data.file_name, e);
+                    log::error!(
+                        "Normal table {} failed to be written to binary file: {}",
+                        tree_data.file_name,
+                        e
+                    );
                 } else {
                     log::info!(
                         "Export [{}] Protobuf binary data successful: {}",
@@ -43,7 +47,11 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
         ESheetType::KV => {
             if let Ok(encoded) = encode_kv_data(&value_data[0], &proto_fields) {
                 if let Err(e) = std::fs::write(&target_path, &encoded) {
-                    log::error!("KV表【{}】写入二进制文件失败: {}", tree_data.file_name, e);
+                    log::error!(
+                        "The writing of KV table [{}] to the binary file failed: {}",
+                        tree_data.file_name,
+                        e
+                    );
                 } else {
                     log::info!(
                         "Export [{}] Protobuf binary data successful: {}",

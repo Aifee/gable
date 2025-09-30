@@ -140,16 +140,16 @@ impl GableApp {
             Ok(mut file_watcher) => {
                 let temp_path: PathBuf = setting::get_temp_path();
                 if let Err(e) = file_watcher.watch_temp_directory(temp_path) {
-                    log::error!("无法监控临时目录: {}", e);
+                    log::error!("Unable to monitor temporary directory: {}", e);
                 } else {
                     file_watcher.start_watching();
-                    log::info!("文件监控器已启动");
+                    log::info!("The file monitor has been activated.");
                     // 保存文件监控器实例，确保它不会被提前释放
                     self.file_watcher = Some(file_watcher);
                 }
             }
             Err(e) => {
-                log::error!("无法创建文件监控器: {}", e);
+                log::error!("Unable to create file monitor: {}", e);
             }
         }
     }

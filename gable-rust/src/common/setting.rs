@@ -135,7 +135,7 @@ pub fn get_temp_path() -> PathBuf {
     let path: PathBuf = get_workspace().join(&constant::DIR_TEMP);
     if !path.exists() {
         if let Err(e) = fs::create_dir_all(&path) {
-            log::error!("无法创建临时目录: {}", e);
+            log::error!("Failed to create temporary directory: {}", e);
         }
     }
     path
@@ -146,13 +146,16 @@ pub fn get_temp_path() -> PathBuf {
  * @return 数据目录
 */
 pub fn get_data_path() -> PathBuf {
-    let exe_path: PathBuf = std::env::current_exe().expect("无法获取当前可执行文件路径");
-    let exe_dir: &Path = exe_path.parent().expect("无法获取可执行文件所在目录");
+    let exe_path: PathBuf =
+        std::env::current_exe().expect("Unable to obtain the path of the current executable file");
+    let exe_dir: &Path = exe_path
+        .parent()
+        .expect("Unable to obtain the directory where the executable file is located");
     let temp_dir: &str = constant::DIR_DATA;
     let path: PathBuf = exe_dir.join(temp_dir);
     if !path.exists() {
         if let Err(e) = fs::create_dir_all(&path) {
-            log::error!("无法创建临时目录: {}", e);
+            log::error!("Failed to create temporary directory: {}", e);
         }
     }
     path

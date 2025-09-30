@@ -62,7 +62,7 @@ pub fn from_target(build_setting: &BuildSetting) {
 pub fn from_items(item: &TreeItem) {
     let datas: HashMap<String, &TreeData> = item.get_datas();
     if datas.len() <= 0 {
-        log::error!("获取数据为空:{}", item.display_name);
+        log::error!("Obtaining data is empty: {}", item.display_name);
         return;
     }
 
@@ -117,7 +117,7 @@ fn system_command(command: &str, path: &PathBuf) {
         // 对于Windows系统，将多行命令写入临时批处理文件执行
         let temp_script = path.join("temp_script.bat");
         if let Err(e) = std::fs::write(&temp_script, command) {
-            log::error!("无法创建临时脚本文件: {}", e);
+            log::error!("Failed to create temporary script file: {}", e);
             return;
         }
 
@@ -133,7 +133,7 @@ fn system_command(command: &str, path: &PathBuf) {
                 let _ = std::fs::remove_file(&temp_script);
             }
             Err(e) => {
-                log::error!("无法执行后处理命令: {}", e);
+                log::error!("The post-processing command cannot be executed: {}", e);
                 let _ = std::fs::remove_file(&temp_script);
             }
         }
@@ -147,7 +147,7 @@ fn system_command(command: &str, path: &PathBuf) {
             .arg(&command)
             .spawn()
         {
-            log::error!("无法执行后处理命令: {}", e);
+            log::error!("The post-processing command cannot be executed: {}", e);
         }
     }
 
@@ -159,7 +159,7 @@ fn system_command(command: &str, path: &PathBuf) {
             .arg(&command)
             .spawn()
         {
-            log::error!("无法执行后处理命令: {}", e);
+            log::error!("The post-processing command cannot be executed: {}", e);
         }
     }
 }

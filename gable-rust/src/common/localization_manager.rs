@@ -49,7 +49,7 @@ impl LocalizationManager {
             if !self.languages.contains_key(&v.key.clone()) {
                 self.languages.insert(v.key.clone(), v.clone());
             } else {
-                log::error!("重复的key:{}", v.key);
+                log::error!("Repeated key: {}", v.key);
             }
         }
         Ok(())

@@ -37,7 +37,10 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let java_fields: Vec<JavaFieldInfo> = transition_fields(&fields);
     let tera_result: Result<Tera, tera::Error> = Tera::new("assets/templates/java/*");
     if tera_result.is_err() {
-        log::error!("创建Tera模板失败: {}", tera_result.unwrap_err());
+        log::error!(
+            "Failed to create Tera template: {}",
+            tera_result.unwrap_err()
+        );
         return;
     }
     let tera: Tera = tera_result.unwrap();
@@ -56,7 +59,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
         ESheetType::Enum => tera.render("enums.temp", &context),
     };
     if rendered_result.is_err() {
-        log::error!("渲染模板错误: {}", rendered_result.unwrap_err());
+        log::error!("Template error: {}", rendered_result.unwrap_err());
         return;
     }
     let rendered: String = rendered_result.unwrap();

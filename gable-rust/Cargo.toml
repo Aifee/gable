@@ -22,5 +22,6 @@ rfd = "0.15.4"
 rust_xlsxwriter = "0.90.0"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = { version ="1.0.142", features = ["preserve_order"] }
+serde_yaml = "0.9.34"
 tera = "1.20.0"
 umya-spreadsheet = "2.3.2"

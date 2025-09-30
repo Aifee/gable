@@ -1,6 +1,6 @@
 use crate::{
     common::{
-        convert::{convert_csv, convert_json, convert_protobuff},
+        convert::{convert_csv, convert_json, convert_protobuff, convert_xml, convert_yaml},
         setting::{self, BuildSetting},
     },
     gui::datas::{etarget_type::ETargetType, gables, tree_data::TreeData, tree_item::TreeItem},
@@ -67,6 +67,8 @@ pub fn execute(build_setting: &BuildSetting, data: &TreeData) {
     match build_setting.target_type {
         ETargetType::Json => convert_json::to(build_setting, data),
         ETargetType::CSV => convert_csv::to(build_setting, data),
+        ETargetType::Xml => convert_xml::to(build_setting, data),
+        ETargetType::Yaml => convert_yaml::to(build_setting, data),
         ETargetType::Protobuff => convert_protobuff::to(build_setting, data),
     }
 }

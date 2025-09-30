@@ -10,6 +10,8 @@ pub mod convert {
     pub mod convert_csv;
     pub mod convert_json;
     pub mod convert_protobuff;
+    pub mod convert_xml;
+    pub mod convert_yaml;
 }
 
 pub mod generate {

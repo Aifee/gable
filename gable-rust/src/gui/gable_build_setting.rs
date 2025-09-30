@@ -252,7 +252,7 @@ impl GableBuildSetting {
                             ui.selectable_value(
                                 &mut build_settings.target_type,
                                 *item,
-                                item.to_string(),
+                                item.as_str(),
                             );
                         }
                     });

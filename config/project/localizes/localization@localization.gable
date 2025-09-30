@@ -88,32 +88,175 @@
         "value": "file_menu"
       },
       {
-        "value": "File"
+        "value": "菜单"
       },
       {
-        "value": "文件"
+        "value": "Menu"
       }
     ],
     [
       {
-        "value": "edit_menu"
+        "value": "new_file"
       },
       {
-        "value": "Edit"
+        "value": "新建文件"
       },
       {
-        "value": "编辑"
+        "value": "New File"
       }
     ],
     [
       {
-        "value": "view_menu"
+        "value": "new_folder"
       },
       {
-        "value": "View"
+        "value": "新建文件夹"
       },
       {
-        "value": "视图"
+        "value": "New Folder"
+      }
+    ],
+    [
+      {
+        "value": "open_project_directory"
+      },
+      {
+        "value": "打开工程目录"
+      },
+      {
+        "value": "Open Project Directory"
+      }
+    ],
+    [
+      {
+        "value": "settings"
+      },
+      {
+        "value": "设置"
+      },
+      {
+        "value": "Settings"
+      }
+    ],
+    [
+      {
+        "value": "exit"
+      },
+      {
+        "value": "退出"
+      },
+      {
+        "value": "Exit"
+      }
+    ],
+    [
+      {
+        "value": "build"
+      },
+      {
+        "value": "编译"
+      },
+      {
+        "value": "Build"
+      }
+    ],
+    [
+      {
+        "value": "build_settings"
+      },
+      {
+        "value": "编译设置"
+      },
+      {
+        "value": "Build Settings"
+      }
+    ],
+    [
+      {
+        "value": "quick_build"
+      },
+      {
+        "value": "快速编译"
+      },
+      {
+        "value": "Quick Build"
+      }
+    ],
+    [
+      {
+        "value": "select"
+      },
+      {
+        "value": "选择"
+      },
+      {
+        "value": "Select"
+      }
+    ],
+    [
+      {
+        "value": "import_excel"
+      },
+      {
+        "value": "导入Excel"
+      },
+      {
+        "value": "Import Excel"
+      }
+    ],
+    [
+      {
+        "value": "help"
+      },
+      {
+        "value": "帮助"
+      },
+      {
+        "value": "Help"
+      }
+    ],
+    [
+      {
+        "value": "about"
+      },
+      {
+        "value": "关于"
+      },
+      {
+        "value": "About"
+      }
+    ],
+    [
+      {
+        "value": "theme"
+      },
+      {
+        "value": "主题"
+      },
+      {
+        "value": "Theme"
+      }
+    ],
+    [
+      {
+        "value": "select_project_directory"
+      },
+      {
+        "value": "选择工程目录"
+      },
+      {
+        "value": "Select Project Directory"
+      }
+    ],
+    [
+      {
+        "value": "failed_to_set_workspace"
+      },
+      {
+        "value": "设置工作空间失败: {}"
+      },
+      {
+        "value": "Failed to set workspace: {}"
       }
     ]
   ]

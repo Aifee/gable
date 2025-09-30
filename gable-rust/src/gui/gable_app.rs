@@ -260,7 +260,9 @@ impl GableApp {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
         commands.push_back(ActionCommand::new(ECommandType::Refresh, None, None));
     }
-    /// 更新指令
+    /**
+     * 更新指令
+     */
     pub fn update_command(&mut self) {
         let mut commands = COMMANDS.lock().unwrap();
         while let Some(command) = commands.pop_front() {

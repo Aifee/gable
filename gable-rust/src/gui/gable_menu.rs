@@ -1,8 +1,10 @@
 use crate::common::convert::convert;
 use crate::common::generate::generate;
+use crate::common::localization_manager;
 use crate::gui::datas::gables;
 use crate::{common::setting, gui::gable_popup};
 use eframe::egui::{Color32, Context, MenuBar, TopBottomPanel, ViewportCommand, Visuals};
+
 pub(crate) struct GableMenu {}
 impl GableMenu {
     pub fn new() -> Self {
@@ -57,44 +59,80 @@ impl GableMenu {
     pub fn ongui(&mut self, ctx: &Context) {
         TopBottomPanel::top("menu_bar").show(ctx, |ui| {
             MenuBar::new().ui(ui, |ui| {
-                ui.menu_button("文件", |ui| {
-                    if ui.button("新建文件").clicked() {}
-                    if ui.button("新建文件夹").clicked() {}
+                ui.menu_button(localization_manager::t("file_menu").as_str(), |ui| {
+                    if ui
+                        .button(localization_manager::t("new_file").as_str())
+                        .clicked()
+                    {}
+                    if ui
+                        .button(localization_manager::t("new_folder").as_str())
+                        .clicked()
+                    {}
                     ui.separator();
-                    if ui.button("打开工程目录").clicked() {
+                    if ui
+                        .button(localization_manager::t("open_project_directory").as_str())
+                        .clicked()
+                    {
                         if let Some(path) = rfd::FileDialog::new()
-                            .set_title("选择工程目录")
+                            .set_title(localization_manager::t("select_project_directory").as_str())
                             .pick_folder()
                         {
                             let path_str: String = path.to_string_lossy().to_string();
                             if let Err(e) = setting::set_workspace(path_str) {
-                                log::error!("设置工作空间失败: {}", e);
+                                log::error!(
+                                    "{}",
+                                    localization_manager::t_with_args(
+                                        "failed_to_set_workspace",
+                                        &[("error", &e.to_string())]
+                                    )
+                                    .as_str()
+                                );
                             } else {
                                 gables::refresh_gables();
                             }
                         }
                     }
                     ui.separator();
-                    if ui.button("设置").clicked() {}
-                    if ui.button("退出").clicked() {
+                    if ui
+                        .button(localization_manager::t("settings").as_str())
+                        .clicked()
+                    {}
+                    if ui
+                        .button(localization_manager::t("exit").as_str())
+                        .clicked()
+                    {
                         ctx.send_viewport_cmd(ViewportCommand::Close);
                     }
                 });
-                ui.menu_button("编译", |ui| {
-                    if ui.button("编译设置").clicked() {
+                ui.menu_button(localization_manager::t("build").as_str(), |ui| {
+                    if ui
+                        .button(localization_manager::t("build_settings").as_str())
+                        .clicked()
+                    {
                         gable_popup::open_window(gable_popup::WINDOW_BUILD_SETTING);
                     }
-                    if ui.button("快速编译").clicked() {
+                    if ui
+                        .button(localization_manager::t("quick_build").as_str())
+                        .clicked()
+                    {
                         convert::from_all();
                         generate::from_all();
                     }
                 });
-                ui.menu_button("选择", |ui| if ui.button("导入Excel").clicked() {});
-                ui.menu_button("帮助", |ui| {
-                    if ui.button("关于").clicked() {
+                ui.menu_button(localization_manager::t("select").as_str(), |ui| {
+                    if ui
+                        .button(localization_manager::t("import_excel").as_str())
+                        .clicked()
+                    {}
+                });
+                ui.menu_button(localization_manager::t("help").as_str(), |ui| {
+                    if ui
+                        .button(localization_manager::t("about").as_str())
+                        .clicked()
+                    {
                         gable_popup::open_window(gable_popup::WINDOW_ABOUT);
                     }
-                    ui.menu_button("主题", |ui| {
+                    ui.menu_button(localization_manager::t("theme").as_str(), |ui| {
                         if ui.button("Light").clicked() {
                             self.set_theme(ctx, "Light");
                         }

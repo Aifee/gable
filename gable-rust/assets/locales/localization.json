@@ -6,17 +6,82 @@
   },
   {
     "key": "file_menu",
-    "zh": "File",
-    "en": "文件"
+    "zh": "菜单",
+    "en": "Menu"
   },
   {
-    "key": "edit_menu",
-    "zh": "Edit",
-    "en": "编辑"
+    "key": "new_file",
+    "zh": "新建文件",
+    "en": "New File"
   },
   {
-    "key": "view_menu",
-    "zh": "View",
-    "en": "视图"
+    "key": "new_folder",
+    "zh": "新建文件夹",
+    "en": "New Folder"
+  },
+  {
+    "key": "open_project_directory",
+    "zh": "打开工程目录",
+    "en": "Open Project Directory"
+  },
+  {
+    "key": "settings",
+    "zh": "设置",
+    "en": "Settings"
+  },
+  {
+    "key": "exit",
+    "zh": "退出",
+    "en": "Exit"
+  },
+  {
+    "key": "build",
+    "zh": "编译",
+    "en": "Build"
+  },
+  {
+    "key": "build_settings",
+    "zh": "编译设置",
+    "en": "Build Settings"
+  },
+  {
+    "key": "quick_build",
+    "zh": "快速编译",
+    "en": "Quick Build"
+  },
+  {
+    "key": "select",
+    "zh": "选择",
+    "en": "Select"
+  },
+  {
+    "key": "import_excel",
+    "zh": "导入Excel",
+    "en": "Import Excel"
+  },
+  {
+    "key": "help",
+    "zh": "帮助",
+    "en": "Help"
+  },
+  {
+    "key": "about",
+    "zh": "关于",
+    "en": "About"
+  },
+  {
+    "key": "theme",
+    "zh": "主题",
+    "en": "Theme"
+  },
+  {
+    "key": "select_project_directory",
+    "zh": "选择工程目录",
+    "en": "Select Project Directory"
+  },
+  {
+    "key": "failed_to_set_workspace",
+    "zh": "设置工作空间失败: {}",
+    "en": "Failed to set workspace: {}"
   }
 ]

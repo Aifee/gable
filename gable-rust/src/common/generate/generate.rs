@@ -2,7 +2,7 @@ use crate::{
     common::{
         generate::{
             generate_cangjie, generate_cpp, generate_csharp, generate_golang, generate_java,
-            generate_javascript, generate_lua, generate_protobuff, generate_python,
+            generate_javascript, generate_lua, generate_protobuff, generate_python, generate_rust,
             generate_typescript,
         },
         setting::{self, BuildSetting},
@@ -100,6 +100,7 @@ pub fn execute(build_setting: &BuildSetting, data: &TreeData) {
             EDevelopType::Lua => generate_lua::to(build_setting, data),
             EDevelopType::Python => generate_python::to(build_setting, data),
             EDevelopType::TypeScript => generate_typescript::to(build_setting, data),
+            EDevelopType::Rust => generate_rust::to(build_setting, data),
         }
     }
 }

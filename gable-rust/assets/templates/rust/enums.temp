@@ -1,0 +1,28 @@
+
+// {{STRUCT_NAME}}.rs
+
+/// {{STRUCT_NAME}}
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum {{STRUCT_NAME}} {
+    {% for field in fields %}
+    /// {{field.field_desc}}
+    {{ field.field_name }} = {{ field.field_index }},
+    {% endfor %}
+}
+
+impl {{STRUCT_NAME}} {
+    /// 将枚举转换为整数值
+    pub fn to_i32(self) -> i32 {
+        self as i32
+    }
+
+    /// 从整数值创建枚举
+    pub fn from_i32(value: i32) -> Option<Self> {
+        match value {
+            {% for field in fields %}
+            {{ field.field_index }} => Some({{STRUCT_NAME}}::{{ field.field_name }}),
+            {% endfor %}
+            _ => None,
+        }
+    }
+}

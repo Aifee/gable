@@ -25,6 +25,7 @@ pub const ICON_JAVASCRIPT: &[u8] = include_bytes!("../../assets/icons/javascript
 pub const ICON_LUA: &[u8] = include_bytes!("../../assets/icons/lua.png");
 pub const ICON_PYTHON: &[u8] = include_bytes!("../../assets/icons/python.png");
 pub const ICON_TYPESCRIPT: &[u8] = include_bytes!("../../assets/icons/typescript.png");
+pub const ICON_RUST: &[u8] = include_bytes!("../../assets/icons/rust.png");
 // pub const ICON_YAML: &[u8] = include_bytes!("../../assets/icons/yaml.png");
 
 /**
@@ -60,6 +61,7 @@ pub fn load_develop_icon(ctx: &Context, dev: &EDevelopType) -> TextureHandle {
         EDevelopType::Lua => ICON_LUA,
         EDevelopType::Python => ICON_PYTHON,
         EDevelopType::TypeScript => ICON_TYPESCRIPT,
+        EDevelopType::Rust => ICON_RUST,
     };
     load_texture(ctx, icon_texture, dev.to_string())
 }

@@ -44,24 +44,30 @@
     ],
     [
       {
-        "value": "rs"
+        "value": "rs",
+        "bg_fill": "theme:9,tint:0.8"
       },
       {
-        "value": "rs"
+        "value": "rs",
+        "bg_fill": "theme:9,tint:0.8"
       },
       {
-        "value": "rs"
+        "value": "rs",
+        "bg_fill": "theme:9,tint:0.8"
       }
     ],
     [
       {
-        "value": ""
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
       },
       {
-        "value": ""
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
       },
       {
-        "value": ""
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
       }
     ]
   ],

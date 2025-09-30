@@ -1,0 +1,20 @@
+
+// {{STRUCT_NAME}}.rs
+
+/// {{STRUCT_NAME}}
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct {{STRUCT_NAME}} {
+    {% for field in fields %}
+    /// {{field.field_desc}}
+    pub {{ field.field_name }}: {{ field.field_type }},
+    {% endfor %}
+}
+
+impl {{STRUCT_NAME}} {
+    {% for field in fields %}
+    /// 获取 {{field.field_desc}}
+    pub fn {{ field.field_name }}(&self) -> &{{ field.field_type }} {
+        &self.{{ field.field_name }}
+    }
+    {% endfor %}
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "key": "app_title",
+    "zh": "Gable",
+    "en": "Gable"
+  },
+  {
+    "key": "file_menu",
+    "zh": "File",
+    "en": "文件"
+  },
+  {
+    "key": "edit_menu",
+    "zh": "Edit",
+    "en": "编辑"
+  },
+  {
+    "key": "view_menu",
+    "zh": "View",
+    "en": "视图"
+  }
+]

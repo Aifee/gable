@@ -21,6 +21,8 @@ pub enum EDevelopType {
     Python = 7,
     // typescript语言
     TypeScript = 8,
+    // Rust语言
+    Rust = 9,
 }
 
 impl EDevelopType {
@@ -35,6 +37,7 @@ impl EDevelopType {
             EDevelopType::Lua => "Lua",
             EDevelopType::Python => "Python",
             EDevelopType::TypeScript => "TypeScript",
+            EDevelopType::Rust => "Rust",
         }
     }
     pub fn iter() -> std::slice::Iter<'static, EDevelopType> {
@@ -48,6 +51,7 @@ impl EDevelopType {
             EDevelopType::Lua,
             EDevelopType::Python,
             EDevelopType::TypeScript,
+            EDevelopType::Rust,
         ];
         VARIANTS.iter()
     }
@@ -62,6 +66,7 @@ impl EDevelopType {
             EDevelopType::Lua => "lua",
             EDevelopType::Python => "py",
             EDevelopType::TypeScript => "ts",
+            EDevelopType::Rust => "rs",
         }
     }
 }

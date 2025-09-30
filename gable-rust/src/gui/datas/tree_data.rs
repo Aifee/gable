@@ -151,7 +151,8 @@ impl TreeData {
         let mut items: Vec<Map<String, Value>> = Vec::new();
         let max_row: usize = self.content.get_max_row();
         for row_index in constant::TABLE_LOCALIZE_ROW_TOTAL..=max_row {
-            let row_data = if let Some(row_data) = self.content.cells.get(row_index) {
+            let real_index: usize = row_index - constant::TABLE_LOCALIZE_ROW_TOTAL;
+            let row_data = if let Some(row_data) = self.content.cells.get(real_index) {
                 row_data
             } else {
                 continue;

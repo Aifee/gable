@@ -142,7 +142,8 @@ fn normal_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
 
     let max_row = tree_data.content.get_max_row() + 1;
     for row_index in constant::TABLE_NORMAL_ROW_TOTAL..=max_row {
-        let row_data = if let Some(row_data) = tree_data.content.cells.get(row_index) {
+        let real_index = row_index - constant::TABLE_NORMAL_ROW_TOTAL;
+        let row_data = if let Some(row_data) = tree_data.content.cells.get(real_index) {
             row_data
         } else {
             continue;
@@ -316,7 +317,8 @@ fn localize_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
 
     let max_row: usize = tree_data.content.get_max_row() + 1;
     for row_index in constant::TABLE_LOCALIZE_ROW_TOTAL..=max_row {
-        let row_data = if let Some(row_data) = tree_data.content.cells.get(row_index) {
+        let real_index = row_index - constant::TABLE_LOCALIZE_ROW_TOTAL;
+        let row_data = if let Some(row_data) = tree_data.content.cells.get(real_index) {
             row_data
         } else {
             continue;

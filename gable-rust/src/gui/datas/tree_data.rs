@@ -71,12 +71,13 @@ impl TreeData {
         let mut items: Vec<Map<String, Value>> = Vec::new();
         let max_row: usize = self.content.get_max_row();
         for row_index in constant::TABLE_NORMAL_ROW_TOTAL..=max_row {
-            let row_data: &Vec<CellData> = if let Some(row_data) = self.content.cells.get(row_index)
-            {
-                row_data
-            } else {
-                continue;
-            };
+            let real_index: usize = row_index - constant::TABLE_NORMAL_ROW_TOTAL;
+            let row_data: &Vec<CellData> =
+                if let Some(row_data) = self.content.cells.get(real_index) {
+                    row_data
+                } else {
+                    continue;
+                };
             let mut row_valid: bool = true;
             let mut item_data: Map<String, Value> = Map::new();
             // 检测行数据是否有效，主键没有数据，行数据无效则跳过

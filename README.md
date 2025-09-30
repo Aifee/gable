@@ -17,7 +17,7 @@ Gable 是一个用于处理Excel文件的图形化工具，支持将Excel数据�
 
 确保您已安装Rust开发环境：
 
-```
+```bash
 git clone <repository-url>
 cd gable-rust
 cargo build --release
@@ -31,11 +31,12 @@ cargo build --release
 
 直接运行Gable可执行文件启动图形界面：
 
-```
+```bash
 ./target/release/gable-rust
 ```
 
 在图形界面中，您可以通过文件浏览器管理Excel文件：
+
 - 创建文件夹 - 右键点击空白区域或文件夹，选择"新建文件夹"
 - 创建Excel文件 - 右键点击空白区域或文件夹，选择"新建文件"
 - 创建Sheet工作表 - 右键点击Excel文件，选择"新建文件"
@@ -50,7 +51,7 @@ cargo build --release
 
 Gable也支持命令行操作：
 
-```
+```bash
 # 导出模式（默认）
 ./gable-rust export [参数]
 
@@ -98,7 +99,7 @@ Gable可以根据Excel模板自动生成以下编程语言的代码：
 
 ### 项目结构
 
-```
+```bash
 gable-rust/
 ├── assets/           # 资源文件
 │   ├── fonts/        # 字体文件
@@ -135,7 +136,8 @@ gable-rust/
 - 生成代码：右键菜单选择生成代码，根据模板自动生成代码文件
 
 ### 许可证
+
 [待添加许可证信息]
 
 联系方式
-如有问题，请联系项目维护者。
+如有问题，请联系项目维护者（329737941@qq.com）

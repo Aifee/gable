@@ -90,16 +90,16 @@ impl LocalizationManager {
         key.to_owned()
     }
 
-    pub fn t_with_args(&self, key: &str, args: &[(&str, &str)]) -> String {
-        let mut result = self.t(key);
+    // pub fn t_with_args(&self, key: &str, args: &[(&str, &str)]) -> String {
+    //     let mut result = self.t(key);
 
-        for (placeholder, value) in args {
-            let placeholder_str = format!("{{{}}}", placeholder);
-            result = result.replace(&placeholder_str, value);
-        }
+    //     for (placeholder, value) in args {
+    //         let placeholder_str = format!("{{{}}}", placeholder);
+    //         result = result.replace(&placeholder_str, value);
+    //     }
 
-        result
-    }
+    //     result
+    // }
     /**
      * 获取可用语言列表
      */
@@ -135,9 +135,9 @@ pub fn t(key: &str) -> String {
     LOCALIZATION_MANAGER.t(key)
 }
 
-pub fn t_with_args(key: &str, args: &[(&str, &str)]) -> String {
-    LOCALIZATION_MANAGER.t_with_args(key, args)
-}
+// pub fn t_with_args(key: &str, args: &[(&str, &str)]) -> String {
+//     LOCALIZATION_MANAGER.t_with_args(key, args)
+// }
 
 pub fn set_language(code: &ELocalizationType) -> bool {
     LOCALIZATION_MANAGER.set_language(code)

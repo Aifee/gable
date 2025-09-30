@@ -1,5 +1,5 @@
 use crate::{
-    common::{constant, excel_util, setting, utils},
+    common::{constant, excel_util, localization_manager, setting, utils},
     gui::{
         datas::{eitem_type::EItemType, gables, tree_item::TreeItem},
         gable_app::GableApp,
@@ -205,18 +205,18 @@ impl GableExplorer {
     fn show_context_menu(ui: &mut Ui, item: &mut TreeItem) {
         match item.item_type {
             EItemType::Folder => {
-                if ui.button("新建文件").clicked() {
+                if ui.button(localization_manager::t("new_file")).clicked() {
                     GableApp::create_excel_command(item.fullpath.clone());
                     ui.close();
                 }
-                if ui.button("新建文件夹").clicked() {
+                if ui.button(localization_manager::t("new_folder")).clicked() {
                     GableApp::create_folder_command(item.fullpath.clone());
                     ui.close();
                 }
-                if ui.button("导入").clicked() {
+                if ui.button(localization_manager::t("import")).clicked() {
                     ui.close();
                     if let Some(files) = FileDialog::new()
-                        .set_title("选择导入的文件")
+                        .set_title(localization_manager::t("select_import_file"))
                         .add_filter("Excel Files", &["xlsx", "xls"])
                         .pick_files()
                     {
@@ -224,11 +224,14 @@ impl GableExplorer {
                     }
                 }
                 ui.separator();
-                if ui.button("删除").clicked() {
+                if ui.button(localization_manager::t("delete")).clicked() {
                     GableApp::delete_comand(item.fullpath.clone());
                     ui.close();
                 }
-                if ui.button("在资源管理器中显示").clicked() {
+                if ui
+                    .button(localization_manager::t("show_in_resource_manager"))
+                    .clicked()
+                {
                     if let Err(e) = utils::open_in_explorer(&item.fullpath) {
                         log::error!("Cannot open the Resource Manager: {}", e);
                     }
@@ -236,34 +239,40 @@ impl GableExplorer {
                 }
             }
             EItemType::Excel => {
-                if ui.button("新建文件").clicked() {
+                if ui.button(localization_manager::t("new_file")).clicked() {
                     GableApp::create_sheet_command(item.fullpath.clone());
                     ui.close();
                 }
-                if ui.button("编辑").clicked() {
+                if ui.button(localization_manager::t("edit")).clicked() {
                     GableApp::editor_command(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
-                if ui.button("导出").clicked() {
+                if ui.button(localization_manager::t("export")).clicked() {
                     GableApp::convert_item_command(item.fullpath.clone());
                     ui.close();
                 }
-                if ui.button("生成代码").clicked() {
+                if ui
+                    .button(localization_manager::t("generate_script"))
+                    .clicked()
+                {
                     GableApp::generate_item_command(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
-                if ui.button("重命名").clicked() {
+                if ui.button(localization_manager::t("rename")).clicked() {
                     GableApp::editname_command(item.fullpath.clone());
                     ui.close();
                 }
-                if ui.button("删除").clicked() {
+                if ui.button(localization_manager::t("delete")).clicked() {
                     GableApp::delete_comand(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
-                if ui.button("在资源管理器中显示").clicked() {
+                if ui
+                    .button(localization_manager::t("show_in_resource_manager"))
+                    .clicked()
+                {
                     if let Some(path) = &item.parent {
                         if let Err(e) = utils::open_in_explorer(&path) {
                             log::error!("Cannot open the Resource Manager: {}", e);
@@ -273,30 +282,36 @@ impl GableExplorer {
                 }
             }
             EItemType::Sheet => {
-                if ui.button("编辑").clicked() {
+                if ui.button(localization_manager::t("edit")).clicked() {
                     GableApp::editor_command(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
-                if ui.button("导出").clicked() {
+                if ui.button(localization_manager::t("export")).clicked() {
                     GableApp::convert_item_command(item.fullpath.clone());
                     ui.close();
                 }
-                if ui.button("生成代码").clicked() {
+                if ui
+                    .button(localization_manager::t("generate_script"))
+                    .clicked()
+                {
                     GableApp::generate_item_command(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
-                if ui.button("重命名").clicked() {
+                if ui.button(localization_manager::t("rename")).clicked() {
                     GableApp::editname_command(item.fullpath.clone());
                     ui.close();
                 }
-                if ui.button("删除").clicked() {
+                if ui.button(localization_manager::t("delete")).clicked() {
                     GableApp::delete_comand(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
-                if ui.button("在资源管理器中显示").clicked() {
+                if ui
+                    .button(localization_manager::t("show_in_resource_manager"))
+                    .clicked()
+                {
                     if let Err(e) = utils::open_in_explorer(&item.fullpath) {
                         log::error!("Cannot open the Resource Manager: {}", e);
                     }

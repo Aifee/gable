@@ -1,4 +1,7 @@
-use crate::gui::{component, datas::log::LogTrace};
+use crate::{
+    common::localization_manager,
+    gui::{component, datas::log::LogTrace},
+};
 use eframe::egui::{Context, Frame, ScrollArea, TopBottomPanel, Ui};
 use egui_extras::{Column, TableBody, TableBuilder};
 
@@ -40,22 +43,22 @@ impl GableLog {
                 .header(self.row_height, |mut header| {
                     header.col(|ui| {
                         ui.centered_and_justified(|ui| {
-                            ui.label("时间");
+                            ui.label(localization_manager::t("time"));
                         });
                     });
                     header.col(|ui| {
                         ui.centered_and_justified(|ui| {
-                            ui.label("级别");
+                            ui.label(localization_manager::t("level"));
                         });
                     });
                     header.col(|ui| {
                         ui.centered_and_justified(|ui| {
-                            ui.label("目标");
+                            ui.label(localization_manager::t("target"));
                         });
                     });
                     header.col(|ui| {
                         ui.centered_and_justified(|ui| {
-                            ui.label("消息");
+                            ui.label(localization_manager::t("message"));
                         });
                     });
                 })
@@ -92,7 +95,7 @@ impl GableLog {
                             } else {
                                 body.row(self.row_height, |mut row| {
                                     row.col(|ui| {
-                                        ui.label("暂无日志");
+                                        ui.label(localization_manager::t("temporary_log"));
                                     });
                                     row.col(|ui| {
                                         ui.label("");
@@ -109,7 +112,7 @@ impl GableLog {
                     } else {
                         body.row(self.row_height, |mut row| {
                             row.col(|ui| {
-                                ui.label("日志系统未初始化");
+                                ui.label(localization_manager::t("log_system_not_initialized"));
                             });
                             row.col(|ui| {
                                 ui.label("");

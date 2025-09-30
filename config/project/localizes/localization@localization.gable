@@ -269,6 +269,358 @@
       {
         "value": "Select Project Directory"
       }
+    ],
+    [
+      {
+        "value": "version"
+      },
+      {
+        "value": "版本"
+      },
+      {
+        "value": "Version"
+      }
+    ],
+    [
+      {
+        "value": "tool_description"
+      },
+      {
+        "value": "一个用于处理Excel文件的工具"
+      },
+      {
+        "value": "A tool for processing Excel files"
+      }
+    ],
+    [
+      {
+        "value": "build_configuration"
+      },
+      {
+        "value": "构建设置"
+      },
+      {
+        "value": "Build Configuration"
+      }
+    ],
+    [
+      {
+        "value": "development_environment"
+      },
+      {
+        "value": "开发环境"
+      },
+      {
+        "value": "Development Environment"
+      }
+    ],
+    [
+      {
+        "value": "add"
+      },
+      {
+        "value": "添加"
+      },
+      {
+        "value": "Add"
+      }
+    ],
+    [
+      {
+        "value": "delete"
+      },
+      {
+        "value": "删除"
+      },
+      {
+        "value": "Delete"
+      }
+    ],
+    [
+      {
+        "value": "export_all"
+      },
+      {
+        "value": "全部导出"
+      },
+      {
+        "value": "Export All"
+      }
+    ],
+    [
+      {
+        "value": "tag"
+      },
+      {
+        "value": "标识"
+      },
+      {
+        "value": "Tag"
+      }
+    ],
+    [
+      {
+        "value": "keyword"
+      },
+      {
+        "value": "关键字"
+      },
+      {
+        "value": "Keyword"
+      }
+    ],
+    [
+      {
+        "value": "export_type"
+      },
+      {
+        "value": "导出类型"
+      },
+      {
+        "value": "Export Type"
+      }
+    ],
+    [
+      {
+        "value": "proto_version"
+      },
+      {
+        "value": "Proto版本"
+      },
+      {
+        "value": "Proto Version"
+      }
+    ],
+    [
+      {
+        "value": "export_path"
+      },
+      {
+        "value": "导出路径"
+      },
+      {
+        "value": "Export Path"
+      }
+    ],
+    [
+      {
+        "value": "browse"
+      },
+      {
+        "value": "浏览"
+      },
+      {
+        "value": "Browse"
+      }
+    ],
+    [
+      {
+        "value": "select_target_path"
+      },
+      {
+        "value": "选择目标路径"
+      },
+      {
+        "value": "Select Target Path"
+      }
+    ],
+    [
+      {
+        "value": "generate_script"
+      },
+      {
+        "value": "生成脚本"
+      },
+      {
+        "value": "Generate Script"
+      }
+    ],
+    [
+      {
+        "value": "script_path"
+      },
+      {
+        "value": "脚本路径"
+      },
+      {
+        "value": "Script Path"
+      }
+    ],
+    [
+      {
+        "value": "custom_template"
+      },
+      {
+        "value": "自定义模板"
+      },
+      {
+        "value": "Custom Template"
+      }
+    ],
+    [
+      {
+        "value": "template_file"
+      },
+      {
+        "value": "模板文件"
+      },
+      {
+        "value": "Template File"
+      }
+    ],
+    [
+      {
+        "value": "select_file"
+      },
+      {
+        "value": "选择文件"
+      },
+      {
+        "value": "Select File"
+      }
+    ],
+    [
+      {
+        "value": "post_processing"
+      },
+      {
+        "value": "后处理"
+      },
+      {
+        "value": "Post Processing"
+      }
+    ],
+    [
+      {
+        "value": "show_in_resource_manager"
+      },
+      {
+        "value": "在资源管理器中显示"
+      },
+      {
+        "value": "Show in Resource Manager"
+      }
+    ],
+    [
+      {
+        "value": "import"
+      },
+      {
+        "value": "导入"
+      },
+      {
+        "value": "Import"
+      }
+    ],
+    [
+      {
+        "value": "select_import_file"
+      },
+      {
+        "value": "选择导入的文件"
+      },
+      {
+        "value": "Select Import File"
+      }
+    ],
+    [
+      {
+        "value": "export"
+      },
+      {
+        "value": "导出"
+      },
+      {
+        "value": "Export"
+      }
+    ],
+    [
+      {
+        "value": "time"
+      },
+      {
+        "value": "时间"
+      },
+      {
+        "value": "Time"
+      }
+    ],
+    [
+      {
+        "value": "level"
+      },
+      {
+        "value": "级别"
+      },
+      {
+        "value": "Level"
+      }
+    ],
+    [
+      {
+        "value": "target"
+      },
+      {
+        "value": "目标"
+      },
+      {
+        "value": "Target"
+      }
+    ],
+    [
+      {
+        "value": "message"
+      },
+      {
+        "value": "信息"
+      },
+      {
+        "value": "Message"
+      }
+    ],
+    [
+      {
+        "value": "temporary_log"
+      },
+      {
+        "value": "暂无日志"
+      },
+      {
+        "value": "No Log Yet"
+      }
+    ],
+    [
+      {
+        "value": "log_system_not_initialized"
+      },
+      {
+        "value": "日志系统未初始化"
+      },
+      {
+        "value": "Log system not initialized"
+      }
+    ],
+    [
+      {
+        "value": "edit"
+      },
+      {
+        "value": "编辑"
+      },
+      {
+        "value": "Edit"
+      }
+    ],
+    [
+      {
+        "value": "rename"
+      },
+      {
+        "value": "重命名"
+      },
+      {
+        "value": "Rename"
+      }
     ]
   ]
 }

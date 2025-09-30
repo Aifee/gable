@@ -88,5 +88,165 @@
     "key": "select_project_directory",
     "zh": "选择工程目录",
     "en": "Select Project Directory"
+  },
+  {
+    "key": "version",
+    "zh": "版本",
+    "en": "Version"
+  },
+  {
+    "key": "tool_description",
+    "zh": "一个用于处理Excel文件的工具",
+    "en": "A tool for processing Excel files"
+  },
+  {
+    "key": "build_configuration",
+    "zh": "构建设置",
+    "en": "Build Configuration"
+  },
+  {
+    "key": "development_environment",
+    "zh": "开发环境",
+    "en": "Development Environment"
+  },
+  {
+    "key": "add",
+    "zh": "添加",
+    "en": "Add"
+  },
+  {
+    "key": "delete",
+    "zh": "删除",
+    "en": "Delete"
+  },
+  {
+    "key": "export_all",
+    "zh": "全部导出",
+    "en": "Export All"
+  },
+  {
+    "key": "tag",
+    "zh": "标识",
+    "en": "Tag"
+  },
+  {
+    "key": "keyword",
+    "zh": "关键字",
+    "en": "Keyword"
+  },
+  {
+    "key": "export_type",
+    "zh": "导出类型",
+    "en": "Export Type"
+  },
+  {
+    "key": "proto_version",
+    "zh": "Proto版本",
+    "en": "Proto Version"
+  },
+  {
+    "key": "export_path",
+    "zh": "导出路径",
+    "en": "Export Path"
+  },
+  {
+    "key": "browse",
+    "zh": "浏览",
+    "en": "Browse"
+  },
+  {
+    "key": "select_target_path",
+    "zh": "选择目标路径",
+    "en": "Select Target Path"
+  },
+  {
+    "key": "generate_script",
+    "zh": "生成脚本",
+    "en": "Generate Script"
+  },
+  {
+    "key": "script_path",
+    "zh": "脚本路径",
+    "en": "Script Path"
+  },
+  {
+    "key": "custom_template",
+    "zh": "自定义模板",
+    "en": "Custom Template"
+  },
+  {
+    "key": "template_file",
+    "zh": "模板文件",
+    "en": "Template File"
+  },
+  {
+    "key": "select_file",
+    "zh": "选择文件",
+    "en": "Select File"
+  },
+  {
+    "key": "post_processing",
+    "zh": "后处理",
+    "en": "Post Processing"
+  },
+  {
+    "key": "show_in_resource_manager",
+    "zh": "在资源管理器中显示",
+    "en": "Show in Resource Manager"
+  },
+  {
+    "key": "import",
+    "zh": "导入",
+    "en": "Import"
+  },
+  {
+    "key": "select_import_file",
+    "zh": "选择导入的文件",
+    "en": "Select Import File"
+  },
+  {
+    "key": "export",
+    "zh": "导出",
+    "en": "Export"
+  },
+  {
+    "key": "time",
+    "zh": "时间",
+    "en": "Time"
+  },
+  {
+    "key": "level",
+    "zh": "级别",
+    "en": "Level"
+  },
+  {
+    "key": "target",
+    "zh": "目标",
+    "en": "Target"
+  },
+  {
+    "key": "message",
+    "zh": "信息",
+    "en": "Message"
+  },
+  {
+    "key": "temporary_log",
+    "zh": "暂无日志",
+    "en": "No Log Yet"
+  },
+  {
+    "key": "log_system_not_initialized",
+    "zh": "日志系统未初始化",
+    "en": "Log system not initialized"
+  },
+  {
+    "key": "edit",
+    "zh": "编辑",
+    "en": "Edit"
+  },
+  {
+    "key": "rename",
+    "zh": "重命名",
+    "en": "Rename"
   }
 ]

@@ -268,3 +268,50 @@ pub fn open_in_explorer(path: &str) -> std::io::Result<()> {
 
     Ok(())
 }
+
+/**
+ * 判断文件是否是临时文件
+ * windows:~$ 开头的文件
+ * macos:.~ 开头的文件
+*/
+pub fn is_temp_file(file_name: &str) -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        file_name.starts_with("~$")
+    }
+    #[cfg(target_os = "macos")]
+    {
+        file_name.starts_with(".~")
+    }
+}
+/**
+ * 获取临时文件路径
+ */
+pub fn get_temp_path(root: &PathBuf, file_name: &str) -> String {
+    #[cfg(target_os = "windows")]
+    {
+        root.join(&format!("~${}", &file_name))
+            .to_string_lossy()
+            .to_string()
+    }
+    #[cfg(target_os = "macos")]
+    {
+        root.join(&format!(".~{}", &file_name))
+            .to_string_lossy()
+            .to_string()
+    }
+}
+
+/**
+ * 临时文件转为正式文件
+ */
+pub fn temp_to_formal(file_name: &str) -> String {
+    #[cfg(target_os = "windows")]
+    {
+        file_name.replacen("~$", "", 1)
+    }
+    #[cfg(target_os = "macos")]
+    {
+        file_name.replacen(".~", "", 1)
+    }
+}

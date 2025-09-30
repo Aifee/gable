@@ -10,7 +10,7 @@ use std::{
     time::Duration,
 };
 
-use crate::gui::datas::gables;
+use crate::{common::utils, gui::datas::gables};
 
 pub struct FileWatcher {
     watcher: RecommendedWatcher,
@@ -65,7 +65,6 @@ impl FileWatcher {
                     Some(event_result) => {
                         match event_result {
                             Ok(event) => {
-                                // 过滤出.xlsx文件（包括~$*.xlsx临时文件）
                                 let mut excel_files: Vec<&std::path::PathBuf> = Vec::new();
                                 for path in &event.paths {
                                     if let Some(file_name) =
@@ -85,7 +84,7 @@ impl FileWatcher {
                                                 if let Some(file_name) =
                                                     file_path.file_name().and_then(|f| f.to_str())
                                                 {
-                                                    if !file_name.starts_with("~$") {
+                                                    if !utils::is_temp_file(file_name) {
                                                         gables::editor_complete(file_path);
                                                     }
                                                 }
@@ -93,17 +92,14 @@ impl FileWatcher {
                                         }
                                         EventKind::Remove(_) => {
                                             for file_path in &excel_files {
-                                                // 只处理包含~$的临时文件
                                                 if let Some(file_name) =
                                                     file_path.file_name().and_then(|f| f.to_str())
                                                 {
-                                                    if file_name.starts_with("~$") {
-                                                        // 规范化路径并去除 ~$ 前缀
+                                                    if utils::is_temp_file(file_name) {
                                                         let normalized_path =
                                                             file_path.to_string_lossy();
-                                                        // 去除 ~$ 前缀得到原始文件名
                                                         let original_file_name: String =
-                                                            file_name.replacen("~$", "", 1);
+                                                            utils::temp_to_formal(file_name);
                                                         // 构造原始文件的路径
                                                         if let Some(parent_path) =
                                                             Path::new(normalized_path.as_str())

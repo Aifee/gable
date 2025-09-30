@@ -55,10 +55,7 @@ pub fn write_excel(
 ) -> Result<String, Box<dyn Error>> {
     let file_name: &str = &format!("{}{}", &excel_name, &constant::EXCEL_EXTENSION);
     let tem_path: PathBuf = setting::get_temp_path();
-    let excel_file_path_tem: String = tem_path
-        .join(&format!("~${}", &file_name))
-        .to_string_lossy()
-        .to_string();
+    let excel_file_path_tem: String = utils::get_temp_path(&tem_path, &file_name);
     let excel_file_path: String = PathBuf::from(&tem_path)
         .join(&file_name)
         .to_string_lossy()

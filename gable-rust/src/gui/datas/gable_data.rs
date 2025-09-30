@@ -62,7 +62,7 @@ impl GableData {
     fn normal_template() -> GableData {
         let mut heads: Vec<Vec<CellData>> = Vec::new();
         let mut desc_cols: Vec<CellData> = Vec::new();
-        desc_cols.push(CellData::new("编号".to_string(), None, None));
+        desc_cols.push(CellData::new("ID".to_string(), None, None));
         heads.push(desc_cols);
         let mut field_cols: Vec<CellData> = Vec::new();
         field_cols.push(CellData::new("id".to_string(), None, None));
@@ -70,8 +70,8 @@ impl GableData {
         let mut type_cols: Vec<CellData> = Vec::new();
         type_cols.push(CellData::new("int".to_string(), None, None));
         heads.push(type_cols);
-        heads.push(Vec::new()); // 空行(关键字)
-        heads.push(Vec::new()); // 空行(链接)
+        heads.push(Vec::new());
+        heads.push(Vec::new());
 
         let mut cells: Vec<Vec<CellData>> = Vec::new();
         let mut value_cols: Vec<CellData> = Vec::new();
@@ -91,11 +91,11 @@ impl GableData {
         let mut heads: Vec<Vec<CellData>> = Vec::new();
         let mut cols: Vec<CellData> = Vec::new();
         cols.push(CellData::new("key".to_string(), None, None));
-        cols.push(CellData::new("数据类型".to_string(), None, None));
-        cols.push(CellData::new("导出目标".to_string(), None, None));
-        cols.push(CellData::new("关联信息".to_string(), None, None));
-        cols.push(CellData::new("值".to_string(), None, None));
-        cols.push(CellData::new("描述".to_string(), None, None));
+        cols.push(CellData::new("Data Type".to_string(), None, None));
+        cols.push(CellData::new("Target".to_string(), None, None));
+        cols.push(CellData::new("Link Info".to_string(), None, None));
+        cols.push(CellData::new("Value".to_string(), None, None));
+        cols.push(CellData::new("Description".to_string(), None, None));
         heads.push(cols);
         GableData {
             heads: heads,
@@ -110,9 +110,9 @@ impl GableData {
     fn enum_template() -> GableData {
         let mut heads: Vec<Vec<CellData>> = Vec::new();
         let mut cols: Vec<CellData> = Vec::new();
-        cols.push(CellData::new("字段名".to_string(), None, None));
-        cols.push(CellData::new("值".to_string(), None, None));
-        cols.push(CellData::new("描述".to_string(), None, None));
+        cols.push(CellData::new("Field Name".to_string(), None, None));
+        cols.push(CellData::new("Value".to_string(), None, None));
+        cols.push(CellData::new("Description".to_string(), None, None));
         heads.push(cols);
         GableData {
             heads: heads,
@@ -127,7 +127,7 @@ impl GableData {
     fn localize_template() -> GableData {
         let mut heads: Vec<Vec<CellData>> = Vec::new();
         let mut desc_cols: Vec<CellData> = Vec::new();
-        desc_cols.push(CellData::new("唯一标识".to_string(), None, None));
+        desc_cols.push(CellData::new("ID".to_string(), None, None));
         heads.push(desc_cols);
         let mut field_cols: Vec<CellData> = Vec::new();
         field_cols.push(CellData::new("key".to_string(), None, None));

@@ -1056,7 +1056,7 @@ pub fn remove_tree_item(full_path: &str) {
  */
 pub fn command_edit_gable(item: &TreeItem) {
     if item.item_type == EItemType::Folder {
-        log::error!("文件夹不能进行编辑");
+        log::error!("The folder cannot be edited.");
         return;
     }
 

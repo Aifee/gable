@@ -62,19 +62,22 @@ impl GableExplorer {
                             eframe::egui::Sense::click_and_drag(),
                         )
                         .context_menu(|ui| {
-                            if ui.button("新建文件").clicked() {
+                            if ui.button(localization_manager::t("new_file")).clicked() {
                                 GableApp::create_excel_command(
                                     setting::get_workspace().to_string_lossy().to_string(),
                                 );
                                 ui.close();
                             }
-                            if ui.button("新建文件夹").clicked() {
+                            if ui.button(localization_manager::t("new_folder")).clicked() {
                                 GableApp::create_folder_command(
                                     setting::get_workspace().to_string_lossy().to_string(),
                                 );
                                 ui.close();
                             }
-                            if ui.button("在资源管理器中显示").clicked() {
+                            if ui
+                                .button(localization_manager::t("show_in_resource_manager"))
+                                .clicked()
+                            {
                                 if let Some(path) = setting::get_workspace().to_str() {
                                     if let Err(e) = utils::open_in_explorer(path) {
                                         log::error!("Cannot open the Resource Manager: {}", e);
@@ -345,11 +348,12 @@ impl GableExplorer {
 
         if is_folder {
             let root_path: PathBuf = PathBuf::from(&target_path.unwrap());
-            let new_folder_path: PathBuf = Path::new(&root_path).join("新建文件夹");
+            let new_folder: String = localization_manager::t("new_folder");
+            let new_folder_path: PathBuf = Path::new(&root_path).join(&new_folder);
             let mut new_path: PathBuf = new_folder_path.clone();
             let mut counter: i32 = 1;
             while new_path.exists() {
-                let new_name: String = format!("新建文件夹({})", counter);
+                let new_name: String = format!("{}({})", new_folder, counter);
                 new_path = Path::new(&root_path).join(new_name);
                 counter += 1;
             }

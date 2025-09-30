@@ -248,5 +248,35 @@
     "key": "rename",
     "zh": "重命名",
     "en": "Rename"
+  },
+  {
+    "key": "go_back",
+    "zh": "前往",
+    "en": "Go to"
+  },
+  {
+    "key": "row",
+    "zh": "行",
+    "en": "Row"
+  },
+  {
+    "key": "column",
+    "zh": "列",
+    "en": "Column"
+  },
+  {
+    "key": "confirm",
+    "zh": "确定",
+    "en": "Confirm"
+  },
+  {
+    "key": "double_click",
+    "zh": "双击左侧文件树中的项目以打开",
+    "en": "Double-click an item in the left file tree to open"
+  },
+  {
+    "key": "selected_tab",
+    "zh": "请选择要浏览的页签",
+    "en": "Please select the tab for browsing"
   }
 ]

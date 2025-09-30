@@ -2,6 +2,11 @@ use lazy_static::lazy_static;
 use std::path::PathBuf;
 
 /**
+ * 版本号
+ */
+pub const GABLE_VERSION: &str = "1.0.0";
+
+/**
  * 数据文件类型
  */
 pub const GABLE_FILE_TYPE: &str = ".gable";

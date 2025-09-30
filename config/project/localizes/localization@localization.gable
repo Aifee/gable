@@ -621,6 +621,72 @@
       {
         "value": "Rename"
       }
+    ],
+    [
+      {
+        "value": "go_back"
+      },
+      {
+        "value": "前往"
+      },
+      {
+        "value": "Go to"
+      }
+    ],
+    [
+      {
+        "value": "row"
+      },
+      {
+        "value": "行"
+      },
+      {
+        "value": "Row"
+      }
+    ],
+    [
+      {
+        "value": "column"
+      },
+      {
+        "value": "列"
+      },
+      {
+        "value": "Column"
+      }
+    ],
+    [
+      {
+        "value": "confirm"
+      },
+      {
+        "value": "确定"
+      },
+      {
+        "value": "Confirm"
+      }
+    ],
+    [
+      {
+        "value": "double_click"
+      },
+      {
+        "value": "双击左侧文件树中的项目以打开"
+      },
+      {
+        "value": "Double-click an item in the left file tree to open"
+      }
+    ],
+    [
+      {
+        "value": "selected_tab"
+      },
+      {
+        "value": "请选择要浏览的页签"
+      },
+      {
+        "value": "Please select the tab for browsing"
+      }
     ]
   ]
 }

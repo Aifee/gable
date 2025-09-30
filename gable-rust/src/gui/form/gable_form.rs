@@ -1,4 +1,4 @@
-use crate::common::constant;
+use crate::common::{constant, localization_manager};
 use crate::gui::component;
 use crate::gui::datas::tree_item::TreeItem;
 use crate::gui::form::opened_excel::OpenedExcel;
@@ -84,14 +84,14 @@ impl GableForm {
                 )
                 .show(ctx, |ui| {
                     ui.horizontal(|ui| {
-                        ui.label("定位:");
+                        ui.label(localization_manager::t("go_back"));
                         ui.add_sized(title_size, TextEdit::singleline(&mut self.goto_row_input))
-                            .on_hover_text("行");
+                            .on_hover_text(localization_manager::t("row"));
 
                         ui.label(":");
                         ui.add_sized(title_size, TextEdit::singleline(&mut self.goto_col_input))
-                            .on_hover_text("列");
-                        if ui.button("确定").clicked() {
+                            .on_hover_text(localization_manager::t("column"));
+                        if ui.button(localization_manager::t("confirm")).clicked() {
                             if let Ok(row) = self.goto_row_input.parse::<u64>() {
                                 self.scroll_to_row = Some(row.saturating_sub(1));
                             }
@@ -116,7 +116,7 @@ impl GableForm {
         CentralPanel::default().show(ctx, |ui| {
             ui.set_min_height(100.0);
             if self.excels.is_empty() {
-                ui.centered_and_justified(|ui| ui.label("双击左侧文件树中的项目以打开"));
+                ui.centered_and_justified(|ui| ui.label(localization_manager::t("double_click")));
                 return;
             }
 
@@ -288,7 +288,7 @@ impl GableForm {
     fn ongui_scroll_table(&mut self, ui: &mut Ui) {
         let sheet: Option<&OpenedSheet> = self.get_sheet();
         if sheet.is_none() {
-            ui.centered_and_justified(|ui| ui.label("请选择要浏览的页签"));
+            ui.centered_and_justified(|ui| ui.label(localization_manager::t("selected_tab")));
             return;
         }
         let sheet: &OpenedSheet = sheet.unwrap();

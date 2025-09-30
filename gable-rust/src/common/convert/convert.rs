@@ -31,7 +31,7 @@ pub fn from_target(setting: &BuildSetting) {
         }
     }
     if datas.len() <= 0 {
-        log::error!("未找到要导出的配置");
+        log::error!("No configurations found to export");
         return;
     }
     for (_, data) in datas.iter() {
@@ -46,7 +46,7 @@ pub fn from_target(setting: &BuildSetting) {
 pub fn from_items(item: &TreeItem) {
     let datas: HashMap<String, &TreeData> = item.get_datas();
     if datas.len() <= 0 {
-        log::error!("获取数据为空:{}", item.display_name);
+        log::error!("No data found: {}", item.display_name);
         return;
     }
 

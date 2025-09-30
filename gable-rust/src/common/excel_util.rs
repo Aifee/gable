@@ -1,5 +1,5 @@
 use crate::{
-    common::{constant, setting, utils},
+    common::{constant, localization_manager, setting, utils},
     gui::{
         datas::{
             cell_data::CellData, edata_type::EDataType, esheet_type::ESheetType,
@@ -30,12 +30,12 @@ pub fn read_gable_file(file_path: &str) -> Option<GableData> {
         Ok(content) => match serde_json::from_str::<GableData>(&content) {
             Ok(json_value) => Some(json_value),
             Err(e) => {
-                log::error!("解析JSON文件失败:'{}': {}", file_path, e);
+                log::error!("Failed to parse JSON file: '{}' : {}", file_path, e);
                 None
             }
         },
         Err(e) => {
-            log::error!("读取文件失败:'{}': {}", file_path, e);
+            log::error!("Failed to read file: '{}' : {}", file_path, e);
             None
         }
     }
@@ -61,14 +61,21 @@ pub fn write_excel(
         .to_string_lossy()
         .to_string();
     if Path::new(&excel_file_path_tem).exists() {
-        log::error!("Excel文件 '{}' 已经打开，无法写入", excel_file_path);
+        log::error!(
+            "Excel file '{}' is already open, unable to write",
+            excel_file_path
+        );
         return Err("Excel文件已经打开，无法写入".into());
     }
     if Path::new(&excel_file_path).exists() {
         match fs::remove_file(&excel_file_path) {
             Ok(_) => {}
             Err(e) => {
-                log::error!("无法删除已存在的Excel文件 '{}': {}", excel_file_path, e);
+                log::error!(
+                    "Unable to delete existing Excel file '{}': {}",
+                    excel_file_path,
+                    e
+                );
                 return Err(e.into());
             }
         }
@@ -759,7 +766,7 @@ fn write_excel_cell_style(cell: &mut Cell, cell_data: &CellData) {
  * */
 pub fn write_gable_new(gable_path: &PathBuf) -> Result<(), Box<dyn Error>> {
     if gable_path.exists() {
-        return Err("gable文件已存在".into());
+        return Err("Gable file already exists".into());
     }
     let sheet_type: ESheetType = setting::determine_sheet_type(Path::new(&gable_path));
     let gable_data: GableData = GableData::new(sheet_type);

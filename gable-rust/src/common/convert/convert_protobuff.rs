@@ -19,7 +19,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
     let value_data: Vec<Map<String, Value>> = tree_data.to_values(&build_setting.keyword);
     if value_data.is_empty() || value_data.len() <= 0 {
-        log::warn!("数据为空");
+        log::warn!("Data is empty");
         return;
     }
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
@@ -33,7 +33,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
                     log::error!("Normal表{}，写入二进制文件失败: {}", tree_data.file_name, e);
                 } else {
                     log::info!(
-                        "导出【{}】Protobuf二进制数据成功:{}",
+                        "Export [{}] Protobuf binary data successful: {}",
                         build_setting.display_name,
                         target_path.to_str().unwrap()
                     );
@@ -46,7 +46,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
                     log::error!("KV表【{}】写入二进制文件失败: {}", tree_data.file_name, e);
                 } else {
                     log::info!(
-                        "导出【{}】Protobuf二进制数据成功:{}",
+                        "Export [{}] Protobuf binary data successful: {}",
                         build_setting.display_name,
                         target_path.to_str().unwrap()
                     );

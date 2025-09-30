@@ -61,7 +61,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
         );
     } else {
         log::info!(
-            "导出【{}】成功:{}",
+            "Export [{}] successful: {}",
             build_setting.display_name,
             proto_path.to_str().unwrap()
         );
@@ -205,7 +205,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
             );
         } else {
             log::info!(
-                "导出【{}】成功:{}",
+                "Export [{}] successful: {}",
                 class_name,
                 target_path.to_str().unwrap()
             );

@@ -43,7 +43,7 @@ pub fn from_target(build_setting: &BuildSetting) {
         }
     }
     if datas.len() <= 0 {
-        log::error!("未找到要导出的配置");
+        log::error!("No configurations found to export");
         return;
     }
     for (_, data) in datas.iter() {

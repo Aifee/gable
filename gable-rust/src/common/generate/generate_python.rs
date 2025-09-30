@@ -71,7 +71,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
         );
     } else {
         log::info!(
-            "导出【{}】成功:{}",
+            "Export [{}] successful: {}",
             build_setting.display_name,
             target_path.to_str().unwrap()
         );

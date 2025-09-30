@@ -25,6 +25,14 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
         .join(format!("{}.yaml", tree_data.file_name));
 
     let yaml_data: String = to_yaml_data(tree_data, &build_setting.keyword);
+    if yaml_data.is_empty() {
+        log::debug!(
+            "Export [{}] skipped: {}",
+            build_setting.display_name,
+            target_path.to_str().unwrap()
+        );
+        return;
+    }
     // 创建YAML文件
     let file: Result<File, Error> = File::create(&target_path);
     if file.is_err() {
@@ -84,6 +92,9 @@ fn to_yaml_data(tree_data: &TreeData, keyword: &str) -> String {
 */
 fn normal_yaml_data(tree_data: &TreeData, keyword: &str) -> String {
     let (valids_main, valids) = tree_data.content.get_valid_normal_heads(keyword);
+    if valids_main.is_empty() || valids.is_empty() {
+        return String::new();
+    }
     let mut yaml_root: BTreeMap<String, JsonValue> = BTreeMap::new();
     let mut rows_data: Vec<BTreeMap<String, String>> = Vec::new();
 
@@ -218,6 +229,9 @@ fn kv_yaml_data(tree_data: &TreeData, keyword: &str) -> String {
 */
 fn localize_yaml_data(tree_data: &TreeData, keyword: &str) -> String {
     let (valids_main, valids) = tree_data.content.get_valid_normal_heads(keyword);
+    if valids_main.is_empty() || valids.is_empty() {
+        return String::new();
+    }
     let mut yaml_root: BTreeMap<String, JsonValue> = BTreeMap::new();
     let mut rows_data: Vec<BTreeMap<String, String>> = Vec::new();
 

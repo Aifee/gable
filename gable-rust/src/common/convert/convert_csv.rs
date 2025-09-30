@@ -22,6 +22,10 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
         .join(format!("{}.csv", tree_data.file_name));
     let csv_data: Vec<Vec<String>> = to_csv_data(tree_data, &build_setting.keyword);
+    if csv_data.is_empty() {
+        log::debug!("No data to export [{}]", build_setting.display_name);
+        return;
+    }
     // 创建CSV文件
     let file: Result<File, Error> = File::create(&target_path);
     if file.is_err() {
@@ -100,6 +104,9 @@ fn to_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
 */
 fn normal_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
     let (valids_main, valids) = tree_data.content.get_valid_normal_heads(keyword);
+    if valids_main.is_empty() || valids.is_empty() {
+        return Vec::new();
+    };
     let mut items: Vec<Vec<String>> = Vec::new();
 
     let mut desc_row_item: Vec<String> = Vec::new();
@@ -180,6 +187,9 @@ fn normal_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
                 String::new()
             };
             item_data.push(value_cell);
+        }
+        if item_data.is_empty() {
+            continue;
         }
         items.push(item_data);
     }
@@ -275,6 +285,9 @@ fn kv_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
 */
 fn localize_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
     let (valids_main, valids) = tree_data.content.get_valid_normal_heads(keyword);
+    if valids_main.is_empty() || valids.is_empty() {
+        return Vec::new();
+    };
     let mut items: Vec<Vec<String>> = Vec::new();
 
     let mut desc_row_item: Vec<String> = Vec::new();
@@ -355,6 +368,9 @@ fn localize_csv_data(tree_data: &TreeData, keyword: &str) -> Vec<Vec<String>> {
                 String::new()
             };
             item_data.push(value_cell);
+        }
+        if item_data.is_empty() {
+            continue;
         }
         items.push(item_data);
     }

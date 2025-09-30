@@ -22,6 +22,14 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
         .join(format!("{}.xml", tree_data.file_name));
     let xml_data: String = to_xml_data(tree_data, &build_setting.keyword);
+    if xml_data.is_empty() {
+        log::debug!(
+            "Export [{}] skipped: {}",
+            build_setting.display_name,
+            target_path.to_str().unwrap()
+        );
+        return;
+    }
     // 创建XML文件
     let file: Result<File, Error> = File::create(&target_path);
     if file.is_err() {
@@ -81,6 +89,9 @@ fn to_xml_data(tree_data: &TreeData, keyword: &str) -> String {
 */
 fn normal_xml_data(tree_data: &TreeData, keyword: &str) -> String {
     let (valids_main, valids) = tree_data.content.get_valid_normal_heads(keyword);
+    if valids_main.is_empty() || valids.is_empty() {
+        return String::new();
+    }
     let mut xml_content: String = String::new();
 
     // XML头部
@@ -220,6 +231,9 @@ fn kv_xml_data(tree_data: &TreeData, keyword: &str) -> String {
 */
 fn localize_xml_data(tree_data: &TreeData, keyword: &str) -> String {
     let (valids_main, valids) = tree_data.content.get_valid_normal_heads(keyword);
+    if valids_main.is_empty() || valids.is_empty() {
+        return String::new();
+    }
     let mut xml_content: String = String::new();
 
     // XML头部

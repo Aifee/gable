@@ -68,6 +68,9 @@ impl TreeData {
      */
     fn normal_data(&self, keyword: &str) -> Vec<Map<String, Value>> {
         let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
+        if valids_main.is_empty() || valids.is_empty() {
+            return Vec::new();
+        }
         let mut items: Vec<Map<String, Value>> = Vec::new();
         let max_row: usize = self.content.get_max_row();
         for row_index in constant::TABLE_NORMAL_ROW_TOTAL..=max_row {
@@ -137,6 +140,9 @@ impl TreeData {
                 let value: Value = Self::get_value(type_cell, value_cell);
                 item_data.insert(field_cell.value.clone(), value);
             }
+            if item_data.is_empty() {
+                continue;
+            }
             items.push(item_data);
         }
         return items;
@@ -149,6 +155,9 @@ impl TreeData {
      */
     fn localize_data(&self, keyword: &str) -> Vec<Map<String, Value>> {
         let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
+        if valids_main.is_empty() || valids.is_empty() {
+            return Vec::new();
+        }
         let mut items: Vec<Map<String, Value>> = Vec::new();
         let max_row: usize = self.content.get_max_row();
         for row_index in constant::TABLE_LOCALIZE_ROW_TOTAL..=max_row {
@@ -316,6 +325,9 @@ impl TreeData {
      */
     fn normal_fields(&self, keyword: &str) -> Vec<FieldInfo> {
         let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
+        if valids_main.is_empty() || valids.is_empty() {
+            return vec![];
+        };
         let mut fields: Vec<FieldInfo> = Vec::new();
         let mut field_index: i32 = 1;
         let mut row_valid: bool = true;
@@ -426,6 +438,9 @@ impl TreeData {
      */
     fn localize_fields(&self, keyword: &str) -> Vec<FieldInfo> {
         let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
+        if valids_main.is_empty() || valids.is_empty() {
+            return vec![];
+        };
         let mut fields: Vec<FieldInfo> = Vec::new();
         let mut field_index: i32 = 1;
         let mut row_valid: bool = true;

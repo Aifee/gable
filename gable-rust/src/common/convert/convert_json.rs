@@ -18,6 +18,10 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
         .join(format!("{}.json", tree_data.file_name));
     let json_data: Vec<Map<String, Value>> = tree_data.to_values(&build_setting.keyword);
+    if json_data.is_empty() {
+        log::debug!("No data to export: {}", target_path.to_str().unwrap());
+        return;
+    }
     let contents: String =
         serde_json::to_string_pretty(&json_data).expect("JSON serialization failed");
     let result: Result<(), Error> = std::fs::write(&target_path, contents);

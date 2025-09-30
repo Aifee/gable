@@ -26,7 +26,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let file: Result<File, Error> = File::create(&target_path);
     if file.is_err() {
         log::error!(
-            "导出【{}】失败:{}",
+            "Export [{}] failed: {}",
             build_setting.display_name,
             target_path.to_str().unwrap()
         );
@@ -55,13 +55,17 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
 
         line.push('\n');
         if let Err(e) = writer.write_all(line.as_bytes()) {
-            log::error!("写入【{}】文件时出错:{}", build_setting.display_name, e);
+            log::error!("Error writing [{}] file: {}", build_setting.display_name, e);
             return;
         }
     }
 
     if let Err(e) = writer.flush() {
-        log::error!("刷新【{}】文件时出错:{}", build_setting.display_name, e);
+        log::error!(
+            "Error flushing [{}] file: {}",
+            build_setting.display_name,
+            e
+        );
         return;
     }
 

@@ -23,7 +23,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let result: Result<(), Error> = std::fs::write(&target_path, contents);
     if result.is_err() {
         log::error!(
-            "导出【{}】失败:{}",
+            "Export [{}] failed: {}",
             build_setting.display_name,
             target_path.to_str().unwrap()
         );

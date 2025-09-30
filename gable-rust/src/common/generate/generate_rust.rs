@@ -1,7 +1,7 @@
 use std::{fs, io::Error, path::PathBuf};
 
 use crate::{
-    common::{setting::BuildSetting, utils},
+    common::{generate::generate, setting::BuildSetting, utils},
     gui::datas::{
         edata_type::EDataType,
         esheet_type::ESheetType,
@@ -42,7 +42,8 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
     let tera: Tera = tera_result.unwrap();
     let mut context: Context = Context::new();
-    context.insert("STRUCT_NAME", &tree_data.file_name);
+    let struct_name = generate::capitalize_first_letter(&tree_data.file_name);
+    context.insert("STRUCT_NAME", &struct_name);
     context.insert("fields", &rust_fields);
     let rendered_result: Result<String, tera::Error> = match tree_data.gable_type {
         ESheetType::Normal | ESheetType::Localize | ESheetType::KV => {

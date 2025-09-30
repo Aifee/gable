@@ -1,7 +1,7 @@
 use std::{fs, io::Error, path::PathBuf};
 
 use crate::{
-    common::{setting::BuildSetting, utils},
+    common::{generate::generate, setting::BuildSetting, utils},
     gui::datas::{
         edata_type::EDataType,
         esheet_type::ESheetType,
@@ -88,7 +88,7 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<GolangFieldInfo> {
     let mut go_fields: Vec<GolangFieldInfo> = Vec::new();
     for field in fields {
         // Go语言字段名需要首字母大写以保证可导出
-        let field_name: String = capitalize_first_letter(&field.field_name);
+        let field_name: String = generate::capitalize_first_letter(&field.field_name);
 
         let go_type = match field.field_type {
             EDataType::Int | EDataType::Time => "int",
@@ -114,9 +114,9 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<GolangFieldInfo> {
                 if !field.field_link.is_empty() {
                     if let Some(pos) = field.field_link.find("@") {
                         let part = &field.field_link[pos + 1..];
-                        enum_name = capitalize_first_letter(part);
+                        enum_name = generate::capitalize_first_letter(part);
                     } else {
-                        enum_name = capitalize_first_letter(&field.field_link);
+                        enum_name = generate::capitalize_first_letter(&field.field_link);
                     };
                 }
                 &enum_name.clone()
@@ -184,17 +184,4 @@ fn collect_imports(fields: &Vec<GolangFieldInfo>) -> Vec<String> {
     }
 
     imports
-}
-
-/**
- * 首字母大写，遵循go语言命名规则
- * @param s 字符串
- * @return 转换后的字符串
-*/
-fn capitalize_first_letter(s: &str) -> String {
-    let mut chars = s.chars();
-    match chars.next() {
-        None => String::new(),
-        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-    }
 }

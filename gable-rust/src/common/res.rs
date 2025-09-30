@@ -28,6 +28,8 @@ pub const ICON_TYPESCRIPT: &[u8] = include_bytes!("../../assets/icons/typescript
 pub const ICON_RUST: &[u8] = include_bytes!("../../assets/icons/rust.png");
 // pub const ICON_YAML: &[u8] = include_bytes!("../../assets/icons/yaml.png");
 
+pub const CONFIG_LOCALIZATION: &str = "assets/locales/localization.json";
+
 /**
  * 加载图片
 */

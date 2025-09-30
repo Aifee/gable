@@ -4,7 +4,6 @@ pub mod gable_about;
 pub mod gable_app;
 pub mod gable_build_setting;
 pub mod gable_explorer;
-pub mod localization;
 pub mod form {
     pub mod gable_form;
     pub mod opened_excel;

@@ -163,3 +163,16 @@ fn system_command(command: &str, path: &PathBuf) {
         }
     }
 }
+
+/**
+ * 首字母大写，遵循go语言命名规则
+ * @param s 字符串
+ * @return 转换后的字符串
+*/
+pub fn capitalize_first_letter(s: &str) -> String {
+    let mut chars = s.chars();
+    match chars.next() {
+        None => String::new(),
+        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+    }
+}

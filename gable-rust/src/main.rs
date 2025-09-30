@@ -3,7 +3,6 @@
 mod cli;
 mod common;
 mod gui;
-use crate::gui::localization;
 use eframe::egui;
 use gui::gable_app::GableApp;
 use std::env;

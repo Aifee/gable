@@ -49,7 +49,9 @@ pub enum EDataType {
 }
 
 impl EDataType {
-    // 转换字符串为枚举
+    /**
+     * 转换字符串为枚举
+     */
     pub fn convert(value: &str) -> EDataType {
         if value.is_empty() {
             return EDataType::String;

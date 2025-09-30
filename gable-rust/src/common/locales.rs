@@ -1,5 +1,5 @@
 use crate::common::localization::Localization;
-use crate::common::res;
+use crate::common::{res, setting};
 use std::collections::HashMap;
 use std::fs;
 use std::sync::RwLock;
@@ -20,6 +20,14 @@ impl ELocalizationType {
             ELocalizationType::English => "en",
         }
     }
+
+    pub fn from_str(value: &str) -> ELocalizationType {
+        match value {
+            "zh" => ELocalizationType::Chinese,
+            "en" => ELocalizationType::English,
+            _ => ELocalizationType::Chinese,
+        }
+    }
 }
 pub struct Locales {
     languages: HashMap<String, Localization>,
@@ -29,9 +37,11 @@ pub struct Locales {
 
 impl Locales {
     pub fn new() -> Self {
+        let set_lang: String = setting::get_language();
+        let lang_type: ELocalizationType = ELocalizationType::from_str(&set_lang);
         Self {
             languages: HashMap::new(),
-            current_language: RwLock::new(ELocalizationType::Chinese),
+            current_language: RwLock::new(lang_type),
             supported: RwLock::new(vec![ELocalizationType::Chinese, ELocalizationType::English]),
         }
     }
@@ -43,7 +53,7 @@ impl Locales {
         &mut self,
         file_path: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let content = fs::read_to_string(file_path)?;
+        let content: String = fs::read_to_string(file_path)?;
         let lang_pack: Vec<Localization> = serde_json::from_str(&content)?;
         for v in lang_pack.iter() {
             if !self.languages.contains_key(&v.key.clone()) {
@@ -62,6 +72,7 @@ impl Locales {
         if supported.contains(code) {
             let mut current = self.current_language.write().unwrap();
             *current = code.clone();
+            let _ = setting::set_language(&code);
             true
         } else {
             false

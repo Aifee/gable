@@ -1,3 +1,4 @@
+use crate::common::locales::ELocalizationType;
 use crate::common::{constant, utils};
 use crate::gui::datas::esheet_type::ESheetType;
 use crate::gui::datas::{edevelop_type::EDevelopType, etarget_type::ETargetType};
@@ -61,12 +62,14 @@ impl Default for BuildSetting {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppSettings {
     pub workspace: Option<String>,
+    pub language: Option<String>,
     pub build_settings: Vec<BuildSetting>,
 }
 
 lazy_static! {
     pub static ref APP_SETTINGS: RwLock<AppSettings> = RwLock::new(AppSettings {
         workspace: None,
+        language: None,
         build_settings: Vec::new(),
     });
 }
@@ -125,6 +128,21 @@ pub fn get_workspace() -> PathBuf {
         PathBuf::from(".")
     };
     root_path
+}
+
+pub fn get_language() -> String {
+    let settings = APP_SETTINGS.read().unwrap();
+    if let Some(lang) = settings.language.as_ref() {
+        lang.clone()
+    } else {
+        ELocalizationType::Chinese.as_str().to_string()
+    }
+}
+
+pub fn set_language(lang: &ELocalizationType) -> io::Result<()> {
+    let mut settings = APP_SETTINGS.write().unwrap();
+    settings.language = Some(lang.as_str().to_string());
+    save_build_settings_to_file(&*settings)
 }
 
 /**

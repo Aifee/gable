@@ -1,6 +1,6 @@
 use crate::{
     common::{
-        localization_manager, res,
+        locales, res,
         setting::{self, BuildSetting},
         utils,
     },
@@ -42,7 +42,7 @@ impl GableBuildSetting {
 
         let mut visible = self.visible;
 
-        let window = Window::new(localization_manager::t("build_configuration"))
+        let window = Window::new(locales::t("build_configuration"))
             .resizable(true)
             .collapsible(false)
             .default_width(960.0)
@@ -75,7 +75,7 @@ impl GableBuildSetting {
     }
 
     fn ongui_left_panel(&mut self, ui: &mut Ui) {
-        ui.heading(localization_manager::t("development_environment"));
+        ui.heading(locales::t("development_environment"));
         let build_settings: Vec<BuildSetting> = setting::clone_build_settings();
         let available_height = ui.available_height();
         let combo_area_height = 40.0;
@@ -136,7 +136,7 @@ impl GableBuildSetting {
                     });
                 ui.add_space(5.0);
                 if ui
-                    .add_sized([120.0, 26.0], Button::new(localization_manager::t("add")))
+                    .add_sized([120.0, 26.0], Button::new(locales::t("add")))
                     .clicked()
                 {
                     if let Some(index) = setting::add_build_setting(self.add_selected) {
@@ -151,10 +151,7 @@ impl GableBuildSetting {
         ui.horizontal(|ui| {
             ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
                 if ui
-                    .add_sized(
-                        [165.0, 26.0],
-                        Button::new(localization_manager::t("delete")),
-                    )
+                    .add_sized([165.0, 26.0], Button::new(locales::t("delete")))
                     .clicked()
                 {
                     self.selected_index =
@@ -168,10 +165,7 @@ impl GableBuildSetting {
 
             ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
                 if ui
-                    .add_sized(
-                        [165.0, 26.0],
-                        Button::new(localization_manager::t("export_all")),
-                    )
+                    .add_sized([165.0, 26.0], Button::new(locales::t("export_all")))
                     .clicked()
                 {
                     if let Some(build_settings) = setting::get_build_setting(self.selected_index) {
@@ -179,7 +173,7 @@ impl GableBuildSetting {
                     }
                 }
                 if ui
-                    .add_sized([165.0, 26.0], Button::new(localization_manager::t("build")))
+                    .add_sized([165.0, 26.0], Button::new(locales::t("build")))
                     .clicked()
                 {}
             });
@@ -216,7 +210,7 @@ impl GableBuildSetting {
                 ui.set_min_size(item_size);
                 ui.add_sized(
                     title_size,
-                    Label::new(localization_manager::t("development_environment")).truncate(),
+                    Label::new(locales::t("development_environment")).truncate(),
                 );
                 ui.allocate_ui_with_layout(content_size, Layout::left_to_right(Align::Min), |ui| {
                     ui.label(build_settings.dev.to_string());
@@ -227,10 +221,7 @@ impl GableBuildSetting {
         ui.horizontal(|ui| {
             ui.group(|ui| {
                 ui.set_min_size(item_size);
-                ui.add_sized(
-                    title_size,
-                    Label::new(localization_manager::t("tag")).truncate(),
-                );
+                ui.add_sized(title_size, Label::new(locales::t("tag")).truncate());
                 ui.add_sized(
                     content_size,
                     TextEdit::singleline(&mut build_settings.display_name),
@@ -241,10 +232,7 @@ impl GableBuildSetting {
         ui.horizontal(|ui| {
             ui.group(|ui| {
                 ui.set_min_size(item_size);
-                ui.add_sized(
-                    title_size,
-                    Label::new(localization_manager::t("keyword")).truncate(),
-                );
+                ui.add_sized(title_size, Label::new(locales::t("keyword")).truncate());
                 ui.add_sized(
                     content_size,
                     TextEdit::singleline(&mut build_settings.keyword),
@@ -256,10 +244,7 @@ impl GableBuildSetting {
             ui.group(|ui| {
                 ui.set_min_size(item_size);
 
-                ui.add_sized(
-                    title_size,
-                    Label::new(localization_manager::t("export_type")).truncate(),
-                );
+                ui.add_sized(title_size, Label::new(locales::t("export_type")).truncate());
                 ComboBox::from_id_salt("build_settings.target_type")
                     .selected_text(format!("{:?}", build_settings.target_type))
                     .show_ui(ui, |ui| {
@@ -280,7 +265,7 @@ impl GableBuildSetting {
                     ui.set_min_size(item_size);
                     ui.add_sized(
                         title_size,
-                        Label::new(localization_manager::t("proto_version")).truncate(),
+                        Label::new(locales::t("proto_version")).truncate(),
                     );
                     ui.allocate_ui_with_layout(
                         content_size,
@@ -299,21 +284,18 @@ impl GableBuildSetting {
         ui.horizontal(|ui| {
             ui.group(|ui| {
                 ui.set_min_size(item_size);
-                ui.add_sized(
-                    title_size,
-                    Label::new(localization_manager::t("export_path")).truncate(),
-                );
+                ui.add_sized(title_size, Label::new(locales::t("export_path")).truncate());
                 ui.allocate_ui_with_layout(second_size, Layout::left_to_right(Align::Min), |ui| {
                     let absolute_path: PathBuf =
                         utils::get_absolute_path(&build_settings.target_path);
                     ui.add(Label::new(absolute_path.to_string_lossy().to_string()).truncate());
                 });
                 if ui
-                    .add_sized(third_size, Button::new(localization_manager::t("browse")))
+                    .add_sized(third_size, Button::new(locales::t("browse")))
                     .clicked()
                 {
                     if let Some(path) = rfd::FileDialog::new()
-                        .set_title(localization_manager::t("select_target_path"))
+                        .set_title(locales::t("select_target_path"))
                         .pick_folder()
                     {
                         let re_path: PathBuf = utils::get_env_relative_path(&path);
@@ -328,7 +310,7 @@ impl GableBuildSetting {
                 ui.set_min_size(item_size);
                 ui.add_sized(
                     title_size,
-                    Label::new(localization_manager::t("generate_script")).truncate(),
+                    Label::new(locales::t("generate_script")).truncate(),
                 );
                 ui.allocate_ui_with_layout(content_size, Layout::left_to_right(Align::Min), |ui| {
                     ui.add(Checkbox::new(&mut build_settings.generate_script, ""))
@@ -340,10 +322,7 @@ impl GableBuildSetting {
             ui.horizontal(|ui| {
                 ui.group(|ui| {
                     ui.set_min_size(item_size);
-                    ui.add_sized(
-                        title_size,
-                        Label::new(localization_manager::t("script_path")).truncate(),
-                    );
+                    ui.add_sized(title_size, Label::new(locales::t("script_path")).truncate());
                     ui.allocate_ui_with_layout(
                         second_size,
                         Layout::left_to_right(Align::Min),
@@ -356,11 +335,11 @@ impl GableBuildSetting {
                         },
                     );
                     if ui
-                        .add_sized(third_size, Button::new(localization_manager::t("browse")))
+                        .add_sized(third_size, Button::new(locales::t("browse")))
                         .clicked()
                     {
                         if let Some(path) = rfd::FileDialog::new()
-                            .set_title(localization_manager::t("select_target_path"))
+                            .set_title(locales::t("select_target_path"))
                             .pick_folder()
                         {
                             let re_path: PathBuf = utils::get_env_relative_path(&path);
@@ -376,7 +355,7 @@ impl GableBuildSetting {
                     ui.set_min_size(item_size);
                     ui.add_sized(
                         title_size,
-                        Label::new(localization_manager::t("custom_template")).truncate(),
+                        Label::new(locales::t("custom_template")).truncate(),
                     );
                     ui.allocate_ui_with_layout(
                         content_size,
@@ -392,7 +371,7 @@ impl GableBuildSetting {
                         ui.set_min_size(item_size);
                         ui.add_sized(
                             title_size,
-                            Label::new(localization_manager::t("template_file")).truncate(),
+                            Label::new(locales::t("template_file")).truncate(),
                         );
                         ui.allocate_ui_with_layout(
                             second_size,
@@ -407,11 +386,11 @@ impl GableBuildSetting {
                             },
                         );
                         if ui
-                            .add_sized(third_size, Button::new(localization_manager::t("browse")))
+                            .add_sized(third_size, Button::new(locales::t("browse")))
                             .clicked()
                         {
                             if let Some(path) = rfd::FileDialog::new()
-                                .set_title(localization_manager::t("select_file"))
+                                .set_title(locales::t("select_file"))
                                 .pick_file()
                             {
                                 let re_path: PathBuf = utils::get_env_relative_path(&path);
@@ -440,7 +419,7 @@ impl GableBuildSetting {
             ui.horizontal(|ui| {
                 ui.add_sized(
                     title_size,
-                    Label::new(localization_manager::t("post_processing")).truncate(),
+                    Label::new(locales::t("post_processing")).truncate(),
                 );
                 ui.add_sized(content_size, Label::new(""));
             });

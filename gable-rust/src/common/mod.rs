@@ -1,7 +1,7 @@
 pub mod constant;
 pub mod excel_util;
+pub mod locales;
 pub mod localization;
-pub mod localization_manager;
 pub mod res;
 pub mod setting;
 pub mod utils;

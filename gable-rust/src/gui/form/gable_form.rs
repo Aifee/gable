@@ -1,4 +1,4 @@
-use crate::common::{constant, localization_manager};
+use crate::common::{constant, locales};
 use crate::gui::component;
 use crate::gui::datas::tree_item::TreeItem;
 use crate::gui::form::opened_excel::OpenedExcel;
@@ -84,14 +84,14 @@ impl GableForm {
                 )
                 .show(ctx, |ui| {
                     ui.horizontal(|ui| {
-                        ui.label(localization_manager::t("go_back"));
+                        ui.label(locales::t("go_back"));
                         ui.add_sized(title_size, TextEdit::singleline(&mut self.goto_row_input))
-                            .on_hover_text(localization_manager::t("row"));
+                            .on_hover_text(locales::t("row"));
 
                         ui.label(":");
                         ui.add_sized(title_size, TextEdit::singleline(&mut self.goto_col_input))
-                            .on_hover_text(localization_manager::t("column"));
-                        if ui.button(localization_manager::t("confirm")).clicked() {
+                            .on_hover_text(locales::t("column"));
+                        if ui.button(locales::t("confirm")).clicked() {
                             if let Ok(row) = self.goto_row_input.parse::<u64>() {
                                 self.scroll_to_row = Some(row.saturating_sub(1));
                             }
@@ -116,7 +116,7 @@ impl GableForm {
         CentralPanel::default().show(ctx, |ui| {
             ui.set_min_height(100.0);
             if self.excels.is_empty() {
-                ui.centered_and_justified(|ui| ui.label(localization_manager::t("double_click")));
+                ui.centered_and_justified(|ui| ui.label(locales::t("double_click")));
                 return;
             }
 
@@ -288,7 +288,7 @@ impl GableForm {
     fn ongui_scroll_table(&mut self, ui: &mut Ui) {
         let sheet: Option<&OpenedSheet> = self.get_sheet();
         if sheet.is_none() {
-            ui.centered_and_justified(|ui| ui.label(localization_manager::t("selected_tab")));
+            ui.centered_and_justified(|ui| ui.label(locales::t("selected_tab")));
             return;
         }
         let sheet: &OpenedSheet = sheet.unwrap();

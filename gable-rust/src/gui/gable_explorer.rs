@@ -1,5 +1,5 @@
 use crate::{
-    common::{constant, excel_util, localization_manager, setting, utils},
+    common::{constant, excel_util, locales, setting, utils},
     gui::{
         datas::{eitem_type::EItemType, gables, tree_item::TreeItem},
         gable_app::GableApp,
@@ -62,22 +62,19 @@ impl GableExplorer {
                             eframe::egui::Sense::click_and_drag(),
                         )
                         .context_menu(|ui| {
-                            if ui.button(localization_manager::t("new_file")).clicked() {
+                            if ui.button(locales::t("new_file")).clicked() {
                                 GableApp::create_excel_command(
                                     setting::get_workspace().to_string_lossy().to_string(),
                                 );
                                 ui.close();
                             }
-                            if ui.button(localization_manager::t("new_folder")).clicked() {
+                            if ui.button(locales::t("new_folder")).clicked() {
                                 GableApp::create_folder_command(
                                     setting::get_workspace().to_string_lossy().to_string(),
                                 );
                                 ui.close();
                             }
-                            if ui
-                                .button(localization_manager::t("show_in_resource_manager"))
-                                .clicked()
-                            {
+                            if ui.button(locales::t("show_in_resource_manager")).clicked() {
                                 if let Some(path) = setting::get_workspace().to_str() {
                                     if let Err(e) = utils::open_in_explorer(path) {
                                         log::error!("Cannot open the Resource Manager: {}", e);
@@ -208,18 +205,18 @@ impl GableExplorer {
     fn show_context_menu(ui: &mut Ui, item: &mut TreeItem) {
         match item.item_type {
             EItemType::Folder => {
-                if ui.button(localization_manager::t("new_file")).clicked() {
+                if ui.button(locales::t("new_file")).clicked() {
                     GableApp::create_excel_command(item.fullpath.clone());
                     ui.close();
                 }
-                if ui.button(localization_manager::t("new_folder")).clicked() {
+                if ui.button(locales::t("new_folder")).clicked() {
                     GableApp::create_folder_command(item.fullpath.clone());
                     ui.close();
                 }
-                if ui.button(localization_manager::t("import")).clicked() {
+                if ui.button(locales::t("import")).clicked() {
                     ui.close();
                     if let Some(files) = FileDialog::new()
-                        .set_title(localization_manager::t("select_import_file"))
+                        .set_title(locales::t("select_import_file"))
                         .add_filter("Excel Files", &["xlsx", "xls"])
                         .pick_files()
                     {
@@ -227,14 +224,11 @@ impl GableExplorer {
                     }
                 }
                 ui.separator();
-                if ui.button(localization_manager::t("delete")).clicked() {
+                if ui.button(locales::t("delete")).clicked() {
                     GableApp::delete_comand(item.fullpath.clone());
                     ui.close();
                 }
-                if ui
-                    .button(localization_manager::t("show_in_resource_manager"))
-                    .clicked()
-                {
+                if ui.button(locales::t("show_in_resource_manager")).clicked() {
                     if let Err(e) = utils::open_in_explorer(&item.fullpath) {
                         log::error!("Cannot open the Resource Manager: {}", e);
                     }
@@ -242,40 +236,34 @@ impl GableExplorer {
                 }
             }
             EItemType::Excel => {
-                if ui.button(localization_manager::t("new_file")).clicked() {
+                if ui.button(locales::t("new_file")).clicked() {
                     GableApp::create_sheet_command(item.fullpath.clone());
                     ui.close();
                 }
-                if ui.button(localization_manager::t("edit")).clicked() {
+                if ui.button(locales::t("edit")).clicked() {
                     GableApp::editor_command(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
-                if ui.button(localization_manager::t("export")).clicked() {
+                if ui.button(locales::t("export")).clicked() {
                     GableApp::convert_item_command(item.fullpath.clone());
                     ui.close();
                 }
-                if ui
-                    .button(localization_manager::t("generate_script"))
-                    .clicked()
-                {
+                if ui.button(locales::t("generate_script")).clicked() {
                     GableApp::generate_item_command(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
-                if ui.button(localization_manager::t("rename")).clicked() {
+                if ui.button(locales::t("rename")).clicked() {
                     GableApp::editname_command(item.fullpath.clone());
                     ui.close();
                 }
-                if ui.button(localization_manager::t("delete")).clicked() {
+                if ui.button(locales::t("delete")).clicked() {
                     GableApp::delete_comand(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
-                if ui
-                    .button(localization_manager::t("show_in_resource_manager"))
-                    .clicked()
-                {
+                if ui.button(locales::t("show_in_resource_manager")).clicked() {
                     if let Some(path) = &item.parent {
                         if let Err(e) = utils::open_in_explorer(&path) {
                             log::error!("Cannot open the Resource Manager: {}", e);
@@ -285,36 +273,30 @@ impl GableExplorer {
                 }
             }
             EItemType::Sheet => {
-                if ui.button(localization_manager::t("edit")).clicked() {
+                if ui.button(locales::t("edit")).clicked() {
                     GableApp::editor_command(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
-                if ui.button(localization_manager::t("export")).clicked() {
+                if ui.button(locales::t("export")).clicked() {
                     GableApp::convert_item_command(item.fullpath.clone());
                     ui.close();
                 }
-                if ui
-                    .button(localization_manager::t("generate_script"))
-                    .clicked()
-                {
+                if ui.button(locales::t("generate_script")).clicked() {
                     GableApp::generate_item_command(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
-                if ui.button(localization_manager::t("rename")).clicked() {
+                if ui.button(locales::t("rename")).clicked() {
                     GableApp::editname_command(item.fullpath.clone());
                     ui.close();
                 }
-                if ui.button(localization_manager::t("delete")).clicked() {
+                if ui.button(locales::t("delete")).clicked() {
                     GableApp::delete_comand(item.fullpath.clone());
                     ui.close();
                 }
                 ui.separator();
-                if ui
-                    .button(localization_manager::t("show_in_resource_manager"))
-                    .clicked()
-                {
+                if ui.button(locales::t("show_in_resource_manager")).clicked() {
                     if let Err(e) = utils::open_in_explorer(&item.fullpath) {
                         log::error!("Cannot open the Resource Manager: {}", e);
                     }
@@ -348,7 +330,7 @@ impl GableExplorer {
 
         if is_folder {
             let root_path: PathBuf = PathBuf::from(&target_path.unwrap());
-            let new_folder: String = localization_manager::t("new_folder");
+            let new_folder: String = locales::t("new_folder");
             let new_folder_path: PathBuf = Path::new(&root_path).join(&new_folder);
             let mut new_path: PathBuf = new_folder_path.clone();
             let mut counter: i32 = 1;

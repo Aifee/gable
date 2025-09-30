@@ -21,13 +21,13 @@ impl ELocalizationType {
         }
     }
 }
-pub struct LocalizationManager {
+pub struct Locales {
     languages: HashMap<String, Localization>,
     current_language: RwLock<ELocalizationType>,
     supported: RwLock<Vec<ELocalizationType>>,
 }
 
-impl LocalizationManager {
+impl Locales {
     pub fn new() -> Self {
         Self {
             languages: HashMap::new(),
@@ -115,8 +115,8 @@ impl LocalizationManager {
 
 // 全局本地化管理器实例
 lazy_static::lazy_static! {
-    pub static ref LOCALIZATION_MANAGER: LocalizationManager = {
-        let mut manager = LocalizationManager::new();
+    pub static ref LOCALIZATION_MANAGER: Locales = {
+        let mut manager = Locales::new();
         match manager.load_language_from_json(res::CONFIG_LOCALIZATION) {
             Ok(_) => {
                 println!("Successfully loaded language packs from {}", res::CONFIG_LOCALIZATION);

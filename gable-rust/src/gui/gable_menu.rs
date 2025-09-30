@@ -1,6 +1,6 @@
 use crate::common::convert::convert;
 use crate::common::generate::generate;
-use crate::common::localization_manager;
+use crate::common::locales;
 use crate::gui::datas::gables;
 use crate::{common::setting, gui::gable_popup};
 use eframe::egui::{Color32, Context, MenuBar, TopBottomPanel, ViewportCommand, Visuals};
@@ -59,22 +59,16 @@ impl GableMenu {
     pub fn ongui(&mut self, ctx: &Context) {
         TopBottomPanel::top("menu_bar").show(ctx, |ui| {
             MenuBar::new().ui(ui, |ui| {
-                ui.menu_button(localization_manager::t("file_menu").as_str(), |ui| {
-                    if ui
-                        .button(localization_manager::t("new_file").as_str())
-                        .clicked()
-                    {}
-                    if ui
-                        .button(localization_manager::t("new_folder").as_str())
-                        .clicked()
-                    {}
+                ui.menu_button(locales::t("file_menu").as_str(), |ui| {
+                    if ui.button(locales::t("new_file").as_str()).clicked() {}
+                    if ui.button(locales::t("new_folder").as_str()).clicked() {}
                     ui.separator();
                     if ui
-                        .button(localization_manager::t("open_project_directory").as_str())
+                        .button(locales::t("open_project_directory").as_str())
                         .clicked()
                     {
                         if let Some(path) = rfd::FileDialog::new()
-                            .set_title(localization_manager::t("select_project_directory").as_str())
+                            .set_title(locales::t("select_project_directory").as_str())
                             .pick_folder()
                         {
                             let path_str: String = path.to_string_lossy().to_string();
@@ -86,53 +80,35 @@ impl GableMenu {
                         }
                     }
                     ui.separator();
-                    if ui
-                        .button(localization_manager::t("settings").as_str())
-                        .clicked()
-                    {}
-                    if ui
-                        .button(localization_manager::t("exit").as_str())
-                        .clicked()
-                    {
+                    if ui.button(locales::t("settings").as_str()).clicked() {}
+                    if ui.button(locales::t("exit").as_str()).clicked() {
                         ctx.send_viewport_cmd(ViewportCommand::Close);
                     }
                 });
-                ui.menu_button(localization_manager::t("build").as_str(), |ui| {
-                    if ui
-                        .button(localization_manager::t("build_settings").as_str())
-                        .clicked()
-                    {
+                ui.menu_button(locales::t("build").as_str(), |ui| {
+                    if ui.button(locales::t("build_settings").as_str()).clicked() {
                         gable_popup::open_window(gable_popup::WINDOW_BUILD_SETTING);
                     }
-                    if ui
-                        .button(localization_manager::t("quick_build").as_str())
-                        .clicked()
-                    {
+                    if ui.button(locales::t("quick_build").as_str()).clicked() {
                         convert::from_all();
                         generate::from_all();
                     }
                 });
-                ui.menu_button(localization_manager::t("select").as_str(), |ui| {
-                    if ui
-                        .button(localization_manager::t("import_excel").as_str())
-                        .clicked()
-                    {}
+                ui.menu_button(locales::t("select").as_str(), |ui| {
+                    if ui.button(locales::t("import_excel").as_str()).clicked() {}
                 });
-                ui.menu_button(localization_manager::t("help").as_str(), |ui| {
-                    if ui
-                        .button(localization_manager::t("about").as_str())
-                        .clicked()
-                    {
+                ui.menu_button(locales::t("help").as_str(), |ui| {
+                    if ui.button(locales::t("about").as_str()).clicked() {
                         gable_popup::open_window(gable_popup::WINDOW_ABOUT);
                     }
-                    ui.menu_button(localization_manager::t("Language").as_str(), |ui| {
-                        for v in localization_manager::get_available_languages().iter() {
-                            if ui.button(localization_manager::t(v.as_str())).clicked() {
-                                localization_manager::set_language(&v);
+                    ui.menu_button(locales::t("Language").as_str(), |ui| {
+                        for v in locales::get_available_languages().iter() {
+                            if ui.button(locales::t(v.as_str())).clicked() {
+                                locales::set_language(&v);
                             }
                         }
                     });
-                    ui.menu_button(localization_manager::t("theme").as_str(), |ui| {
+                    ui.menu_button(locales::t("theme").as_str(), |ui| {
                         if ui.button("Light").clicked() {
                             self.set_theme(ctx, "Light");
                         }

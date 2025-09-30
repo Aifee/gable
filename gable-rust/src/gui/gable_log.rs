@@ -1,5 +1,5 @@
 use crate::{
-    common::localization_manager,
+    common::locales,
     gui::{component, datas::log::LogTrace},
 };
 use eframe::egui::{Context, Frame, ScrollArea, TopBottomPanel, Ui};
@@ -43,22 +43,22 @@ impl GableLog {
                 .header(self.row_height, |mut header| {
                     header.col(|ui| {
                         ui.centered_and_justified(|ui| {
-                            ui.label(localization_manager::t("time"));
+                            ui.label(locales::t("time"));
                         });
                     });
                     header.col(|ui| {
                         ui.centered_and_justified(|ui| {
-                            ui.label(localization_manager::t("level"));
+                            ui.label(locales::t("level"));
                         });
                     });
                     header.col(|ui| {
                         ui.centered_and_justified(|ui| {
-                            ui.label(localization_manager::t("target"));
+                            ui.label(locales::t("target"));
                         });
                     });
                     header.col(|ui| {
                         ui.centered_and_justified(|ui| {
-                            ui.label(localization_manager::t("message"));
+                            ui.label(locales::t("message"));
                         });
                     });
                 })
@@ -95,7 +95,7 @@ impl GableLog {
                             } else {
                                 body.row(self.row_height, |mut row| {
                                     row.col(|ui| {
-                                        ui.label(localization_manager::t("temporary_log"));
+                                        ui.label(locales::t("temporary_log"));
                                     });
                                     row.col(|ui| {
                                         ui.label("");
@@ -112,7 +112,7 @@ impl GableLog {
                     } else {
                         body.row(self.row_height, |mut row| {
                             row.col(|ui| {
-                                ui.label(localization_manager::t("log_system_not_initialized"));
+                                ui.label(locales::t("log_system_not_initialized"));
                             });
                             row.col(|ui| {
                                 ui.label("");

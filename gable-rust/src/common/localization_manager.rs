@@ -106,11 +106,11 @@ impl LocalizationManager {
     /**
      * 获取可用语言列表
      */
-    pub fn get_available_languages(&self) -> Vec<String> {
-        let mut list: Vec<String> = vec![];
+    pub fn get_available_languages(&self) -> Vec<ELocalizationType> {
+        let mut list: Vec<ELocalizationType> = vec![];
         let supported = self.supported.read().unwrap();
         for lang in supported.iter() {
-            list.push(self.t(lang.as_str()));
+            list.push(*lang);
         }
         list
     }
@@ -147,6 +147,6 @@ pub fn set_language(code: &ELocalizationType) -> bool {
 }
 
 /// 获取可用语言列表
-pub fn get_available_languages() -> Vec<String> {
+pub fn get_available_languages() -> Vec<ELocalizationType> {
     LOCALIZATION_MANAGER.get_available_languages()
 }

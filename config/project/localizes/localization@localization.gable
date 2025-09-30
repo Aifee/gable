@@ -85,6 +85,28 @@
     ],
     [
       {
+        "value": "zh"
+      },
+      {
+        "value": "中文"
+      },
+      {
+        "value": "中文"
+      }
+    ],
+    [
+      {
+        "value": "en"
+      },
+      {
+        "value": "English"
+      },
+      {
+        "value": "English"
+      }
+    ],
+    [
+      {
         "value": "file_menu"
       },
       {

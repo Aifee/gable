@@ -5,6 +5,16 @@
     "en": "Gable"
   },
   {
+    "key": "zh",
+    "zh": "中文",
+    "en": "中文"
+  },
+  {
+    "key": "en",
+    "zh": "English",
+    "en": "English"
+  },
+  {
     "key": "file_menu",
     "zh": "菜单",
     "en": "Menu"

@@ -132,6 +132,13 @@ impl GableMenu {
                     {
                         gable_popup::open_window(gable_popup::WINDOW_ABOUT);
                     }
+                    ui.menu_button(localization_manager::t("Language").as_str(), |ui| {
+                        for v in localization_manager::get_available_languages().iter() {
+                            if ui.button(localization_manager::t(v.as_str())).clicked() {
+                                localization_manager::set_language(&v);
+                            }
+                        }
+                    });
                     ui.menu_button(localization_manager::t("theme").as_str(), |ui| {
                         if ui.button("Light").clicked() {
                             self.set_theme(ctx, "Light");

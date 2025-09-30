@@ -32,18 +32,22 @@
     ],
     [
       {
-        "value": "cs|java"
+        "value": "cs|java",
+        "bg_fill": "theme:9,tint:0.8"
       },
       {
-        "value": "cs|java"
+        "value": "cs|java",
+        "bg_fill": "theme:9,tint:0.8"
       }
     ],
     [
       {
-        "value": ""
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
       },
       {
-        "value": ""
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
       }
     ]
   ],

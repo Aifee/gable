@@ -111,10 +111,15 @@ pub fn write_excel(
                     continue;
                 }
             };
-
+            let max_row: usize = match sheet_type {
+                ESheetType::Normal => constant::TABLE_NORMAL_ROW_TOTAL,
+                ESheetType::Localize => constant::TABLE_LOCALIZE_ROW_TOTAL,
+                ESheetType::KV => constant::TABLE_KV_ROW_TOTAL,
+                ESheetType::Enum => constant::TABLE_ENUM_ROW_TOTAL,
+            };
             // 预先设置单元格格式，百分率，千分率，万分率，时间，枚举类型的单元格，如果按照数据填充的话有可能会设置不到
             // 但又不能全量遍历所有的单元格，故此只针对这几种类型单独设置单元格格式
-            for row_index in 0..gable_data.heads.len() {
+            for row_index in 0..max_row {
                 if let Some(row_data) = gable_data.heads.get(row_index) {
                     for col_index in 0..row_data.len() {
                         if let Some(cell_data) = row_data.get(col_index) {

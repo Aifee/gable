@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[clap(name = "Gable CLI", version = "1.0.0", author = "Gable")]
-#[clap(about = "Gable 命令行工具", long_about = None)]
+#[clap(about = "Gable command-line tool", long_about = None)]
 struct GableCli {
     #[command(subcommand)]
     command: Option<Commands>,
@@ -27,7 +27,6 @@ enum Commands {
 }
 
 pub fn run(args: Vec<String>) -> Result<(), eframe::Error> {
-    // 确保始终有程序名作为第一个参数
     let processed_args = if args.is_empty() {
         vec!["gable".to_string(), "export".to_string()]
     } else {

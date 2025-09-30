@@ -13,7 +13,7 @@ use crate::{
 
 #[derive(Parser)]
 #[clap(name = "Gable Export", version = "1.0", author = "Gable")]
-#[clap(about = "Gable 导出工具", long_about = None)]
+#[clap(about = "Gable Export Tool", long_about = None)]
 pub struct ExportArgs {
     /// 指定输入文件（可以指定多个）
     #[clap(short = 'f', long = "files", num_args = 1..)]
@@ -42,7 +42,9 @@ pub fn run_export(args: Vec<String>) -> Result<(), eframe::Error> {
         }
     };
     if !export_args.data && !export_args.script {
-        println!("Error: 导出数据需要指定导出数据或生成脚本");
+        println!(
+            "Error: To export data, you need to specify either to export the data or to generate a script."
+        );
         let help_args: Vec<&str> = vec![args_str[0], "--help"];
         if let Err(e) = ExportArgs::try_parse_from(&help_args) {
             eprintln!("{}", e);
@@ -57,7 +59,7 @@ pub fn run_export(args: Vec<String>) -> Result<(), eframe::Error> {
     if export_args.script {
         execute_script_command(&export_args.files, &export_args.target);
     }
-    println!("导出完成");
+    println!("export successful");
     Ok(())
 }
 

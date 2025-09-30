@@ -6,7 +6,7 @@ use crate::common::excel_util;
 
 #[derive(Parser)]
 #[clap(name = "Gable Import", version = "1.0", author = "Gable")]
-#[clap(about = "Gable 导入工具", long_about = None)]
+#[clap(about = "Gable Import Tool", long_about = None)]
 pub struct ImportArgs {
     /// 指定输入文件（可以指定多个）
     #[clap(short = 'f', long = "files", num_args = 1..)]
@@ -32,7 +32,7 @@ pub fn run_import(args: Vec<String>) -> Result<(), eframe::Error> {
     };
 
     if import_args.files.is_empty() && import_args.dir.is_none() {
-        println!("Error: 需要指定导入的文件");
+        println!("Error: A file to be imported needs to be specified.");
         let help_args = vec![args_str[0], "--help"];
         if let Err(e) = ImportArgs::try_parse_from(&help_args) {
             eprintln!("{}", e);
@@ -58,7 +58,7 @@ pub fn run_import(args: Vec<String>) -> Result<(), eframe::Error> {
                 }
             }
             Err(e) => {
-                println!("Error: 无法读取目录 {}: {}", dir, e);
+                println!("Error: Unable to read the directory {}: {}", dir, e);
                 return Ok(());
             }
         }
@@ -68,17 +68,17 @@ pub fn run_import(args: Vec<String>) -> Result<(), eframe::Error> {
             if let Some(extension) = path.extension() {
                 let ext_str = extension.to_string_lossy().to_lowercase();
                 if ext_str != "xlsx" && ext_str != "xls" {
-                    print!("Error: 文件 {} 不是 Excel 文件", file);
+                    print!("Error: The file {} is not an Excel file", file);
                     continue;
                 }
             } else {
-                print!("Error: 文件 {} 不是一个有效的文件", file);
+                print!("Error: The file {} is not a valid file", file);
                 continue;
             }
             files.push(path);
         }
     }
     excel_util::import_excels(&import_args.target_path, files);
-    println!("导入完成");
+    println!("Import successful");
     Ok(())
 }

@@ -85,9 +85,6 @@ impl LocalizationManager {
                 ELocalizationType::English => {
                     return lang_pack.en.clone();
                 }
-                _ => {
-                    return lang_pack.en.clone();
-                }
             }
         };
         key.to_owned()

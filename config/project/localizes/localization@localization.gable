@@ -1,0 +1,114 @@
+{
+  "heads": [
+    [
+      {
+        "value": "唯一标识",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "中文",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "英文",
+        "bg_fill": "theme:7,tint:0.8"
+      }
+    ],
+    [
+      {
+        "value": "key",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "zh",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "en",
+        "bg_fill": "theme:9,tint:0.8"
+      }
+    ],
+    [
+      {
+        "value": "string",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "string",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "string",
+        "bg_fill": "theme:7,tint:0.8"
+      }
+    ],
+    [
+      {
+        "value": "rs"
+      },
+      {
+        "value": "rs"
+      },
+      {
+        "value": "rs"
+      }
+    ],
+    [
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      }
+    ]
+  ],
+  "cells": [
+    [
+      {
+        "value": "app_title"
+      },
+      {
+        "value": "Gable"
+      },
+      {
+        "value": "Gable"
+      }
+    ],
+    [
+      {
+        "value": "file_menu"
+      },
+      {
+        "value": "File"
+      },
+      {
+        "value": "文件"
+      }
+    ],
+    [
+      {
+        "value": "edit_menu"
+      },
+      {
+        "value": "Edit"
+      },
+      {
+        "value": "编辑"
+      }
+    ],
+    [
+      {
+        "value": "view_menu"
+      },
+      {
+        "value": "View"
+      },
+      {
+        "value": "视图"
+      }
+    ]
+  ]
+}

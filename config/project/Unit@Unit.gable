@@ -12,7 +12,7 @@
     ],
     [
       {
-        "value": "id",
+        "value": "*id",
         "bg_fill": "theme:9,tint:0.8"
       },
       {
@@ -32,11 +32,11 @@
     ],
     [
       {
-        "value": "cs|java",
+        "value": "cs|java|rs|cpp|cj|go|js|lua|py|ts",
         "bg_fill": "theme:9,tint:0.8"
       },
       {
-        "value": "cs|java",
+        "value": "cs|java|rs|cpp|cj|go|js|lua|py|ts",
         "bg_fill": "theme:9,tint:0.8"
       }
     ],

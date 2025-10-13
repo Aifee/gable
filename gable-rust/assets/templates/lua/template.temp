@@ -1,23 +1,24 @@
 -- {{CLASS_NAME}}.lua
 
-{% for import in imports %}local {{ import }} = require("{{ import }}")
-{% endfor %}
+{%- for import in imports %}
+local {{ import }} = require("{{ import }}")
+{%- endfor %}
 
 --- {{CLASS_NAME}}
 local {{CLASS_NAME}} = {
-    {% for field in fields %}
+    {%- for field in fields %}
     --- {{field.field_desc}}
     {{ field.field_name }} = nil,
-    {% endfor %}
+    {%- endfor %}
 }
 
 --- Create a new instance of {{CLASS_NAME}}
 function {{CLASS_NAME}}:new()
     local instance = {}
     setmetatable(instance, { __index = {{CLASS_NAME}} })
-    {% for field in fields %}
+    {%- for field in fields %}
     instance.{{ field.field_name }} = nil
-    {% endfor %}
+    {%- endfor %}
     return instance
 end
 

@@ -1,11 +1,9 @@
+use crate::common::{constant, excel_util};
+use clap::Parser;
 use std::{fs, path::PathBuf};
 
-use clap::Parser;
-
-use crate::common::excel_util;
-
 #[derive(Parser)]
-#[clap(name = "Gable Import", version = "1.0", author = "Aifei Liu")]
+#[clap(name = "Gable Import", version = constant::GABLE_VERSION, author = "Aifei Liu")]
 #[clap(about = "Gable Import Tool", long_about = None)]
 pub struct ImportArgs {
     /// 指定输入文件（可以指定多个）

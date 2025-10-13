@@ -32,8 +32,8 @@ impl GableAbout {
                     ui.label(version_info);
                     ui.separator();
                     ui.label(tool_desc);
-                    ui.label("© liuaf 2025");
-                    ui.label("email:329737941@qq.com");
+                    ui.label("© Aifei Liu 2025");
+                    ui.label("Email:329737941@qq.com");
                 });
             });
     }

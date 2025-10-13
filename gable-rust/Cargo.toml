@@ -1,7 +1,8 @@
 [package]
-name = "gable-rust"
-version = "0.1.0"
+name = "gable"
+version = "1.0.0"
 edition = "2024"
+authors = ["Aifei Liu <329737941@qq.com>"]
 
 [dependencies]
 calamine = "0.30.0"

@@ -4,6 +4,7 @@ use clap::Parser;
 
 use crate::{
     common::{
+        constant,
         convert::convert,
         generate::generate,
         setting::{self, BuildSetting},
@@ -12,7 +13,7 @@ use crate::{
 };
 
 #[derive(Parser)]
-#[clap(name = "Gable Export", version = "1.0", author = "Aifei Liu")]
+#[clap(name = "Gable Export", version = constant::GABLE_VERSION, author = "Aifei Liu")]
 #[clap(about = "Gable Export Tool", long_about = None)]
 pub struct ExportArgs {
     /// 指定输入文件（可以指定多个）

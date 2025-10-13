@@ -1,8 +1,11 @@
-use crate::cli::{cli_export, cli_import};
+use crate::{
+    cli::{cli_export, cli_import},
+    common::constant,
+};
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[clap(name = "Gable CLI", version = "1.0.0", author = "Gable")]
+#[clap(name = "Gable CLI", version = constant::GABLE_VERSION, author = "Gable")]
 #[clap(about = "Gable command-line tool", long_about = None)]
 struct GableCli {
     #[command(subcommand)]

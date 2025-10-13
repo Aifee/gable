@@ -1723,8 +1723,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "gable-rust"
-version = "0.1.0"
+name = "gable"
+version = "1.0.0"
 dependencies = [
  "calamine",
  "chrono",

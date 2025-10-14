@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Gable
 {
-    public class PlayLevel 
+    public class PlayerLevel 
     {
         /// <summary>
         /// ID

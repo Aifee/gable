@@ -2,24 +2,71 @@
   "heads": [
     [
       {
-        "value": "key"
+        "value": "唯一ID",
+        "bg_fill": "theme:7,tint:0.8"
       },
       {
-        "value": "Data Type"
+        "value": "数据类型",
+        "bg_fill": "theme:7,tint:0.8"
       },
       {
-        "value": "Target"
+        "value": "目标平台",
+        "bg_fill": "theme:7,tint:0.8"
       },
       {
-        "value": "Link Info"
+        "value": "链接",
+        "bg_fill": "theme:7,tint:0.8"
       },
       {
-        "value": "Value"
+        "value": "值",
+        "bg_fill": "theme:7,tint:0.8"
       },
       {
-        "value": "Description"
+        "value": "描述",
+        "bg_fill": "theme:7,tint:0.8"
       }
     ]
   ],
-  "cells": []
+  "cells": [
+    [
+      {
+        "value": "player_default_position"
+      },
+      {
+        "value": "vector3"
+      },
+      {
+        "value": "cs"
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": "10,0,12"
+      },
+      {
+        "value": "默认玩家坐标"
+      }
+    ],
+    [
+      {
+        "value": "map_height"
+      },
+      {
+        "value": "float"
+      },
+      {
+        "value": "cs"
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": "60"
+      },
+      {
+        "value": "地图默认高度"
+      }
+    ]
+  ]
 }

@@ -2,17 +2,26 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TableManager : MonoBehaviour
+public class TableManager 
 {
-    // Start is called before the first frame update
-    void Start()
+    #region Instance
+    private static TableManager _instance;
+    public static TableManager Instance
     {
-        
+        get
+        {
+            if(_instance == null)
+            {
+                _instance = new TableManager();
+                _instance.Load();
+            }
+            return _instance;
+        }
     }
+    #endregion
 
-    // Update is called once per frame
-    void Update()
+    private void Load()
     {
-        
+
     }
 }

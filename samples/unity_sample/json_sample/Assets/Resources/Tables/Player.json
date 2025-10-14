@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1001,
+    "type": 0,
+    "name": "Player_Name_Hiccup",
+    "level": 1,
+    "cd": 300
+  },
+  {
+    "id": 1002,
+    "type": 1,
+    "name": "Player_Name_Astrid",
+    "level": 2,
+    "cd": 600
+  },
+  {
+    "id": 1003,
+    "type": 2,
+    "name": "Player_Name_Fishlegs",
+    "level": 6,
+    "cd": 180
+  },
+  {
+    "id": 1004,
+    "type": 1,
+    "name": "Player_Name_Gobber",
+    "level": 5,
+    "cd": 480
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "attack": 10,
+    "defense": 2,
+    "hp": 100
+  },
+  {
+    "id": 2,
+    "attack": 11,
+    "defense": 3,
+    "hp": 110
+  },
+  {
+    "id": 3,
+    "attack": 13,
+    "defense": 4,
+    "hp": 130
+  },
+  {
+    "id": 4,
+    "attack": 18,
+    "defense": 5,
+    "hp": 180
+  },
+  {
+    "id": 5,
+    "attack": 22,
+    "defense": 8,
+    "hp": 220
+  },
+  {
+    "id": 6,
+    "attack": 28,
+    "defense": 11,
+    "hp": 280
+  },
+  {
+    "id": 7,
+    "attack": 35,
+    "defense": 16,
+    "hp": 350
+  },
+  {
+    "id": 8,
+    "attack": 52,
+    "defense": 21,
+    "hp": 520
+  },
+  {
+    "id": 9,
+    "attack": 87,
+    "defense": 38,
+    "hp": 870
+  },
+  {
+    "id": 10,
+    "attack": 105,
+    "defense": 56,
+    "hp": 1050
+  }
+]

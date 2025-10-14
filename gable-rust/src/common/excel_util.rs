@@ -1187,6 +1187,9 @@ fn write_gable_kv(
                         row_data.push(cell_data);
                     }
                 }
+            } else {
+                let cell_data: CellData = CellData::new(String::new(), None, None);
+                row_data.push(cell_data);
             }
         }
         if row_idx < constant::TABLE_KV_ROW_TOTAL {

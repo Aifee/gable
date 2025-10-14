@@ -1,5 +1,5 @@
 use crate::{
-    common::{generate::proto_field_info::ProtoFieldInfo, setting::BuildSetting, utils},
+    common::{generate::proto_field_info::ProtoFieldInfo, res, setting::BuildSetting, utils},
     gui::datas::{
         edata_type::EDataType,
         esheet_type::ESheetType,
@@ -18,20 +18,38 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
     let (imports, proto_fields, common_protos) =
         ProtoFieldInfo::transition_fields(&fields, build_setting.is_proto_2);
-    let templat_path = if build_setting.is_proto_2 {
-        "assets/templates/proto2/*"
+    let mut tera: Tera = Tera::default();
+    if build_setting.is_proto_2 {
+        if let Some(file) = res::load_template("templates/proto2/template.temp") {
+            let template_content = file
+                .contents_utf8()
+                .expect("Failed to read template content");
+            tera.add_raw_template("template.temp", template_content)
+                .expect("Failed to add template");
+        }
+        if let Some(file) = res::load_template("templates/proto2/enums.temp") {
+            let enum_content = file
+                .contents_utf8()
+                .expect("Failed to read template content");
+            tera.add_raw_template("enums.temp", enum_content)
+                .expect("Failed to add template");
+        }
     } else {
-        "assets/templates/proto3/*"
-    };
-    let tera_result: Result<Tera, tera::Error> = Tera::new(templat_path);
-    if tera_result.is_err() {
-        log::error!(
-            "Failed to create Tera template: {}",
-            tera_result.unwrap_err()
-        );
-        return;
+        if let Some(file) = res::load_template("templates/proto3/template.temp") {
+            let template_content = file
+                .contents_utf8()
+                .expect("Failed to read template content");
+            tera.add_raw_template("template.temp", template_content)
+                .expect("Failed to add template");
+        }
+        if let Some(file) = res::load_template("templates/proto3/enums.temp") {
+            let enum_content = file
+                .contents_utf8()
+                .expect("Failed to read template content");
+            tera.add_raw_template("enums.temp", enum_content)
+                .expect("Failed to add template");
+        }
     }
-    let tera: Tera = tera_result.unwrap();
     if common_protos.len() > 0 {
         create_common_proto(&tera, &common_protos, &build_setting.script_path)
     }
@@ -41,9 +59,9 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     context.insert("imports", &imports);
     let rendered_result: Result<String, tera::Error> = match tree_data.gable_type {
         ESheetType::Normal | ESheetType::Localize | ESheetType::KV => {
-            tera.render("template.proto", &context)
+            tera.render("template.temp", &context)
         }
-        ESheetType::Enum => tera.render("enums.proto", &context),
+        ESheetType::Enum => tera.render("enums.temp", &context),
     };
     if rendered_result.is_err() {
         log::error!("Template error: {}", rendered_result.unwrap_err());
@@ -188,7 +206,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
         common_context.insert("imports", &Vec::<String>::new());
 
         let rendered_result: Result<String, tera::Error> =
-            tera.render("template.proto", &common_context);
+            tera.render("template.temp", &common_context);
         if rendered_result.is_err() {
             log::error!("Template error: {}", rendered_result.unwrap_err());
             continue;

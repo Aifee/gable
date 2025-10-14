@@ -1,7 +1,6 @@
 use crate::common::localization::Localization;
 use crate::common::{res, setting};
 use std::collections::HashMap;
-use std::fs;
 use std::sync::RwLock;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -51,10 +50,9 @@ impl Locales {
      */
     pub fn load_language_from_json(
         &mut self,
-        file_path: &str,
+        content: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let content: String = fs::read_to_string(file_path)?;
-        let lang_pack: Vec<Localization> = serde_json::from_str(&content)?;
+        let lang_pack: Vec<Localization> = serde_json::from_str(content)?;
         for v in lang_pack.iter() {
             if !self.languages.contains_key(&v.key.clone()) {
                 self.languages.insert(v.key.clone(), v.clone());
@@ -101,16 +99,6 @@ impl Locales {
         key.to_owned()
     }
 
-    // pub fn t_with_args(&self, key: &str, args: &[(&str, &str)]) -> String {
-    //     let mut result = self.t(key);
-
-    //     for (placeholder, value) in args {
-    //         let placeholder_str = format!("{{{}}}", placeholder);
-    //         result = result.replace(&placeholder_str, value);
-    //     }
-
-    //     result
-    // }
     /**
      * 获取可用语言列表
      */
@@ -130,11 +118,10 @@ lazy_static::lazy_static! {
         let mut manager = Locales::new();
         match manager.load_language_from_json(res::CONFIG_LOCALIZATION) {
             Ok(_) => {
-                println!("Successfully loaded language packs from {}", res::CONFIG_LOCALIZATION);
+                log::debug!("Successfully loaded language packs from config");
             }
             Err(e) => {
-                eprintln!("Failed to load language packs from {}: {}", res::CONFIG_LOCALIZATION, e);
-                eprintln!("Using default language packs instead");
+                log::error!("Failed to load language packs from config {}", e);
             }
         }
         manager
@@ -145,10 +132,6 @@ lazy_static::lazy_static! {
 pub fn t(key: &str) -> String {
     LOCALIZATION_MANAGER.t(key)
 }
-
-// pub fn t_with_args(key: &str, args: &[(&str, &str)]) -> String {
-//     LOCALIZATION_MANAGER.t_with_args(key, args)
-// }
 
 pub fn set_language(code: &ELocalizationType) -> bool {
     LOCALIZATION_MANAGER.set_language(code)

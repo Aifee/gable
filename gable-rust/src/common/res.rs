@@ -1,6 +1,9 @@
 use crate::gui::datas::edevelop_type::EDevelopType;
 use eframe::egui::{Color32, ColorImage, Context, TextureHandle, TextureOptions, Vec2};
 use image::{DynamicImage, ImageBuffer, Rgba};
+use include_dir::{Dir, include_dir};
+
+static ASSETS_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/assets");
 
 /**
  * 字体资源
@@ -10,12 +13,6 @@ pub const FONT_ASSETS: &[u8] = include_bytes!(r"../../assets/fonts/SourceHanSans
  * fallback字体
 */
 pub const FONT_FALLBACK: &[u8] = include_bytes!(r"../../assets/fonts/fallback_font.ttf");
-
-// pub const ICON_FOLDER_BLUE: &[u8] = include_bytes!("../../assets/icons/folder_blue.png");
-// pub const ICON_FOLDER_NORMAL: &[u8] = include_bytes!("../../assets/icons/folder_normal.png");
-// pub const ICON_EXCEL: &[u8] = include_bytes!("../../assets/icons/excel.png");
-// pub const ICON_SHEET: &[u8] = include_bytes!("../../assets/icons/sheet.png");
-
 pub const ICON_C: &[u8] = include_bytes!("../../assets/icons/c.png");
 pub const ICON_CANGJIE: &[u8] = include_bytes!("../../assets/icons/cangjie.png");
 pub const ICON_CSHARP: &[u8] = include_bytes!("../../assets/icons/csharp.png");
@@ -26,9 +23,7 @@ pub const ICON_LUA: &[u8] = include_bytes!("../../assets/icons/lua.png");
 pub const ICON_PYTHON: &[u8] = include_bytes!("../../assets/icons/python.png");
 pub const ICON_TYPESCRIPT: &[u8] = include_bytes!("../../assets/icons/typescript.png");
 pub const ICON_RUST: &[u8] = include_bytes!("../../assets/icons/rust.png");
-// pub const ICON_YAML: &[u8] = include_bytes!("../../assets/icons/yaml.png");
-
-pub const CONFIG_LOCALIZATION: &str = "assets/locales/localization.json";
+pub const CONFIG_LOCALIZATION: &str = include_str!("../../assets/locales/localization.json");
 
 /**
  * 加载图片

@@ -1,6 +1,8 @@
-[
-  {
-    "player_default_position": {},
-    "map_height": 60.0
-  }
-]
+{
+  "player_default_position": {
+    "x": 10.0,
+    "y": 0.0,
+    "z": 12.0
+  },
+  "map_height": 60.0
+}

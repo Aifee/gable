@@ -22,8 +22,13 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
         log::debug!("No data to export: {}", target_path.to_str().unwrap());
         return;
     }
-    let contents: String =
-        serde_json::to_string_pretty(&json_data).expect("JSON serialization failed");
+    let contents: String = if tree_data.gable_type == ESheetType::KV {
+        serde_json::to_string_pretty(&json_data[0]).expect("JSON serialization failed")
+    } else {
+        serde_json::to_string_pretty(&json_data).expect("JSON serialization failed")
+    };
+    // let contents: String =
+    //     serde_json::to_string_pretty(&json_data).expect("JSON serialization failed");
     let result: Result<(), Error> = std::fs::write(&target_path, contents);
     if result.is_err() {
         log::error!(

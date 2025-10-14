@@ -1,7 +1,7 @@
 use crate::gui::datas::edevelop_type::EDevelopType;
 use eframe::egui::{Color32, ColorImage, Context, TextureHandle, TextureOptions, Vec2};
 use image::{DynamicImage, ImageBuffer, Rgba};
-use include_dir::{Dir, include_dir};
+use include_dir::{Dir, File, include_dir};
 
 static ASSETS_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/assets");
 
@@ -62,4 +62,8 @@ pub fn load_develop_icon(ctx: &Context, dev: &EDevelopType) -> TextureHandle {
         EDevelopType::Rust => ICON_RUST,
     };
     load_texture(ctx, icon_texture, dev.to_string())
+}
+
+pub fn load_template(file_path: &str) -> Option<&File<'_>> {
+    return ASSETS_DIR.get_file(file_path);
 }

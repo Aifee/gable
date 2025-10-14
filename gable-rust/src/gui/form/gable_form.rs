@@ -312,7 +312,7 @@ impl GableForm {
             .num_rows(show_rows)
             .columns(columns)
             .num_sticky_cols(1)
-            .headers([HeaderRow::new(20.0)])
+            .headers([HeaderRow::new(24.0)])
             .auto_size_mode(self.auto_size_mode);
 
         if let Some(scroll_to_column) = self.scroll_to_column {
@@ -383,5 +383,9 @@ impl TableDelegate for GableForm {
                 ui.label("");
             }
         }
+    }
+
+    fn default_row_height(&self) -> f32 {
+        24.0
     }
 }

@@ -1,0 +1,8 @@
+syntax = "proto3";
+package Gable;
+
+enum EPlayerType {
+    None = 0;// 未定义
+    Normal = 1;// 普通
+    Special = 2;// 特殊
+}

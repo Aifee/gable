@@ -1,0 +1,28 @@
+syntax = "proto2";
+package com.gable.proto;
+
+message Global { 
+    optional string string_value = 1;//  
+    optional int32 int_value = 2;//  
+    optional bool bool_value = 3;//  
+    optional float float_value = 4;//  
+    optional string vector2_value = 5;//  
+    optional string vector3_value = 6;//  
+    optional string vector4_value = 7;//  
+    repeated int32 int_value_arr = 8;//  
+    repeated string string_value_arr = 9;//  
+    repeated bool bool_value_arr = 10;//  
+    repeated float float_value_arr = 11;//  
+    repeated string vector2_value_arr = 12;//  
+    repeated string vector3_value_arr = 13;//  
+    repeated string vector4_value_arr = 14;//  
+    optional float baifen = 15;//  
+    optional float qianfen = 16;// 10 
+    optional float wanfen = 17;// 10 
+    optional int32 time_value = 18;//  
+    optional int64 date_value = 19;//  
+}
+
+message GlobalTable {
+    optional Global table = 1;
+}

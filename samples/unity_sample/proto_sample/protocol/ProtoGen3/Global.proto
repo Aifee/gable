@@ -1,0 +1,31 @@
+syntax = "proto3";
+package Gable;
+
+import "HeroQuality.proto";
+import "Vector2.proto";
+import "Vector3.proto";
+import "Vector4.proto";
+
+message Global { 
+    string string_value = 1;// 字符串 
+    int32 int_value = 2;// int值 
+    bool bool_value = 3;// bool测试 
+    float float_value = 4;// 浮点测试 
+    Vector2 vector2_value = 5;// 二位向量 
+    Vector3 vector3_value = 6;// 三维向量 
+    Vector4 vector4_value = 7;// 四元数 
+    repeated int32 int_value_arr = 8;// int数组 
+    repeated string string_value_arr = 9;// 字符串数组 
+    repeated bool bool_value_arr = 10;// bool数组 
+    repeated float float_value_arr = 11;// 浮点数数组 
+    repeated Vector2 vector2_value_arr = 12;// 二维向量数组 
+    repeated Vector3 vector3_value_arr = 13;// 三维向量数组 
+    repeated Vector4 vector4_value_arr = 14;// 四元数数组 
+    float baifen = 15;// 百分比 
+    float qianfen = 16;// 千分比 
+    float wanfen = 17;// 万分比 
+    int32 time_value = 18;// 时间 
+    int64 date_value = 19;// 日期 
+    string loc_value = 20;//  
+    HeroQuality quality = 21;//  
+}

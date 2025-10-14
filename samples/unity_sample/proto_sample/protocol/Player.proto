@@ -1,0 +1,10 @@
+syntax = "proto3";
+package Gable;
+import "EPlayerType.proto";
+message Player {
+    int32 id = 1;// ID
+    EPlayerType type = 2;// 类型
+    string name = 3;// 名字
+    int32 level = 4;// 等级
+    int32 cd = 5;// 升级消耗时间
+}

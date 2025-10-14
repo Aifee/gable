@@ -15,3 +15,9 @@ samples/unity_sample/json_sample/obj/Debug/
 samples/unity_sample/json_sample/.vsconfig
 samples/unity_sample/json_sample/Temp/
 samples/unity_sample/json_sample/UserSettings/
+samples/unity_sample/proto_sample/sample/.vs/
+samples/unity_sample/proto_sample/sample/Library/
+samples/unity_sample/proto_sample/sample/Logs/
+samples/unity_sample/proto_sample/sample/obj/
+samples/unity_sample/proto_sample/sample/UserSettings/
+samples/unity_sample/proto_sample/sample/Temp/

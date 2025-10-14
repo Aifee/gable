@@ -1,0 +1,7 @@
+syntax = "proto3";
+package Gable;
+import "Vector3.proto";
+message Const {
+    Vector3 player_default_position = 1;// 默认玩家坐标
+    float map_height = 2;// 地图默认高度
+}

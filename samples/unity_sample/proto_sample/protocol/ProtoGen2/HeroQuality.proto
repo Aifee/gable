@@ -1,0 +1,10 @@
+syntax = "proto2";
+package com.gable.proto;
+
+enum HeroQuality { 
+    Value_0 = 0;// 0.未知 
+    Value_2 = 2;// 2.优秀 
+    Value_3 = 3;// 3.精英 
+    Value_4 = 4;// 4.史诗 
+    Value_5 = 5;// 5.传说 
+}

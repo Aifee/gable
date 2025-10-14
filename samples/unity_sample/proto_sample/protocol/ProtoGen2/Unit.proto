@@ -1,0 +1,29 @@
+syntax = "proto2";
+package com.gable.proto;
+
+message Unit { 
+    optional int32 id = 1;// 唯一ID 
+    optional string string_value = 2;// string test 
+    optional bool bool_value = 3;// bool test 
+    optional float float_test = 4;// float text 
+    optional string vector2_value = 5;// vector2 
+    optional string vector3_value = 6;// vector3 
+    optional string vector4_value = 7;// vector4 
+    repeated int32 int_arr = 8;// int array 
+    repeated string string_arr = 9;// string arry 
+    repeated bool bool_arr = 10;// bool array 
+    repeated float float_arr = 11;// float array 
+    repeated string vector2_arr = 12;// vector2 array 
+    repeated string vector3_arr = 13;// vector3array 
+    repeated string vector4_arr = 14;// vector4 array 
+    optional float percentage_value = 15;// 百分比 
+    optional float permillage_value = 16;// 千分比 
+    optional float permian_value = 17;// 万分比 
+    optional int32 time_value = 18;// 时间 
+    optional int64 date_value = 19;// 日期 
+    optional int32 enum_value = 20;// 枚举 
+}
+
+message UnitTable {
+    repeated Unit items = 1;
+}

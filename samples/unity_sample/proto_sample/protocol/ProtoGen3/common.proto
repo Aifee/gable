@@ -1,0 +1,9 @@
+syntax = "proto3";
+package Gable;
+
+
+message common { 
+    string key = 1;// 多语言key 
+    string zh = 2;// 中文 
+    string cn = 3;// 英文 
+}

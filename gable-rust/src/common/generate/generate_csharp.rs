@@ -92,8 +92,8 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CsharpFieldInfo> {
     for field in fields {
         let cs_type = match field.field_type {
             EDataType::Int | EDataType::Time => "int",
-            EDataType::Date => "long",
-            EDataType::String | EDataType::Loc => "string",
+            EDataType::Date | EDataType::Long => "long",
+            EDataType::Unknown | EDataType::String | EDataType::Loc => "string",
             EDataType::Boolean => "bool",
             EDataType::Float
             | EDataType::Percentage
@@ -103,6 +103,7 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CsharpFieldInfo> {
             EDataType::Vector3 => "Vector3",
             EDataType::Vector4 => "Vector4",
             EDataType::IntArr => "int[]",
+            EDataType::LongArr => "long[]",
             EDataType::StringArr => "string[]",
             EDataType::BooleanArr => "bool[]",
             EDataType::FloatArr => "float[]",
@@ -120,7 +121,6 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CsharpFieldInfo> {
                 }
                 enum_name
             }
-            _ => "string",
         };
 
         let cs_field: CsharpFieldInfo = CsharpFieldInfo {

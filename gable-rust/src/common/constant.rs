@@ -174,6 +174,7 @@ pub const TABLE_ENUM_COL_DESC: usize = 2;
 pub const TABLE_ENUM_ROW_TOTAL: usize = 1;
 
 pub const DATA_TYPE_KEY_INT: &str = "int";
+pub const DATA_TYPE_KEY_LONG: &str = "long";
 pub const DATA_TYPE_KEY_STRING: &str = "string";
 pub const DATA_TYPE_KEY_BOOLEAN: &str = "bool";
 pub const DATA_TYPE_KEY_FLOAT: &str = "float";
@@ -181,6 +182,7 @@ pub const DATA_TYPE_KEY_VECTOR2: &str = "vector2";
 pub const DATA_TYPE_KEY_VECTOR3: &str = "vector3";
 pub const DATA_TYPE_KEY_VECTOR4: &str = "vector4";
 pub const DATA_TYPE_KEY_INT_ARR: &str = "int[]";
+pub const DATA_TYPE_KEY_LONG_ARR: &str = "long[]";
 pub const DATA_TYPE_KEY_STRING_ARR: &str = "string[]";
 pub const DATA_TYPE_KEY_BOOLEAN_ARR: &str = "bool[]";
 pub const DATA_TYPE_KEY_FLOAT_ARR: &str = "float[]";
@@ -196,6 +198,7 @@ pub const DATA_TYPE_KEY_ENUM: &str = "enum";
 pub const DATA_TYPE_KEY_LOC: &str = "loc";
 pub const DATA_TYPE_KEYS: &[&str] = &[
     DATA_TYPE_KEY_INT,
+    DATA_TYPE_KEY_LONG,
     DATA_TYPE_KEY_STRING,
     DATA_TYPE_KEY_BOOLEAN,
     DATA_TYPE_KEY_FLOAT,
@@ -203,6 +206,7 @@ pub const DATA_TYPE_KEYS: &[&str] = &[
     DATA_TYPE_KEY_VECTOR3,
     DATA_TYPE_KEY_VECTOR4,
     DATA_TYPE_KEY_INT_ARR,
+    DATA_TYPE_KEY_LONG_ARR,
     DATA_TYPE_KEY_STRING_ARR,
     DATA_TYPE_KEY_BOOLEAN_ARR,
     DATA_TYPE_KEY_FLOAT_ARR,

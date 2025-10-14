@@ -98,24 +98,27 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<LuaFieldInfo> {
     for field in fields {
         // Lua 是动态类型语言，不需要转换为特定类型，但保留用于注释
         let lua_type = match field.field_type {
-            EDataType::Int | EDataType::Time => "number",
-            EDataType::Date => "number", // Date类型在Lua中通常用时间戳表示
-            EDataType::String | EDataType::Loc => "string",
+            EDataType::Unknown | EDataType::String | EDataType::Loc => "string",
             EDataType::Boolean => "boolean",
-            EDataType::Float
+            EDataType::Int
+            | EDataType::Long
+            | EDataType::Time
+            | EDataType::Date
+            | EDataType::Float
             | EDataType::Percentage
             | EDataType::Permillage
             | EDataType::Permian => "number",
             EDataType::Vector2 => "Vector2",
             EDataType::Vector3 => "Vector3",
             EDataType::Vector4 => "Vector4",
-            EDataType::IntArr => "table", // 数组在Lua中是table
-            EDataType::StringArr => "table",
-            EDataType::BooleanArr => "table",
-            EDataType::FloatArr => "table",
-            EDataType::Vector2Arr => "table",
-            EDataType::Vector3Arr => "table",
-            EDataType::Vector4Arr => "table",
+            EDataType::IntArr
+            | EDataType::LongArr
+            | EDataType::StringArr
+            | EDataType::BooleanArr
+            | EDataType::FloatArr
+            | EDataType::Vector2Arr
+            | EDataType::Vector3Arr
+            | EDataType::Vector4Arr => "table",
             EDataType::Enum => {
                 let mut enum_name = "number";
                 if !field.field_link.is_empty() {
@@ -127,7 +130,6 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<LuaFieldInfo> {
                 }
                 enum_name
             }
-            _ => "string",
         };
 
         let lua_field: LuaFieldInfo = LuaFieldInfo {

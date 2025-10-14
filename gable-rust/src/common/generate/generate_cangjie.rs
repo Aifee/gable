@@ -99,8 +99,8 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CangjieFieldInfo> {
     for field in fields {
         let cangjie_type = match field.field_type {
             EDataType::Int | EDataType::Time => "Int32",
-            EDataType::Date => "Int64",
-            EDataType::String | EDataType::Loc => "String",
+            EDataType::Date | EDataType::Long => "Int64",
+            EDataType::Unknown | EDataType::String | EDataType::Loc => "String",
             EDataType::Boolean => "Bool",
             EDataType::Float
             | EDataType::Percentage
@@ -110,6 +110,7 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CangjieFieldInfo> {
             EDataType::Vector3 => "Vector3",
             EDataType::Vector4 => "Vector4",
             EDataType::IntArr => "Array<Int32>",
+            EDataType::LongArr => "Array<Int64>",
             EDataType::StringArr => "Array<String>",
             EDataType::BooleanArr => "Array<Bool>",
             EDataType::FloatArr => "Array<Float32>",
@@ -127,7 +128,6 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CangjieFieldInfo> {
                 }
                 enum_name
             }
-            _ => "String",
         };
 
         let cangjie_field: CangjieFieldInfo = CangjieFieldInfo {

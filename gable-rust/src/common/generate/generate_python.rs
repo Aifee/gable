@@ -96,9 +96,8 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<PythonFieldInfo> {
     for field in fields {
         // Python 是动态类型语言，不需要转换为特定类型，但保留用于注释
         let python_type = match field.field_type {
-            EDataType::Int | EDataType::Time => "int",
-            EDataType::Date => "int", // Date类型在Python中通常用时间戳表示
-            EDataType::String | EDataType::Loc => "str",
+            EDataType::Int | EDataType::Long | EDataType::Time | EDataType::Date => "int",
+            EDataType::Unknown | EDataType::String | EDataType::Loc => "str",
             EDataType::Boolean => "bool",
             EDataType::Float
             | EDataType::Percentage
@@ -107,13 +106,14 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<PythonFieldInfo> {
             EDataType::Vector2 => "Vector2",
             EDataType::Vector3 => "Vector3",
             EDataType::Vector4 => "Vector4",
-            EDataType::IntArr => "list", // 数组在Python中是list
-            EDataType::StringArr => "list",
-            EDataType::BooleanArr => "list",
-            EDataType::FloatArr => "list",
-            EDataType::Vector2Arr => "list",
-            EDataType::Vector3Arr => "list",
-            EDataType::Vector4Arr => "list",
+            EDataType::IntArr
+            | EDataType::LongArr
+            | EDataType::StringArr
+            | EDataType::BooleanArr
+            | EDataType::FloatArr
+            | EDataType::Vector2Arr
+            | EDataType::Vector3Arr
+            | EDataType::Vector4Arr => "list",
             EDataType::Enum => {
                 let mut enum_name = "int";
                 if !field.field_link.is_empty() {
@@ -125,7 +125,6 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<PythonFieldInfo> {
                 }
                 enum_name
             }
-            _ => "str",
         };
 
         let python_field: PythonFieldInfo = PythonFieldInfo {

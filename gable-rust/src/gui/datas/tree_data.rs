@@ -296,15 +296,20 @@ impl TreeData {
     fn get_value(type_cell: &CellData, value_cell: &CellData) -> Value {
         let data_type: EDataType = EDataType::convert(&type_cell.value);
         match data_type {
-            EDataType::Int | EDataType::Time | EDataType::Date | EDataType::Enum => {
-                Value::from(value_cell.parse_int())
+            EDataType::Unknown | EDataType::String | EDataType::Loc => {
+                Value::from(value_cell.value.clone())
             }
+            EDataType::Int
+            | EDataType::Long
+            | EDataType::Time
+            | EDataType::Date
+            | EDataType::Enum => Value::from(value_cell.parse_int()),
             EDataType::Boolean => Value::from(value_cell.parse_bool()),
             EDataType::Float => Value::from(value_cell.parse_float()),
             EDataType::Vector2 => Value::from(value_cell.to_json_vector2()),
             EDataType::Vector3 => Value::from(value_cell.to_json_vector3()),
             EDataType::Vector4 => Value::from(value_cell.to_json_vector4()),
-            EDataType::IntArr => Value::from(value_cell.to_json_int_array()),
+            EDataType::IntArr | EDataType::LongArr => Value::from(value_cell.to_json_int_array()),
             EDataType::StringArr => Value::from(value_cell.to_json_string_array()),
             EDataType::BooleanArr => Value::from(value_cell.to_json_bool_array()),
             EDataType::FloatArr => Value::from(value_cell.to_json_float_array()),
@@ -314,7 +319,6 @@ impl TreeData {
             EDataType::Percentage | EDataType::Permillage | EDataType::Permian => {
                 Value::from(value_cell.parse_float())
             }
-            _ => Value::from(value_cell.value.clone()),
         }
     }
 

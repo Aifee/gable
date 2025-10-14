@@ -42,8 +42,8 @@ impl ProtoFieldInfo {
             let mut field_extend: String = String::new();
             let proto_type = match field.field_type {
                 EDataType::Int | EDataType::Time => "int32",
-                EDataType::Date => "int64",
-                EDataType::String | EDataType::Loc => "string",
+                EDataType::Date | EDataType::Long => "int64",
+                EDataType::Unknown | EDataType::String | EDataType::Loc => "string",
                 EDataType::Boolean => "bool",
                 EDataType::Float
                 | EDataType::Percentage
@@ -68,6 +68,7 @@ impl ProtoFieldInfo {
                     "Vector4"
                 }
                 EDataType::IntArr => "repeated int32",
+                EDataType::LongArr => "repeated int64",
                 EDataType::StringArr => "repeated string",
                 EDataType::BooleanArr => "repeated bool",
                 EDataType::FloatArr => "repeated float",
@@ -114,7 +115,6 @@ impl ProtoFieldInfo {
                     }
                     enum_name
                 }
-                _ => "string",
             };
             let data_type = if field.field_type == EDataType::Enum {
                 "enum"

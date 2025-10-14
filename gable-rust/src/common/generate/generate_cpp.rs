@@ -98,8 +98,8 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CppFieldInfo> {
     for field in fields {
         let cpp_type = match field.field_type {
             EDataType::Int | EDataType::Time => "int",
-            EDataType::Date => "long long",
-            EDataType::String | EDataType::Loc => "std::string",
+            EDataType::Date | EDataType::Long => "long",
+            EDataType::Unknown | EDataType::String | EDataType::Loc => "std::string",
             EDataType::Boolean => "bool",
             EDataType::Float
             | EDataType::Percentage
@@ -109,6 +109,7 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CppFieldInfo> {
             EDataType::Vector3 => "Vector3",
             EDataType::Vector4 => "Vector4",
             EDataType::IntArr => "std::vector<int>",
+            EDataType::LongArr => "std::vector<long>",
             EDataType::StringArr => "std::vector<std::string>",
             EDataType::BooleanArr => "std::vector<bool>",
             EDataType::FloatArr => "std::vector<float>",
@@ -126,7 +127,6 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CppFieldInfo> {
                 }
                 enum_name
             }
-            _ => "std::string",
         };
 
         let cpp_field: CppFieldInfo = CppFieldInfo {

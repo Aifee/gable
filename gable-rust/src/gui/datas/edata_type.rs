@@ -6,42 +6,46 @@ pub enum EDataType {
     Unknown = 0,
     /// int
     Int = 1,
+    /// int64
+    Long = 2,
     /// string
-    String = 2,
+    String = 3,
     /// bool
-    Boolean = 3,
+    Boolean = 4,
     /// float
-    Float = 4,
+    Float = 5,
     /// vector2
-    Vector2 = 5,
+    Vector2 = 6,
     /// vector3
-    Vector3 = 6,
+    Vector3 = 7,
     /// vector4
-    Vector4 = 7,
+    Vector4 = 8,
     /// int[]
-    IntArr = 8,
+    IntArr = 9,
+    /// int64[]
+    LongArr = 10,
     /// string[]
-    StringArr = 9,
+    StringArr = 11,
     /// bool[]
-    BooleanArr = 10,
+    BooleanArr = 12,
     /// float[]
-    FloatArr = 11,
+    FloatArr = 13,
     /// vector2[]
-    Vector2Arr = 12,
+    Vector2Arr = 14,
     /// vector3[]
-    Vector3Arr = 13,
+    Vector3Arr = 15,
     /// vector4[]
-    Vector4Arr = 14,
+    Vector4Arr = 16,
     /// 百分比(两位数的float)
-    Percentage = 15,
+    Percentage = 17,
     /// 千分比(三位数的float)
-    Permillage = 16,
+    Permillage = 18,
     /// 万分比(四位数的float)
-    Permian = 17,
+    Permian = 19,
     /// 时间(int)，注意此数据类型最大值是1天
-    Time = 18,
+    Time = 20,
     /// 日期(int)
-    Date = 19,
+    Date = 21,
     /// 枚举，配合链接使用
     Enum = 100,
     // 本地化key
@@ -59,6 +63,7 @@ impl EDataType {
         match value {
             constant::DATA_TYPE_KEY_STRING => EDataType::String,
             constant::DATA_TYPE_KEY_INT => EDataType::Int,
+            constant::DATA_TYPE_KEY_LONG => EDataType::Long,
             constant::DATA_TYPE_KEY_BOOLEAN => EDataType::Boolean,
             constant::DATA_TYPE_KEY_FLOAT => EDataType::Float,
             constant::DATA_TYPE_KEY_VECTOR2 => EDataType::Vector2,
@@ -66,6 +71,7 @@ impl EDataType {
             constant::DATA_TYPE_KEY_VECTOR4 => EDataType::Vector4,
             constant::DATA_TYPE_KEY_STRING_ARR => EDataType::StringArr,
             constant::DATA_TYPE_KEY_INT_ARR => EDataType::IntArr,
+            constant::DATA_TYPE_KEY_LONG_ARR => EDataType::LongArr,
             constant::DATA_TYPE_KEY_BOOLEAN_ARR => EDataType::BooleanArr,
             constant::DATA_TYPE_KEY_FLOAT_ARR => EDataType::FloatArr,
             constant::DATA_TYPE_KEY_VECTOR2_ARR => EDataType::Vector2Arr,

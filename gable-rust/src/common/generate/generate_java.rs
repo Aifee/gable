@@ -98,8 +98,8 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<JavaFieldInfo> {
     for field in fields {
         let java_type = match field.field_type {
             EDataType::Int | EDataType::Time => "int",
-            EDataType::Date => "long",
-            EDataType::String | EDataType::Loc => "String",
+            EDataType::Date | EDataType::Long => "long",
+            EDataType::Unknown | EDataType::String | EDataType::Loc => "String",
             EDataType::Boolean => "boolean",
             EDataType::Float
             | EDataType::Percentage
@@ -109,6 +109,7 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<JavaFieldInfo> {
             EDataType::Vector3 => "Vector3",
             EDataType::Vector4 => "Vector4",
             EDataType::IntArr => "int[]",
+            EDataType::LongArr => "long[]",
             EDataType::StringArr => "String[]",
             EDataType::BooleanArr => "boolean[]",
             EDataType::FloatArr => "float[]",
@@ -126,7 +127,6 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<JavaFieldInfo> {
                 }
                 enum_name
             }
-            _ => "String",
         };
 
         let java_field: JavaFieldInfo = JavaFieldInfo {

@@ -94,8 +94,8 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<RustInfo> {
     for field in fields {
         let rust_type = match field.field_type {
             EDataType::Int | EDataType::Time => "i32",
-            EDataType::Date => "i64",
-            EDataType::String | EDataType::Loc => "String",
+            EDataType::Date | EDataType::Long => "i64",
+            EDataType::Unknown | EDataType::String | EDataType::Loc => "String",
             EDataType::Boolean => "bool",
             EDataType::Float
             | EDataType::Percentage
@@ -105,6 +105,7 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<RustInfo> {
             EDataType::Vector3 => "(f32, f32, f32)",
             EDataType::Vector4 => "(f32, f32, f32, f32)",
             EDataType::IntArr => "Vec<i32>",
+            EDataType::LongArr => "Vec<i64>",
             EDataType::StringArr => "Vec<String>",
             EDataType::BooleanArr => "Vec<bool>",
             EDataType::FloatArr => "Vec<f32>",
@@ -122,7 +123,6 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<RustInfo> {
                 }
                 enum_name
             }
-            _ => "String",
         };
 
         let rust_field: RustInfo = RustInfo {

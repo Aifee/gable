@@ -19,6 +19,6 @@ namespace Gable
         /// <summary>
         /// 血量
         /// </summary>
-        public int hp;
+        public long hp;
     }
 }

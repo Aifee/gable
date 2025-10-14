@@ -98,21 +98,22 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<JavascriptFieldInfo> {
     for field in fields {
         // JavaScript 是动态类型语言，不需要转换为特定类型，但保留用于注释
         let js_type = match field.field_type {
-            EDataType::Int | EDataType::Time => "number",
-            EDataType::Date => "number", // Date类型在JavaScript中通常用时间戳表示
-            EDataType::String | EDataType::Loc => "string",
+            EDataType::Unknown | EDataType::String | EDataType::Loc => "string",
             EDataType::Boolean => "boolean",
-            EDataType::Float
+            EDataType::Int
+            | EDataType::Long
+            | EDataType::Time
+            | EDataType::Date
+            | EDataType::Float
             | EDataType::Percentage
             | EDataType::Permillage
             | EDataType::Permian => "number",
             EDataType::Vector2 => "Vector2",
             EDataType::Vector3 => "Vector3",
             EDataType::Vector4 => "Vector4",
-            EDataType::IntArr => "number[]",
+            EDataType::IntArr | EDataType::LongArr | EDataType::FloatArr => "number[]",
             EDataType::StringArr => "string[]",
             EDataType::BooleanArr => "boolean[]",
-            EDataType::FloatArr => "number[]",
             EDataType::Vector2Arr => "Vector2[]",
             EDataType::Vector3Arr => "Vector3[]",
             EDataType::Vector4Arr => "Vector4[]",
@@ -127,7 +128,6 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<JavascriptFieldInfo> {
                 }
                 enum_name
             }
-            _ => "string",
         };
 
         let javascript_field: JavascriptFieldInfo = JavascriptFieldInfo {

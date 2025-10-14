@@ -101,8 +101,8 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<GolangFieldInfo> {
 
         let go_type = match field.field_type {
             EDataType::Int | EDataType::Time => "int",
-            EDataType::Date => "int64",
-            EDataType::String | EDataType::Loc => "string",
+            EDataType::Date | EDataType::Long => "int64",
+            EDataType::Unknown | EDataType::String | EDataType::Loc => "string",
             EDataType::Boolean => "bool",
             EDataType::Float
             | EDataType::Percentage
@@ -112,6 +112,7 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<GolangFieldInfo> {
             EDataType::Vector3 => "Vector3",
             EDataType::Vector4 => "Vector4",
             EDataType::IntArr => "[]int",
+            EDataType::LongArr => "[]int64",
             EDataType::StringArr => "[]string",
             EDataType::BooleanArr => "[]bool",
             EDataType::FloatArr => "[]float64",
@@ -130,7 +131,6 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<GolangFieldInfo> {
                 }
                 &enum_name.clone()
             }
-            _ => "string",
         };
 
         let go_field: GolangFieldInfo = GolangFieldInfo {

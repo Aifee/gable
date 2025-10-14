@@ -50,7 +50,7 @@
         "bg_fill": "theme:7,tint:0.8"
       },
       {
-        "value": "int",
+        "value": "long",
         "bg_fill": "theme:7,tint:0.8"
       }
     ],

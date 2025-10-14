@@ -203,13 +203,59 @@ fn encode_field_value(
                 if let Some(arr) = value.as_array() {
                     for val in arr {
                         if let Some(s) = val.as_str() {
+                            // 直接编码Vector数据而不是作为嵌套消息
                             let vector_data: Vec<u8> = encode_vector_data(s, inner_type)?;
+                            let key: u32 = (field_number << 3) | 2; // wire type 2 for length-delimited
+                            encode_varint(key as u64, buffer);
+                            encode_varint(vector_data.len() as u64, buffer);
+                            buffer.extend_from_slice(&vector_data);
+                        } else if let Some(array) = val.as_array() {
+                            // 处理数组格式的Vector数据（例如：[1.0, 2.0] 或 [1.0, 2.0, 3.0] 或 [1.0, 2.0, 3.0, 4.0]）
+                            let vector_str = format!(
+                                "{{{}}}",
+                                array
+                                    .iter()
+                                    .filter_map(|v| v.as_f64())
+                                    .map(|v| v.to_string())
+                                    .collect::<Vec<_>>()
+                                    .join(",")
+                            );
+                            let vector_data: Vec<u8> = encode_vector_data(&vector_str, inner_type)?;
+                            let key: u32 = (field_number << 3) | 2; // wire type 2 for length-delimited
+                            encode_varint(key as u64, buffer);
+                            encode_varint(vector_data.len() as u64, buffer);
+                            buffer.extend_from_slice(&vector_data);
+                        } else if let Some(obj) = val.as_object() {
+                            // 处理对象格式的Vector数据（例如：{"x": 1.0, "y": 2.0}）
+                            let vector_str = match inner_type {
+                                "Vector2" => {
+                                    let x = obj.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                                    let y = obj.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                                    format!("{{{},{}}}", x, y)
+                                }
+                                "Vector3" => {
+                                    let x = obj.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                                    let y = obj.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                                    let z = obj.get("z").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                                    format!("{{{},{},{}}}", x, y, z)
+                                }
+                                "Vector4" => {
+                                    let x = obj.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                                    let y = obj.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                                    let z = obj.get("z").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                                    let w = obj.get("w").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                                    format!("{{{},{},{},{}}}", x, y, z, w)
+                                }
+                                _ => "{}".to_string(),
+                            };
+                            let vector_data: Vec<u8> = encode_vector_data(&vector_str, inner_type)?;
                             let key: u32 = (field_number << 3) | 2; // wire type 2 for length-delimited
                             encode_varint(key as u64, buffer);
                             encode_varint(vector_data.len() as u64, buffer);
                             buffer.extend_from_slice(&vector_data);
                         } else {
                             let s: String = val.to_string();
+                            // 直接编码Vector数据而不是作为嵌套消息
                             let vector_data: Vec<u8> = encode_vector_data(&s, inner_type)?;
                             let key: u32 = (field_number << 3) | 2; // wire type 2 for length-delimited
                             encode_varint(key as u64, buffer);
@@ -285,6 +331,50 @@ fn encode_field_value(
                 if let Some(s) = value.as_str() {
                     // 解析Vector字符串格式 "{x,y}" 或 "{x,y,z}" 或 "{x,y,z,w}"
                     let vector_data: Vec<u8> = encode_vector_data(s, data_type)?;
+                    let key: u32 = (field_number << 3) | 2; // wire type 2 for length-delimited
+                    encode_varint(key as u64, buffer);
+                    encode_varint(vector_data.len() as u64, buffer);
+                    buffer.extend_from_slice(&vector_data);
+                } else if let Some(array) = value.as_array() {
+                    // 处理数组格式的Vector数据（例如：[1.0, 2.0] 或 [1.0, 2.0, 3.0] 或 [1.0, 2.0, 3.0, 4.0]）
+                    let vector_str = format!(
+                        "{{{}}}",
+                        array
+                            .iter()
+                            .filter_map(|v| v.as_f64())
+                            .map(|v| v.to_string())
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    );
+                    let vector_data: Vec<u8> = encode_vector_data(&vector_str, data_type)?;
+                    let key: u32 = (field_number << 3) | 2; // wire type 2 for length-delimited
+                    encode_varint(key as u64, buffer);
+                    encode_varint(vector_data.len() as u64, buffer);
+                    buffer.extend_from_slice(&vector_data);
+                } else if let Some(obj) = value.as_object() {
+                    // 处理对象格式的Vector数据（例如：{"x": 1.0, "y": 2.0}）
+                    let vector_str = match data_type {
+                        "Vector2" => {
+                            let x = obj.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                            let y = obj.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                            format!("{{{},{}}}", x, y)
+                        }
+                        "Vector3" => {
+                            let x = obj.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                            let y = obj.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                            let z = obj.get("z").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                            format!("{{{},{},{}}}", x, y, z)
+                        }
+                        "Vector4" => {
+                            let x = obj.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                            let y = obj.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                            let z = obj.get("z").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                            let w = obj.get("w").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                            format!("{{{},{},{},{}}}", x, y, z, w)
+                        }
+                        _ => "{}".to_string(),
+                    };
+                    let vector_data: Vec<u8> = encode_vector_data(&vector_str, data_type)?;
                     let key: u32 = (field_number << 3) | 2; // wire type 2 for length-delimited
                     encode_varint(key as u64, buffer);
                     encode_varint(vector_data.len() as u64, buffer);

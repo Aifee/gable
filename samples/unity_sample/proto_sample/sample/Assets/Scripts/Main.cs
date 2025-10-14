@@ -23,7 +23,8 @@ public class Main : MonoBehaviour
         switch (_dropdown.captionText.text)
         {
             case "Const":
-                Debug.Log(TableManager.Instance.Const.player_default_position);
+                Gable.Vector3 pos = TableManager.Instance.Const.player_default_position;
+                Debug.Log($"x:{pos.x}, y:{pos.y}, z:{pos.z}");
                 break;
 
             case "Player":

@@ -1,7 +1,7 @@
 use std::{fs, io::Error, path::PathBuf};
 
 use crate::{
-    common::{setting::BuildSetting, utils},
+    common::{res, setting::BuildSetting, utils},
     gui::datas::{
         edata_type::EDataType,
         esheet_type::ESheetType,
@@ -33,15 +33,21 @@ struct TypescriptFieldInfo {
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
     let typescript_fields: Vec<TypescriptFieldInfo> = transition_fields(&fields);
-    let tera_result: Result<Tera, tera::Error> = Tera::new("assets/templates/typescript/*");
-    if tera_result.is_err() {
-        log::error!(
-            "Failed to create Tera template: {}",
-            tera_result.unwrap_err()
-        );
-        return;
+    let mut tera: Tera = Tera::default();
+    if let Some(file) = res::load_template("templates/typescript/template.temp") {
+        let template_content = file
+            .contents_utf8()
+            .expect("Failed to read template content");
+        tera.add_raw_template("template.temp", template_content)
+            .expect("Failed to add template");
     }
-    let tera: Tera = tera_result.unwrap();
+    if let Some(file) = res::load_template("templates/typescript/enums.temp") {
+        let enum_content = file
+            .contents_utf8()
+            .expect("Failed to read template content");
+        tera.add_raw_template("enums.temp", enum_content)
+            .expect("Failed to add template");
+    }
     let mut context: Context = Context::new();
     context.insert("CLASS_NAME", &tree_data.file_name);
     context.insert("fields", &typescript_fields);

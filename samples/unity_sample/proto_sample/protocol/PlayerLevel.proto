@@ -4,5 +4,5 @@ message PlayerLevel {
     int32 id = 1;// ID
     int32 attack = 2;// 攻击
     int32 defense = 3;// 防御
-    string hp = 4;// 血量
+    int64 hp = 4;// 血量
 }

@@ -25,7 +25,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
     let (_, proto_fields, _) = ProtoFieldInfo::transition_fields(&fields, true);
     let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
-        .join(format!("{}.bin", tree_data.file_name));
+        .join(format!("{}.bytes", tree_data.file_name));
     match tree_data.gable_type {
         ESheetType::Normal | ESheetType::Localize => {
             if let Ok(encoded) = encode_normal_data(&value_data, &proto_fields) {

@@ -26,8 +26,7 @@ namespace Gable
         public int defense { get; set; }
 
         [global::ProtoBuf.ProtoMember(4)]
-        [global::System.ComponentModel.DefaultValue("")]
-        public string hp { get; set; } = "";
+        public long hp { get; set; }
 
     }
 

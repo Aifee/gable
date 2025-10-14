@@ -6,3 +6,12 @@ export/
 samples/configs/__Datas
 samples/configs/__Temps
 samples/configs/tables/__Temps/
+samples/unity_sample/json_sample/.vs/
+samples/unity_sample/json_sample/Library/
+samples/unity_sample/json_sample/Logs/
+samples/unity_sample/json_sample/obj/Debug/
+*.sln
+*.csproj
+samples/unity_sample/json_sample/.vsconfig
+samples/unity_sample/json_sample/Temp/
+samples/unity_sample/json_sample/UserSettings/

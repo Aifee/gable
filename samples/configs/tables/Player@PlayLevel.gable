@@ -4,11 +4,35 @@
       {
         "value": "ID",
         "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "攻击",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "防御",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "血量",
+        "bg_fill": "theme:7,tint:0.8"
       }
     ],
     [
       {
-        "value": "id",
+        "value": "*id",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "attack",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "defense",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "hp",
         "bg_fill": "theme:9,tint:0.8"
       }
     ],
@@ -16,15 +40,51 @@
       {
         "value": "int",
         "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "int",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "int",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "int",
+        "bg_fill": "theme:7,tint:0.8"
+      }
+    ],
+    [
+      {
+        "value": "cs",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "cs",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "cs",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "cs",
+        "bg_fill": "theme:9,tint:0.8"
       }
     ],
     [
       {
         "value": "",
-        "bg_fill": "theme:9,tint:0.8"
-      }
-    ],
-    [
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
+      },
       {
         "value": "",
         "bg_fill": "theme:7,tint:0.8"
@@ -35,6 +95,141 @@
     [
       {
         "value": "1"
+      },
+      {
+        "value": "10"
+      },
+      {
+        "value": "2"
+      },
+      {
+        "value": "100"
+      }
+    ],
+    [
+      {
+        "value": "2"
+      },
+      {
+        "value": "11"
+      },
+      {
+        "value": "3"
+      },
+      {
+        "value": "110"
+      }
+    ],
+    [
+      {
+        "value": "3"
+      },
+      {
+        "value": "13"
+      },
+      {
+        "value": "4"
+      },
+      {
+        "value": "130"
+      }
+    ],
+    [
+      {
+        "value": "4"
+      },
+      {
+        "value": "18"
+      },
+      {
+        "value": "5"
+      },
+      {
+        "value": "180"
+      }
+    ],
+    [
+      {
+        "value": "5"
+      },
+      {
+        "value": "22"
+      },
+      {
+        "value": "8"
+      },
+      {
+        "value": "220"
+      }
+    ],
+    [
+      {
+        "value": "6"
+      },
+      {
+        "value": "28"
+      },
+      {
+        "value": "11"
+      },
+      {
+        "value": "280"
+      }
+    ],
+    [
+      {
+        "value": "7"
+      },
+      {
+        "value": "35"
+      },
+      {
+        "value": "16"
+      },
+      {
+        "value": "350"
+      }
+    ],
+    [
+      {
+        "value": "8"
+      },
+      {
+        "value": "52"
+      },
+      {
+        "value": "21"
+      },
+      {
+        "value": "520"
+      }
+    ],
+    [
+      {
+        "value": "9"
+      },
+      {
+        "value": "87"
+      },
+      {
+        "value": "38"
+      },
+      {
+        "value": "870"
+      }
+    ],
+    [
+      {
+        "value": "10"
+      },
+      {
+        "value": "105"
+      },
+      {
+        "value": "56"
+      },
+      {
+        "value": "1050"
       }
     ]
   ]

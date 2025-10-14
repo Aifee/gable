@@ -6,75 +6,43 @@
         "bg_fill": "theme:7,tint:0.8"
       },
       {
-        "value": "类型",
+        "value": "中文",
         "bg_fill": "theme:7,tint:0.8"
       },
       {
-        "value": "名字",
-        "bg_fill": "theme:7,tint:0.8"
-      },
-      {
-        "value": "等级",
-        "bg_fill": "theme:7,tint:0.8"
-      },
-      {
-        "value": "升级消耗时间",
+        "value": "英文",
         "bg_fill": "theme:7,tint:0.8"
       }
     ],
     [
       {
-        "value": "*id",
+        "value": "*key",
         "bg_fill": "theme:9,tint:0.8"
       },
       {
-        "value": "type",
+        "value": "#zh",
         "bg_fill": "theme:9,tint:0.8"
       },
       {
-        "value": "name",
-        "bg_fill": "theme:9,tint:0.8"
-      },
-      {
-        "value": "level",
-        "bg_fill": "theme:9,tint:0.8"
-      },
-      {
-        "value": "cd",
+        "value": "ch",
         "bg_fill": "theme:9,tint:0.8"
       }
     ],
     [
       {
-        "value": "int",
+        "value": "string",
         "bg_fill": "theme:7,tint:0.8"
       },
       {
-        "value": "enum",
+        "value": "string",
         "bg_fill": "theme:7,tint:0.8"
       },
       {
-        "value": "loc",
-        "bg_fill": "theme:7,tint:0.8"
-      },
-      {
-        "value": "int",
-        "bg_fill": "theme:7,tint:0.8"
-      },
-      {
-        "value": "time",
+        "value": "string",
         "bg_fill": "theme:7,tint:0.8"
       }
     ],
     [
-      {
-        "value": "cs",
-        "bg_fill": "theme:9,tint:0.8"
-      },
-      {
-        "value": "cs",
-        "bg_fill": "theme:9,tint:0.8"
-      },
       {
         "value": "cs",
         "bg_fill": "theme:9,tint:0.8"
@@ -91,14 +59,6 @@
     [
       {
         "value": "",
-        "bg_fill": "theme:7,tint:0.8"
-      },
-      {
-        "value": "EPlayerType@EPlayerType",
-        "bg_fill": "theme:7,tint:0.8"
-      },
-      {
-        "value": "Language@Player",
         "bg_fill": "theme:7,tint:0.8"
       },
       {
@@ -114,70 +74,57 @@
   "cells": [
     [
       {
-        "value": "1001"
-      },
-      {
-        "value": "0"
-      },
-      {
         "value": "Player_Name_Hiccup"
       },
       {
-        "value": "1"
+        "value": "小嗝嗝"
       },
       {
-        "value": "300"
+        "value": "Hiccup"
       }
     ],
     [
-      {
-        "value": "1002"
-      },
-      {
-        "value": "1"
-      },
       {
         "value": "Player_Name_Astrid"
       },
       {
-        "value": "2"
+        "value": "阿丝翠德"
       },
       {
-        "value": "600"
+        "value": "Astrid"
       }
     ],
     [
-      {
-        "value": "1003"
-      },
-      {
-        "value": "2"
-      },
       {
         "value": "Player_Name_Fishlegs"
       },
       {
-        "value": "6"
+        "value": "鱼脚司"
       },
       {
-        "value": "180"
+        "value": "Fishlegs"
       }
     ],
     [
       {
-        "value": "1004"
+        "value": "Player_Name_Snotlout"
       },
       {
-        "value": "1"
+        "value": "鼻涕虫"
       },
+      {
+        "value": "Snotlout"
+      }
+    ],
+    [
       {
         "value": "Player_Name_Gobber"
       },
       {
-        "value": "5"
+        "value": "戈伯"
       },
       {
-        "value": "480"
+        "value": "Gobber"
       }
     ]
   ]

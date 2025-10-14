@@ -35,18 +35,18 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
     let python_fields: Vec<PythonFieldInfo> = transition_fields(&fields);
     let mut tera: Tera = Tera::default();
-    if let Some(file) = res::load_template("templates/python/template.temp") {
+    if let Some(file) = res::load_template("templates/python/template.tpl") {
         let template_content = file
             .contents_utf8()
             .expect("Failed to read template content");
-        tera.add_raw_template("template.temp", template_content)
+        tera.add_raw_template("template.tpl", template_content)
             .expect("Failed to add template");
     }
-    if let Some(file) = res::load_template("templates/python/enums.temp") {
+    if let Some(file) = res::load_template("templates/python/enums.tpl") {
         let enum_content = file
             .contents_utf8()
             .expect("Failed to read template content");
-        tera.add_raw_template("enums.temp", enum_content)
+        tera.add_raw_template("enums.tpl", enum_content)
             .expect("Failed to add template");
     }
     let mut context: Context = Context::new();
@@ -59,9 +59,9 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
 
     let rendered_result: Result<String, tera::Error> = match tree_data.gable_type {
         ESheetType::Normal | ESheetType::Localize | ESheetType::KV => {
-            tera.render("template.temp", &context)
+            tera.render("template.tpl", &context)
         }
-        ESheetType::Enum => tera.render("enums.temp", &context),
+        ESheetType::Enum => tera.render("enums.tpl", &context),
     };
     if rendered_result.is_err() {
         log::error!("Template error: {}", rendered_result.unwrap_err());

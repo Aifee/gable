@@ -1,0 +1,25 @@
+{
+  "heads": [
+    [
+      {
+        "value": "key"
+      },
+      {
+        "value": "Data Type"
+      },
+      {
+        "value": "Target"
+      },
+      {
+        "value": "Link Info"
+      },
+      {
+        "value": "Value"
+      },
+      {
+        "value": "Description"
+      }
+    ]
+  ],
+  "cells": []
+}

@@ -1,0 +1,53 @@
+{
+  "heads": [
+    [
+      {
+        "value": "玩家类型",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "枚举值",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "描述",
+        "bg_fill": "theme:7,tint:0.8"
+      }
+    ]
+  ],
+  "cells": [
+    [
+      {
+        "value": "None"
+      },
+      {
+        "value": "0"
+      },
+      {
+        "value": "未定义"
+      }
+    ],
+    [
+      {
+        "value": "Normal"
+      },
+      {
+        "value": "1"
+      },
+      {
+        "value": "普通"
+      }
+    ],
+    [
+      {
+        "value": "Special"
+      },
+      {
+        "value": "2"
+      },
+      {
+        "value": "特殊"
+      }
+    ]
+  ]
+}

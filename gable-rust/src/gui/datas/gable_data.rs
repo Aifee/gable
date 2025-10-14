@@ -65,7 +65,7 @@ impl GableData {
         desc_cols.push(CellData::new("ID".to_string(), None, None));
         heads.push(desc_cols);
         let mut field_cols: Vec<CellData> = Vec::new();
-        field_cols.push(CellData::new("id".to_string(), None, None));
+        field_cols.push(CellData::new("*id".to_string(), None, None));
         heads.push(field_cols);
         let mut type_cols: Vec<CellData> = Vec::new();
         type_cols.push(CellData::new("int".to_string(), None, None));

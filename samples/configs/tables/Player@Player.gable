@@ -1,0 +1,248 @@
+{
+  "heads": [
+    [
+      {
+        "value": "ID",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "类型",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "名字",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "攻击",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "防御",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "血量",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "升级消耗时间",
+        "bg_fill": "theme:7,tint:0.8"
+      }
+    ],
+    [
+      {
+        "value": "*id",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "type",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "name",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:9,tint:0.8"
+      }
+    ],
+    [
+      {
+        "value": "int",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "enum",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "string",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
+      }
+    ],
+    [
+      {
+        "value": "cs",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "cs",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "cs",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:9,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:9,tint:0.8"
+      }
+    ],
+    [
+      {
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "EPlayerType@EPlayerType",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
+      },
+      {
+        "value": "",
+        "bg_fill": "theme:7,tint:0.8"
+      }
+    ]
+  ],
+  "cells": [
+    [
+      {
+        "value": "1001"
+      },
+      {
+        "value": "0"
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      }
+    ],
+    [
+      {
+        "value": "1002"
+      },
+      {
+        "value": "1"
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      }
+    ],
+    [
+      {
+        "value": "1003"
+      },
+      {
+        "value": "2"
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      }
+    ],
+    [
+      {
+        "value": "1004"
+      },
+      {
+        "value": "1"
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      },
+      {
+        "value": ""
+      }
+    ]
+  ]
+}

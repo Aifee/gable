@@ -3,3 +3,6 @@
 */__Temps/
 config/project/__Temps
 export/
+samples/configs/__Datas
+samples/configs/__Temps
+samples/configs/tables/__Temps/

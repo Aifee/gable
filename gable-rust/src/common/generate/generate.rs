@@ -120,7 +120,8 @@ pub fn preload_templates(build_setting: &BuildSetting) {
 fn load_template(build_setting: &BuildSetting, builtin: &str, file_name: &str) -> String {
     let mut tempalte_content: String = String::new();
     if build_setting.is_custom {
-        let template_path: PathBuf = build_setting.custom_template.join(file_name);
+        let template_path: PathBuf =
+            utils::get_absolute_path(&build_setting.custom_template).join(file_name);
         if template_path.exists() {
             if let Ok(content) = fs::read_to_string(&template_path) {
                 tempalte_content = content;

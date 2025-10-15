@@ -4,20 +4,21 @@ using UnityEngine;
 
 public partial class TableManager
 {
-    {%- if info.primary_num is 0 -%}
+    {% if info.primary_num == 0 -%}
     private {{CLASS_NAME}} _{{CLASS_NAME | lower}};
+    public {{CLASS_NAME}} {{CLASS_NAME}} => _{{CLASS_NAME | lower}};
 
     private void Load_{{CLASS_NAME}}()
     {
         TextAsset asset = Resources.Load<TextAsset>("Tables/{{CLASS_NAME}}");
-        _{{CLASS_NAME | lower}}s = LitJson.JsonMapper.ToObject<{{CLASS_NAME}}>(asset.text);
+        _{{CLASS_NAME | lower}} = LitJson.JsonMapper.ToObject<{{CLASS_NAME}}>(asset.text);
     }
-    {%- elif info.primary_num is 1 -%}
+    {%- elif info.primary_num == 1 -%}
     private Dictionary<{{info.main_fields[0].field_type}}, {{CLASS_NAME}}> _{{CLASS_NAME | lower}}s;
 
     private void Load_{{CLASS_NAME}}()
     {
-        _{{CLASS_NAME | lower}}s = new Dictionary<int, {{CLASS_NAME}}>();
+        _{{CLASS_NAME | lower}}s = new Dictionary<{{info.main_fields[0].field_type}}, {{CLASS_NAME}}>();
         TextAsset asset = Resources.Load<TextAsset>("Tables/{{CLASS_NAME}}");
         {{CLASS_NAME}}[] array = LitJson.JsonMapper.ToObject<{{CLASS_NAME}}[]>(asset.text);
         foreach (var item in array)
@@ -42,15 +43,15 @@ public partial class TableManager
 
     private void Load_{{CLASS_NAME}}()
     {
-        _{{CLASS_NAME | lower}}s = new Dictionary<int, Dictionary<int,{{CLASS_NAME}}>>();
+        _{{CLASS_NAME | lower}}s = new Dictionary<{{info.main_fields[0].field_type}}, Dictionary<{{info.main_fields[1].field_type}}, {{CLASS_NAME}}>>();
         TextAsset asset = Resources.Load<TextAsset>("Tables/{{CLASS_NAME}}");
         {{CLASS_NAME}}[] array = LitJson.JsonMapper.ToObject<{{CLASS_NAME}}[]>(asset.text);
         foreach (var item in array)
         {
-            Dictionary<int,{{CLASS_NAME}}> subItem;
+            Dictionary<{{info.main_fields[1].field_type}}, {{CLASS_NAME}}> subItem;
             if(!_{{CLASS_NAME | lower}}s.TryGetValue(item.{{info.main_fields[0].field_name}}, out subItem))
             {
-                subItem = new Dictionary<int, {{CLASS_NAME}}>();
+                subItem = new Dictionary<{{info.main_fields[1].field_type}}, {{CLASS_NAME}}>();
                 _{{CLASS_NAME | lower}}s.Add(item.{{info.main_fields[0].field_name}}, subItem);
             }
             if (!subItem.ContainsKey(item.{{info.main_fields[1].field_name}}))
@@ -66,19 +67,21 @@ public partial class TableManager
         {
             return null;
         }
-        Dictionary<{{info.main_fields[1].field_name}}, {{CLASS_NAME}}> subItem = _{{CLASS_NAME | lower}}s[id];
+        Dictionary<{{info.main_fields[1].field_type}}, {{CLASS_NAME}}> subItem = _{{CLASS_NAME | lower}}s[{{info.main_fields[0].field_name}}];
         if (subItem.ContainsKey({{info.main_fields[1].field_name}}))
         {
             return subItem[{{info.main_fields[1].field_name}}];
         }
         return null;
     }
-    {%- endif -%}
+    {%- endif %}
 }
 
 namespace Gable
 {
-    // 这是一个测试
+    /// <summary>
+    /// {{CLASS_NAME}} 数据类
+    /// </summary>
     public class {{CLASS_NAME}} 
     {
         {%- for field in info.fields %}

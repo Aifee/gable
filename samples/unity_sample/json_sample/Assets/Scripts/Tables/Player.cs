@@ -4,38 +4,27 @@ using UnityEngine;
 
 public partial class TableManager
 {
-    private Dictionary<int, Dictionary<int, Player>> _players;
+    private Dictionary<int, Player> _players;
 
     private void Load_Player()
     {
-        _players = new Dictionary<int, Dictionary<int,Player>>();
+        _players = new Dictionary<int, Player>();
         TextAsset asset = Resources.Load<TextAsset>("Tables/Player");
         Player[] array = LitJson.JsonMapper.ToObject<Player[]>(asset.text);
         foreach (var item in array)
         {
-            Dictionary<int, Player> subItem;
-            if(!_players.TryGetValue(item.id, out subItem))
+            if (!_players.ContainsKey(item.id))
             {
-                subItem = new Dictionary<int, Player>();
-                _players.Add(item.id, subItem);
-            }
-            if (!subItem.ContainsKey(item.cd))
-            {
-                subItem.Add(item.cd, item);
+                _players.Add(item.id, item);
             }
         }
     }
 
-    public Player GetPlayer(int id, int cd)
+    public Player GetPlayer(int id)
     {
-        if (!_players.ContainsKey(id))
+        if (_players.ContainsKey(id))
         {
-            return  null;
-        }
-        Dictionary<int, Player> subItem = _players[id];
-        if (subItem.ContainsKey(cd))
-        {
-            return subItem[cd];
+            return _players[id];
         }
         return null;
     }
@@ -43,7 +32,9 @@ public partial class TableManager
 
 namespace Gable
 {
-    // 这是一个测试
+    /// <summary>
+    /// Player 数据类
+    /// </summary>
     public class Player 
     {
         /// <summary>

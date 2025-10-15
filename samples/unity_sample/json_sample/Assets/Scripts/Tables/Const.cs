@@ -4,27 +4,21 @@ using UnityEngine;
 
 public partial class TableManager
 {
-    private Const _consts;
+    private Const _const;
+    public Const Const => _const;
 
     private void Load_Const()
     {
         TextAsset asset = Resources.Load<TextAsset>("Tables/Const");
-        _consts = LitJson.JsonMapper.ToObject<Const>(asset.text);
-    }
-
-    public Const GetConst(int id)
-    {
-        if (_consts.ContainsKey(id))
-        {
-            return _consts[id];
-        }
-        return null;
+        _const = LitJson.JsonMapper.ToObject<Const>(asset.text);
     }
 }
 
 namespace Gable
 {
-    // 这是一个测试
+    /// <summary>
+    /// Const 数据类
+    /// </summary>
     public class Const 
     {
         /// <summary>

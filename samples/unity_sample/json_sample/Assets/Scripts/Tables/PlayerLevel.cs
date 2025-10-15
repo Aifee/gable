@@ -32,7 +32,9 @@ public partial class TableManager
 
 namespace Gable
 {
-    // 这是一个测试
+    /// <summary>
+    /// PlayerLevel 数据类
+    /// </summary>
     public class PlayerLevel 
     {
         /// <summary>

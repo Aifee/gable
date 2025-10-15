@@ -4,7 +4,7 @@ package gable;
  * {{CLASS_NAME}}
  */
 public enum {{CLASS_NAME}} {
-    {%- for field in fields %}
+    {%- for field in info.fields %}
     /**
      * {{field.field_desc}}
      */

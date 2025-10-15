@@ -35,7 +35,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
 
     let mut context: Context = Context::new();
     context.insert("CLASS_NAME", &tree_data.file_name);
-    context.insert("fields", &proto_fields);
+    context.insert("info", &proto_fields);
     context.insert("imports", &imports);
     let rendered_result: Result<String, tera::Error> = match tree_data.gable_type {
         ESheetType::Normal | ESheetType::Localize | ESheetType::KV => tera.render(

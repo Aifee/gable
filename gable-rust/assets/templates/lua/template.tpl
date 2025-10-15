@@ -6,7 +6,7 @@ local {{ import }} = require("{{ import }}")
 
 --- {{CLASS_NAME}}
 local {{CLASS_NAME}} = {
-    {%- for field in fields %}
+    {%- for field in info.fields %}
     --- {{field.field_desc}}
     {{ field.field_name }} = nil,
     {%- endfor %}
@@ -16,7 +16,7 @@ local {{CLASS_NAME}} = {
 function {{CLASS_NAME}}:new()
     local instance = {}
     setmetatable(instance, { __index = {{CLASS_NAME}} })
-    {%- for field in fields %}
+    {%- for field in info.fields %}
     instance.{{ field.field_name }} = nil
     {%- endfor %}
     return instance

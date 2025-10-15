@@ -4,7 +4,7 @@
 /// {{STRUCT_NAME}}
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum {{STRUCT_NAME}} {
-    {%- for field in fields %}
+    {%- for field in info.fields %}
     /// {{field.field_desc}}
     {{ field.field_name }} = {{ field.field_index }},
     {%- endfor %}
@@ -19,7 +19,7 @@ impl {{STRUCT_NAME}} {
     /// Create an enumeration from integer values
     pub fn from_i32(value: i32) -> Option<Self> {
         match value {
-            {%- for field in fields %}
+            {%- for field in info.fields %}
             {{ field.field_index }} => Some({{STRUCT_NAME}}::{{ field.field_name }}),
             {%- endfor %}
             _ => None,

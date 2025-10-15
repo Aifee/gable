@@ -5,7 +5,7 @@ import "{{ import }}"
 {%- endfor %}
 // {{CLASS_NAME}} 
 type {{CLASS_NAME}} struct {
-	{%- for field in fields %}
+	{%- for field in info.fields %}
 	// {{field.field_desc}}
 	{{ field.field_name }} {{ field.field_type }} `json:"{{ field.field_name }}"`
 	{%- endfor %}

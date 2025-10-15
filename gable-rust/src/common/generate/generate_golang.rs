@@ -38,7 +38,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
     let mut context: Context = Context::new();
     context.insert("CLASS_NAME", &tree_data.file_name);
-    context.insert("fields", &go_fields);
+    context.insert("info", &go_fields);
 
     // 收集导入的包
     let imports: Vec<String> = collect_imports(&go_fields);

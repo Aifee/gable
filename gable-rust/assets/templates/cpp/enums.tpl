@@ -4,7 +4,7 @@
  * {{CLASS_NAME}}
  */
 enum class {{CLASS_NAME}} {
-    {% for field in fields %}
+    {% for field in info.fields %}
     /**
      * {{field.field_desc}}
      */

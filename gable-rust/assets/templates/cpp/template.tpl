@@ -10,7 +10,7 @@
  */
 class {{CLASS_NAME}} {
 public:
-    {% for field in fields %}
+    {% for field in info.fields %}
     /**
      * {{field.field_desc}}
      */

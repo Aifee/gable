@@ -4,27 +4,38 @@ using UnityEngine;
 
 public partial class TableManager
 {
-    private Dictionary<int, Player> _players;
+    private Dictionary<int, Dictionary<int, Player>> _players;
 
     private void Load_Player()
     {
-        _players = new Dictionary<int, Player>();
+        _players = new Dictionary<int, Dictionary<int,Player>>();
         TextAsset asset = Resources.Load<TextAsset>("Tables/Player");
         Player[] array = LitJson.JsonMapper.ToObject<Player[]>(asset.text);
         foreach (var item in array)
         {
-            if (!_players.ContainsKey(item.id))
+            Dictionary<int, Player> subItem;
+            if(!_players.TryGetValue(item.id, out subItem))
             {
-                _players.Add(item.id, item);
+                subItem = new Dictionary<int, Player>();
+                _players.Add(item.id, subItem);
+            }
+            if (!subItem.ContainsKey(item.cd))
+            {
+                subItem.Add(item.cd, item);
             }
         }
     }
 
-    public Player GetPlayer(int id)
+    public Player GetPlayer(int id, int cd)
     {
-        if (_players.ContainsKey(id))
+        if (!_players.ContainsKey(id))
         {
-            return _players[id];
+            return  null;
+        }
+        Dictionary<int, Player> subItem = _players[id];
+        if (subItem.ContainsKey(cd))
+        {
+            return subItem[cd];
         }
         return null;
     }

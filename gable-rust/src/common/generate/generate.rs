@@ -42,6 +42,7 @@ pub struct GenerateFieldItem {
 }
 #[derive(serde::Serialize)]
 pub struct GenerateFieldInfo {
+    pub primary_num: usize,
     pub main_fields: Vec<GenerateMainFieldItem>,
     pub fields: Vec<GenerateFieldItem>,
 }

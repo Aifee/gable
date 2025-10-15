@@ -144,6 +144,7 @@ pub fn transition_fields(
         }
     }
     let generate_info = GenerateFieldInfo {
+        primary_num: main_fields.len(),
         main_fields,
         fields,
     };

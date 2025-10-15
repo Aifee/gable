@@ -4,20 +4,12 @@ using UnityEngine;
 
 public partial class TableManager
 {
-    private Dictionary<int, Const> _consts;
+    private Const _consts;
 
     private void Load_Const()
     {
-        _consts = new Dictionary<int, Const>();
         TextAsset asset = Resources.Load<TextAsset>("Tables/Const");
-        Const[] array = LitJson.JsonMapper.ToObject<Const[]>(asset.text);
-        foreach (var item in array)
-        {
-            if (!_consts.ContainsKey(item.id))
-            {
-                _consts.Add(item.id, item);
-            }
-        }
+        _consts = LitJson.JsonMapper.ToObject<Const>(asset.text);
     }
 
     public Const GetConst(int id)

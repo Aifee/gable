@@ -8,7 +8,7 @@ import {{ import }};
  * {{CLASS_NAME}}
  */
 class {{CLASS_NAME}} {
-    {%- for field in fields %}
+    {%- for field in info.fields %}
     /**
      * {{field.field_desc}}
      */

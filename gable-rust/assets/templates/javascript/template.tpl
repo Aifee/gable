@@ -8,7 +8,7 @@ import { {{ import }} } from './{{ import }}.js';
  * {{CLASS_NAME}}
  */
 export class {{CLASS_NAME}} {
-    {%- for field in fields %}
+    {%- for field in info.fields %}
     /**
      * {{field.field_desc}}
      */
@@ -16,7 +16,7 @@ export class {{CLASS_NAME}} {
     {%- endfor %}
     
     constructor() {
-        {%- for field in fields %}
+        {%- for field in info.fields %}
         this.{{ field.field_name }} = null;
         {%- endfor %}
     }

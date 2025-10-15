@@ -9,7 +9,7 @@ class {{CLASS_NAME}}:
     {{CLASS_NAME}}
     """
     def __init__(self):
-        {%- for field in fields %}
+        {%- for field in info.fields %}
         # {{field.field_desc}}
         self.{{ field.field_name }} = None
         {%- endfor %}

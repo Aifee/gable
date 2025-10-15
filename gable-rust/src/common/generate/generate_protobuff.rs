@@ -19,15 +19,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let (imports, proto_fields, common_protos) =
         ProtoFieldInfo::transition_fields(&fields, build_setting.is_proto_2);
 
-    // 使用全局缓存的Tera实例，避免重复创建
     let tera: &Tera = get_tera_instance();
-
-    // 为当前操作创建一个新的Tera实例，但复用已解析的模板
-    // let mut local_tera = Tera::default();
-    // for (name, template) in &tera.templates {
-    //     local_tera.add_raw_template(name, &template.raw).unwrap();
-    // }
-
     if common_protos.len() > 0 {
         create_common_proto(&tera, &common_protos, build_setting)
     }

@@ -214,6 +214,13 @@ impl GableApp {
             ActionCommand::new(ECommandType::ConvertTarget, Some(display_name), None);
         commands.push_back(action);
     }
+    // 生成配置（根据设置生成）
+    pub fn generate_target_command(display_name: String) {
+        let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
+        let action: ActionCommand =
+            ActionCommand::new(ECommandType::GenerateTarget, Some(display_name), None);
+        commands.push_back(action);
+    }
 
     pub fn create_folder_command(full_path: String) {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
@@ -299,6 +306,12 @@ impl GableApp {
                     if let Some(param) = command.param1 {
                         if let Some(setting) = setting::get_build_setting_with_name(&param) {
                             convert::from_target(&setting);
+                        }
+                    }
+                }
+                ECommandType::GenerateTarget => {
+                    if let Some(param) = command.param1 {
+                        if let Some(setting) = setting::get_build_setting_with_name(&param) {
                             generate::from_target(&setting);
                         }
                     }

@@ -49,6 +49,7 @@ pub fn from_target(build_setting: &BuildSetting) {
     for (_, data) in datas.iter() {
         execute(build_setting, *data);
     }
+
     if !build_setting.postprocessing.is_empty() {
         let target_path: PathBuf = utils::get_absolute_path(&setting::get_workspace());
         system_command(&build_setting.postprocessing, &target_path);
@@ -121,16 +122,18 @@ fn system_command(command: &str, path: &PathBuf) {
             return;
         }
 
+        // 使用spawn启动子进程，但不等待其完成，避免阻塞主线程
         match Command::new("cmd")
             .current_dir(&path)
             .args(&["/C", &temp_script.to_string_lossy()])
             .spawn()
         {
             Ok(mut child) => {
-                // 等待命令执行完成
-                let _ = child.wait();
-                // 删除临时脚本文件
-                let _ = std::fs::remove_file(&temp_script);
+                // 在单独的线程中等待命令执行完成并清理临时文件
+                std::thread::spawn(move || {
+                    let _ = child.wait();
+                    let _ = std::fs::remove_file(&temp_script);
+                });
             }
             Err(e) => {
                 log::error!("The post-processing command cannot be executed: {}", e);
@@ -141,25 +144,43 @@ fn system_command(command: &str, path: &PathBuf) {
 
     #[cfg(target_os = "macos")]
     {
-        if let Err(e) = Command::new("sh")
+        // 使用spawn启动子进程，但不等待其完成，避免阻塞主线程
+        match Command::new("sh")
             .current_dir(&path)
             .arg("-c")
             .arg(&command)
             .spawn()
         {
-            log::error!("The post-processing command cannot be executed: {}", e);
+            Ok(mut child) => {
+                // 在单独的线程中等待命令执行完成
+                std::thread::spawn(move || {
+                    let _ = child.wait();
+                });
+            }
+            Err(e) => {
+                log::error!("The post-processing command cannot be executed: {}", e);
+            }
         }
     }
 
     #[cfg(target_os = "linux")]
     {
-        if let Err(e) = Command::new("sh")
+        // 使用spawn启动子进程，但不等待其完成，避免阻塞主线程
+        match Command::new("sh")
             .current_dir(&path)
             .arg("-c")
             .arg(&command)
             .spawn()
         {
-            log::error!("The post-processing command cannot be executed: {}", e);
+            Ok(mut child) => {
+                // 在单独的线程中等待命令执行完成
+                std::thread::spawn(move || {
+                    let _ = child.wait();
+                });
+            }
+            Err(e) => {
+                log::error!("The post-processing command cannot be executed: {}", e);
+            }
         }
     }
 }

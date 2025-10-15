@@ -13,6 +13,8 @@ pub enum ECommandType {
     GenerateItem,
     // 根据目标表单导出数据
     ConvertTarget,
+    // 根据目标表单生成代码
+    GenerateTarget,
     // 创建文件夹
     CreateFolder,
     // 创建Excel

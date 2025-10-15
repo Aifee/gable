@@ -175,7 +175,11 @@ impl GableBuildSetting {
                 if ui
                     .add_sized([165.0, 26.0], Button::new(locales::t("build")))
                     .clicked()
-                {}
+                {
+                    if let Some(build_settings) = setting::get_build_setting(self.selected_index) {
+                        GableApp::generate_target_command(build_settings.display_name);
+                    }
+                }
             });
         });
     }

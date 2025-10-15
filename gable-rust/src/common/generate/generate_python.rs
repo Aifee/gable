@@ -1,13 +1,12 @@
-use std::{fs, io::Error, path::PathBuf};
-
 use crate::{
-    common::{res, setting::BuildSetting, utils},
+    common::{generate::generate, setting::BuildSetting, utils},
     gui::datas::{
         edata_type::EDataType,
         esheet_type::ESheetType,
         tree_data::{FieldInfo, TreeData},
     },
 };
+use std::{fs, io::Error, path::PathBuf};
 use tera::{Context, Tera};
 
 /**
@@ -35,19 +34,15 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
     let python_fields: Vec<PythonFieldInfo> = transition_fields(&fields);
     let mut tera: Tera = Tera::default();
-    if let Some(file) = res::load_template("templates/python/template.tpl") {
-        let template_content = file
-            .contents_utf8()
-            .expect("Failed to read template content");
-        tera.add_raw_template("template.tpl", template_content)
-            .expect("Failed to add template");
+    let template_key = "templates/python/template.tpl";
+    if let Some(content) = generate::get_template(template_key) {
+        tera.add_raw_template(template_key, &content)
+            .expect("Python Failed to add template");
     }
-    if let Some(file) = res::load_template("templates/python/enums.tpl") {
-        let enum_content = file
-            .contents_utf8()
-            .expect("Failed to read template content");
-        tera.add_raw_template("enums.tpl", enum_content)
-            .expect("Failed to add template");
+    let enum_key = "templates/python/enums.tpl";
+    if let Some(content) = generate::get_template(enum_key) {
+        tera.add_raw_template(enum_key, &content)
+            .expect("Python Failed to add template");
     }
     let mut context: Context = Context::new();
     context.insert("CLASS_NAME", &tree_data.file_name);
@@ -59,15 +54,15 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
 
     let rendered_result: Result<String, tera::Error> = match tree_data.gable_type {
         ESheetType::Normal | ESheetType::Localize | ESheetType::KV => {
-            tera.render("template.tpl", &context)
+            tera.render(template_key, &context)
         }
-        ESheetType::Enum => tera.render("enums.tpl", &context),
+        ESheetType::Enum => tera.render(enum_key, &context),
     };
     if rendered_result.is_err() {
         log::error!("Template error: {}", rendered_result.unwrap_err());
         return;
     }
-    let rendered: String = rendered_result.unwrap();
+    let rendered: String = rendered_result.unwrap_or(String::new());
     let target_path: PathBuf = utils::get_absolute_path(&build_setting.script_path)
         .join(format!("{}.py", tree_data.file_name));
 

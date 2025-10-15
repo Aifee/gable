@@ -5,6 +5,7 @@ use crate::{
             generate_javascript, generate_lua, generate_protobuff, generate_python, generate_rust,
             generate_typescript,
         },
+        res,
         setting::{self, BuildSetting},
         utils,
     },
@@ -13,8 +14,11 @@ use crate::{
         tree_item::TreeItem,
     },
 };
-use std::process::Command;
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, fs, path::PathBuf, sync::Mutex};
+use std::{process::Command, sync::LazyLock};
+
+static TEMPLATES: LazyLock<Mutex<HashMap<String, String>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /**
  * 批量生成代码（所有平台 & 所有表单）
@@ -46,6 +50,8 @@ pub fn from_target(build_setting: &BuildSetting) {
         log::error!("No configurations found to export");
         return;
     }
+    clear_templates();
+    preload_templates(build_setting);
     for (_, data) in datas.iter() {
         execute(build_setting, *data);
     }
@@ -66,12 +72,13 @@ pub fn from_items(item: &TreeItem) {
         log::error!("Obtaining data is empty: {}", item.display_name);
         return;
     }
-
+    clear_templates();
     let settings = setting::APP_SETTINGS.read().unwrap();
     for build_setting in settings.build_settings.iter() {
         if !build_setting.generate_script {
             continue;
         }
+        preload_templates(build_setting);
         for (_, data) in datas.iter() {
             execute(build_setting, *data);
         }
@@ -80,6 +87,54 @@ pub fn from_items(item: &TreeItem) {
             system_command(&build_setting.postprocessing, &target_path);
         }
     }
+}
+
+pub fn get_template(key: &str) -> Option<String> {
+    let templates = TEMPLATES.lock().unwrap();
+    templates.get(key).cloned()
+}
+
+pub fn clear_templates() {
+    let mut templates = TEMPLATES.lock().unwrap();
+    templates.clear();
+}
+
+pub fn preload_templates(build_setting: &BuildSetting) {
+    let mut templates = TEMPLATES.lock().unwrap();
+    if build_setting.target_type == ETargetType::Protobuff {
+    } else {
+        let path_keyword = build_setting.dev.path_keyword();
+        let template_path = format!("templates/{}/template.tpl", path_keyword);
+        templates.insert(
+            template_path.clone(),
+            load_template(build_setting, &template_path, "template.tpl"),
+        );
+        let enum_path = format!("templates/{}/enums.tpl", path_keyword);
+        templates.insert(
+            enum_path.clone(),
+            load_template(build_setting, &enum_path, "enums.tpl"),
+        );
+    }
+}
+
+fn load_template(build_setting: &BuildSetting, builtin: &str, file_name: &str) -> String {
+    let mut tempalte_content: String = String::new();
+    if build_setting.is_custom {
+        let template_path: PathBuf = build_setting.custom_template.join(file_name);
+        if template_path.exists() {
+            if let Ok(content) = fs::read_to_string(&template_path) {
+                tempalte_content = content;
+            }
+        }
+    }
+    if tempalte_content.is_empty() {
+        if let Some(file) = res::load_template(builtin) {
+            if let Some(content) = file.contents_utf8() {
+                tempalte_content = content.to_string();
+            }
+        }
+    }
+    tempalte_content
 }
 
 /**

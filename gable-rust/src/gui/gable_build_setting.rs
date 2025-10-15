@@ -394,8 +394,8 @@ impl GableBuildSetting {
                             .clicked()
                         {
                             if let Some(path) = rfd::FileDialog::new()
-                                .set_title(locales::t("select_file"))
-                                .pick_file()
+                                .set_title(locales::t("select_template_path"))
+                                .pick_folder()
                             {
                                 let re_path: PathBuf = utils::get_env_relative_path(&path);
                                 build_settings.custom_template = re_path;

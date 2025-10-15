@@ -180,9 +180,9 @@
     "en": "Template File"
   },
   {
-    "key": "select_file",
-    "zh": "选择文件",
-    "en": "Select File"
+    "key": "select_template_path",
+    "zh": "选择模板路径",
+    "en": "Select the template path"
   },
   {
     "key": "post_processing",

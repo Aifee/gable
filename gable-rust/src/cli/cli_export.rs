@@ -82,7 +82,9 @@ fn execute_convert_command(files: &[String], target: &Option<String>) {
 fn execute_script_command(files: &[String], target: &Option<String>) {
     let build_settings: Vec<BuildSetting> = setting::get_build_settings(target);
     let items: Vec<TreeItem> = gables::get_item_display_name(files);
+    generate::clear_templates();
     for setting in build_settings.iter() {
+        generate::preload_templates(setting);
         for item in items.iter() {
             let datas: HashMap<String, &TreeData> = item.get_datas();
             if datas.len() <= 0 {

@@ -69,4 +69,19 @@ impl EDevelopType {
             EDevelopType::Rust => "rs",
         }
     }
+
+    pub fn path_keyword(&self) -> &'static str {
+        match self {
+            EDevelopType::Cpp => "cpp",
+            EDevelopType::Csharp => "csharp",
+            EDevelopType::Cangjie => "cangjie",
+            EDevelopType::Golang => "golang",
+            EDevelopType::Java => "java",
+            EDevelopType::JavaScript => "javascript",
+            EDevelopType::Lua => "lua",
+            EDevelopType::Python => "python",
+            EDevelopType::TypeScript => "typescript",
+            EDevelopType::Rust => "rust",
+        }
+    }
 }

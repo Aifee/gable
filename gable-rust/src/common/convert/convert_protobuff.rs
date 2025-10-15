@@ -1,5 +1,9 @@
 use crate::{
-    common::{generate::proto_field_info::ProtoFieldInfo, setting::BuildSetting, utils},
+    common::{
+        generate::{generate::GenerateFieldInfo, proto_field_info},
+        setting::BuildSetting,
+        utils,
+    },
     gui::datas::{
         esheet_type::ESheetType,
         tree_data::{FieldInfo, TreeData},
@@ -22,8 +26,13 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
         log::debug!("Data is empty");
         return;
     }
-    let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
-    let (_, proto_fields, _) = ProtoFieldInfo::transition_fields(&fields, true);
+    let field_info: FieldInfo = if let Some(info) = tree_data.to_fields(&build_setting.keyword) {
+        info
+    } else {
+        return;
+    };
+
+    let (_, proto_fields, _) = proto_field_info::transition_fields(&field_info, true);
     let target_path: PathBuf = utils::get_absolute_path(&build_setting.target_path)
         .join(format!("{}.bytes", tree_data.file_name));
     match tree_data.gable_type {
@@ -73,26 +82,21 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
  */
 fn encode_normal_data(
     items: &Vec<Map<String, Value>>,
-    fields: &Vec<ProtoFieldInfo>,
+    info: &GenerateFieldInfo,
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let mut table_buffer = Vec::new();
-    let items_field_number = 1u32; // UnitTable中items字段的编号 (repeated Unit items = 1)
+    let items_field_number = 1u32;
 
     // 为每个数据项编码并作为repeated字段的元素添加
     for item in items.iter() {
         let mut item_buffer = Vec::new();
-
-        // 编码Unit消息的所有字段
-        for (index, field_info) in fields.iter().enumerate() {
+        for (index, field_info) in info.fields.iter().enumerate() {
             let field_number: u32 = (index + 1) as u32;
             if let Some(value) = item.get(&field_info.field_name) {
                 encode_field_value(field_number, value, &field_info.data_type, &mut item_buffer)?;
             }
         }
-
-        // 将编码后的Unit消息作为repeated字段的一个元素添加到UnitTable中
-        // 字段key = (field_number << 3) | wire_type
-        let field_key: u32 = (items_field_number << 3) | 2; // wire type 2 = length-delimited
+        let field_key: u32 = (items_field_number << 3) | 2;
         encode_varint(field_key as u64, &mut table_buffer);
         encode_varint(item_buffer.len() as u64, &mut table_buffer);
         table_buffer.extend_from_slice(&item_buffer);
@@ -109,12 +113,10 @@ fn encode_normal_data(
  */
 fn encode_kv_data(
     item: &Map<String, Value>,
-    field_infos: &Vec<ProtoFieldInfo>,
+    info: &GenerateFieldInfo,
 ) -> Result<Vec<u8>, Box<dyn Error>> {
     let mut item_buffer = Vec::new();
-
-    // 直接编码KV数据项为单个消息，不使用repeated字段包装
-    for field_info in field_infos {
+    for field_info in info.fields.iter() {
         let field_number: u32 = field_info.field_index as u32;
         if let Some(value) = item.get(&field_info.field_name) {
             encode_field_value(field_number, value, &field_info.data_type, &mut item_buffer)?;

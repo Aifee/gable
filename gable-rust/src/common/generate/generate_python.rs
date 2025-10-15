@@ -1,5 +1,9 @@
 use crate::{
-    common::{generate::generate, setting::BuildSetting, utils},
+    common::{
+        generate::generate::{self, GenerateFieldInfo, GenerateFieldItem, GenerateMainFieldItem},
+        setting::BuildSetting,
+        utils,
+    },
     gui::datas::{
         edata_type::EDataType,
         esheet_type::ESheetType,
@@ -10,29 +14,17 @@ use std::{fs, io::Error, path::PathBuf};
 use tera::{Context, Tera};
 
 /**
- * python 字段信息
-*/
-#[derive(serde::Serialize)]
-struct PythonFieldInfo {
-    // 是否是主键
-    pub is_key: bool,
-    // 字段名称
-    pub field_name: String,
-    // 字段类型（用于注释）
-    pub field_type: String,
-    // 字段描述
-    pub field_desc: String,
-    // 字段序号
-    pub field_index: i32,
-}
-/**
  * 生成python脚本
  * @param build_setting 构建设置
  * @param tree_data 树结构数据
 */
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
-    let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
-    let python_fields: Vec<PythonFieldInfo> = transition_fields(&fields);
+    let field_info: FieldInfo = if let Some(info) = tree_data.to_fields(&build_setting.keyword) {
+        info
+    } else {
+        return;
+    };
+    let python_fields: GenerateFieldInfo = transition_fields(&field_info);
     let mut tera: Tera = Tera::default();
     let template_key = "templates/python/template.tpl";
     if let Some(content) = generate::get_template(template_key) {
@@ -86,9 +78,23 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
  * @param fields 字段列表
  * @return python字段列表
 */
-fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<PythonFieldInfo> {
-    let mut python_fields: Vec<PythonFieldInfo> = Vec::new();
-    for field in fields {
+fn transition_fields(info: &FieldInfo) -> GenerateFieldInfo {
+    let mut main_fields: Vec<GenerateMainFieldItem> = Vec::new();
+    for field in info.main_fields.iter() {
+        let field_type = match field.field_type {
+            EDataType::Int | EDataType::Long => "int",
+            EDataType::Float => "float",
+            _ => "str",
+        };
+        let main_field: GenerateMainFieldItem = GenerateMainFieldItem {
+            field_type: field_type.to_string(),
+            field_name: field.field_name.clone(),
+        };
+        main_fields.push(main_field);
+    }
+
+    let mut fields: Vec<GenerateFieldItem> = Vec::new();
+    for field in info.fields.iter() {
         // Python 是动态类型语言，不需要转换为特定类型，但保留用于注释
         let python_type = match field.field_type {
             EDataType::Int | EDataType::Long | EDataType::Time | EDataType::Date => "int",
@@ -121,27 +127,30 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<PythonFieldInfo> {
                 enum_name
             }
         };
-
-        let python_field: PythonFieldInfo = PythonFieldInfo {
-            is_key: field.is_key,
+        let python_field: GenerateFieldItem = GenerateFieldItem {
             field_name: field.field_name.clone(),
             field_type: python_type.to_string(),
             field_desc: field.field_desc.clone(),
             field_index: field.field_index,
+            field_extend: String::new(),
+            data_type: String::new(),
         };
-        python_fields.push(python_field);
+        fields.push(python_field);
     }
-    return python_fields;
+    return GenerateFieldInfo {
+        main_fields,
+        fields,
+    };
 }
 /**
  * 收集需要导入的模块
  * @param fields 字段列表
  * @return 模块列表
 */
-fn collect_imports(fields: &Vec<PythonFieldInfo>) -> Vec<String> {
+fn collect_imports(info: &GenerateFieldInfo) -> Vec<String> {
     let mut imports: Vec<String> = Vec::new();
 
-    for field in fields {
+    for field in info.fields.iter() {
         // 检查是否有需要导入的自定义类型
         if field.field_type != "int"
             && field.field_type != "str"

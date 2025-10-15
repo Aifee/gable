@@ -1,5 +1,9 @@
 use crate::{
-    common::{generate::generate, setting::BuildSetting, utils},
+    common::{
+        generate::generate::{self, GenerateFieldInfo, GenerateFieldItem, GenerateMainFieldItem},
+        setting::BuildSetting,
+        utils,
+    },
     gui::datas::{
         edata_type::EDataType,
         esheet_type::ESheetType,
@@ -10,30 +14,17 @@ use std::{fs, io::Error, path::PathBuf};
 use tera::{Context, Tera};
 
 /**
- * Lua 字段信息
-*/
-#[derive(serde::Serialize)]
-struct LuaFieldInfo {
-    // 是否是主键
-    pub is_key: bool,
-    // 字段名称
-    pub field_name: String,
-    // 字段类型（用于注释）
-    pub field_type: String,
-    // 字段描述
-    pub field_desc: String,
-    // 字段序号
-    pub field_index: i32,
-}
-
-/**
  * 生成 Lua脚本
  * @param build_setting 构建设置
  * @param tree_data 树数据
 */
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
-    let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
-    let lua_fields: Vec<LuaFieldInfo> = transition_fields(&fields);
+    let field_info: FieldInfo = if let Some(info) = tree_data.to_fields(&build_setting.keyword) {
+        info
+    } else {
+        return;
+    };
+    let lua_fields: GenerateFieldInfo = transition_fields(&field_info);
     let mut tera: Tera = Tera::default();
     let template_key = "templates/lua/template.tpl";
     if let Some(content) = generate::get_template(template_key) {
@@ -87,10 +78,22 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
  * @param fields 通用字段
  * @return lua字段
 */
-fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<LuaFieldInfo> {
-    let mut lua_fields: Vec<LuaFieldInfo> = Vec::new();
-    for field in fields {
-        // Lua 是动态类型语言，不需要转换为特定类型，但保留用于注释
+fn transition_fields(info: &FieldInfo) -> GenerateFieldInfo {
+    let mut main_fields: Vec<GenerateMainFieldItem> = Vec::new();
+    for field in info.main_fields.iter() {
+        let field_type = match field.field_type {
+            EDataType::Int | EDataType::Long | EDataType::Float => "number",
+            _ => "string",
+        };
+        let main_field: GenerateMainFieldItem = GenerateMainFieldItem {
+            field_type: field_type.to_string(),
+            field_name: field.field_name.clone(),
+        };
+        main_fields.push(main_field);
+    }
+
+    let mut fields: Vec<GenerateFieldItem> = Vec::new();
+    for field in info.fields.iter() {
         let lua_type = match field.field_type {
             EDataType::Unknown | EDataType::String | EDataType::Loc => "string",
             EDataType::Boolean => "boolean",
@@ -125,17 +128,20 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<LuaFieldInfo> {
                 enum_name
             }
         };
-
-        let lua_field: LuaFieldInfo = LuaFieldInfo {
-            is_key: field.is_key,
+        let lua_field: GenerateFieldItem = GenerateFieldItem {
             field_name: field.field_name.clone(),
             field_type: lua_type.to_string(),
             field_desc: field.field_desc.clone(),
             field_index: field.field_index,
+            field_extend: String::new(),
+            data_type: String::new(),
         };
-        lua_fields.push(lua_field);
+        fields.push(lua_field);
     }
-    return lua_fields;
+    return GenerateFieldInfo {
+        main_fields,
+        fields,
+    };
 }
 
 /**
@@ -143,10 +149,10 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<LuaFieldInfo> {
  * @param fields 字段列表
  * @returns 导入的模块列表
 */
-fn collect_imports(fields: &Vec<LuaFieldInfo>) -> Vec<String> {
+fn collect_imports(info: &GenerateFieldInfo) -> Vec<String> {
     let mut imports: Vec<String> = Vec::new();
 
-    for field in fields {
+    for field in info.fields.iter() {
         // 检查是否有需要导入的自定义类型
         if field.field_type != "number"
             && field.field_type != "string"

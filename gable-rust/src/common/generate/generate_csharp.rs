@@ -1,5 +1,9 @@
 use crate::{
-    common::{generate::generate, setting::BuildSetting, utils},
+    common::{
+        generate::generate::{self, GenerateFieldInfo, GenerateFieldItem, GenerateMainFieldItem},
+        setting::BuildSetting,
+        utils,
+    },
     gui::datas::{
         edata_type::EDataType,
         esheet_type::ESheetType,
@@ -10,30 +14,17 @@ use std::{fs, io::Error, path::PathBuf};
 use tera::{Context, Tera};
 
 /**
- * C# 字段信息
-*/
-#[derive(serde::Serialize)]
-struct CsharpFieldInfo {
-    // 是否是主键
-    pub is_key: bool,
-    // 字段名称
-    pub field_name: String,
-    // 字段类型
-    pub field_type: String,
-    // 字段描述
-    pub field_desc: String,
-    // 字段序号
-    pub field_index: i32,
-}
-
-/**
  * 生成C#脚本
  * @param build_setting 构建设置
  * @param tree_data 树结构数据
 */
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
-    let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
-    let cs_fields: Vec<CsharpFieldInfo> = transition_fields(&fields);
+    let field_info: FieldInfo = if let Some(info) = tree_data.to_fields(&build_setting.keyword) {
+        info
+    } else {
+        return;
+    };
+    let generate_info: GenerateFieldInfo = transition_fields(&field_info);
     let mut tera: Tera = Tera::default();
     let template_key = "templates/csharp/template.tpl";
     if let Some(content) = generate::get_template(template_key) {
@@ -47,7 +38,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     }
     let mut context: Context = Context::new();
     context.insert("CLASS_NAME", &tree_data.file_name);
-    context.insert("fields", &cs_fields);
+    context.insert("info", &generate_info);
     let rendered_result: Result<String, tera::Error> = match tree_data.gable_type {
         ESheetType::Normal | ESheetType::Localize | ESheetType::KV => {
             tera.render(template_key, &context)
@@ -83,9 +74,24 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
  * @param fields 字段列表
  * @return C#字段列表
 */
-fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CsharpFieldInfo> {
-    let mut cs_fields: Vec<CsharpFieldInfo> = Vec::new();
-    for field in fields {
+fn transition_fields(info: &FieldInfo) -> GenerateFieldInfo {
+    let mut main_fields: Vec<GenerateMainFieldItem> = Vec::new();
+    for field in info.main_fields.iter() {
+        let field_type = match field.field_type {
+            EDataType::Int => "int",
+            EDataType::Long => "long",
+            EDataType::Float => "float",
+            _ => "string",
+        };
+        let main_field = GenerateMainFieldItem {
+            field_type: field_type.to_string(),
+            field_name: field.field_name.clone(),
+        };
+        main_fields.push(main_field);
+    }
+
+    let mut fields: Vec<GenerateFieldItem> = Vec::new();
+    for field in info.fields.iter() {
         let cs_type = match field.field_type {
             EDataType::Int | EDataType::Time => "int",
             EDataType::Date | EDataType::Long => "long",
@@ -119,14 +125,18 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<CsharpFieldInfo> {
             }
         };
 
-        let cs_field: CsharpFieldInfo = CsharpFieldInfo {
-            is_key: field.is_key,
+        let cs_field: GenerateFieldItem = GenerateFieldItem {
             field_name: field.field_name.clone(),
             field_type: cs_type.to_string(),
             field_desc: field.field_desc.clone(),
             field_index: field.field_index,
+            field_extend: String::new(),
+            data_type: String::new(),
         };
-        cs_fields.push(cs_field);
+        fields.push(cs_field);
     }
-    return cs_fields;
+    return GenerateFieldInfo {
+        main_fields,
+        fields,
+    };
 }

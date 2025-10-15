@@ -1,5 +1,9 @@
 use crate::{
-    common::{generate::generate, setting::BuildSetting, utils},
+    common::{
+        generate::generate::{self, GenerateFieldInfo, GenerateFieldItem, GenerateMainFieldItem},
+        setting::BuildSetting,
+        utils,
+    },
     gui::datas::{
         edata_type::EDataType,
         esheet_type::ESheetType,
@@ -10,30 +14,17 @@ use std::{fs, io::Error, path::PathBuf};
 use tera::{Context, Tera};
 
 /**
- * Rust 字段信息
-*/
-#[derive(serde::Serialize)]
-struct RustInfo {
-    // 是否是主键
-    pub is_key: bool,
-    // 字段名称
-    pub field_name: String,
-    // 字段类型
-    pub field_type: String,
-    // 字段描述
-    pub field_desc: String,
-    // 字段序号
-    pub field_index: i32,
-}
-
-/**
  * 生成Rust代码
  * @param build_setting 构建设置
  * @param tree_data 表数据
 */
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
-    let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
-    let rust_fields: Vec<RustInfo> = transition_fields(&fields);
+    let field_info: FieldInfo = if let Some(info) = tree_data.to_fields(&build_setting.keyword) {
+        info
+    } else {
+        return;
+    };
+    let rust_fields: GenerateFieldInfo = transition_fields(&field_info);
     let mut tera: Tera = Tera::default();
     let template_key = "templates/rust/template.tpl";
     if let Some(content) = generate::get_template(template_key) {
@@ -84,9 +75,24 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
  * @param fields 字段列表
  * @return 转换后的字段列表
 */
-fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<RustInfo> {
-    let mut rust_fields: Vec<RustInfo> = Vec::new();
-    for field in fields {
+fn transition_fields(info: &FieldInfo) -> GenerateFieldInfo {
+    let mut main_fields: Vec<GenerateMainFieldItem> = Vec::new();
+    for field in info.main_fields.iter() {
+        let field_type = match field.field_type {
+            EDataType::Int => "i32",
+            EDataType::Long => "i64",
+            EDataType::Float => "f32",
+            _ => "String",
+        };
+        let main_field: GenerateMainFieldItem = GenerateMainFieldItem {
+            field_type: field_type.to_string(),
+            field_name: field.field_name.clone(),
+        };
+        main_fields.push(main_field);
+    }
+
+    let mut fields: Vec<GenerateFieldItem> = Vec::new();
+    for field in info.fields.iter() {
         let rust_type = match field.field_type {
             EDataType::Int | EDataType::Time => "i32",
             EDataType::Date | EDataType::Long => "i64",
@@ -119,15 +125,18 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<RustInfo> {
                 enum_name
             }
         };
-
-        let rust_field: RustInfo = RustInfo {
-            is_key: field.is_key,
+        let rust_field: GenerateFieldItem = GenerateFieldItem {
             field_name: field.field_name.clone(),
             field_type: rust_type.to_string(),
             field_desc: field.field_desc.clone(),
             field_index: field.field_index,
+            field_extend: String::new(),
+            data_type: String::new(),
         };
-        rust_fields.push(rust_field);
+        fields.push(rust_field);
     }
-    return rust_fields;
+    return GenerateFieldInfo {
+        main_fields,
+        fields,
+    };
 }

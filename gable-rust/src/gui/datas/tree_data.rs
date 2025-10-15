@@ -6,10 +6,11 @@ use crate::{
 };
 use serde_json::{Map, Value};
 
-// #[derive(serde::Serialize)]
-pub struct FieldInfo {
-    // 是否是主键
-    pub is_key: bool,
+pub struct MainFieldItem {
+    pub field_type: EDataType,
+    pub field_name: String,
+}
+pub struct FieldItem {
     // 字段名称
     pub field_name: String,
     // 字段类型
@@ -20,6 +21,11 @@ pub struct FieldInfo {
     pub field_link: String,
     // 字段序号
     pub field_index: i32,
+}
+
+pub struct FieldInfo {
+    pub main_fields: Vec<MainFieldItem>,
+    pub fields: Vec<FieldItem>,
 }
 
 #[derive(Debug, Clone)]
@@ -52,7 +58,7 @@ impl TreeData {
      * @param keyword 关键字，用于筛选包含该关键字的数据
      * @return 返回字段信息列表
      */
-    pub fn to_fields(&self, keyword: &str) -> Vec<FieldInfo> {
+    pub fn to_fields(&self, keyword: &str) -> Option<FieldInfo> {
         match self.gable_type {
             ESheetType::Normal => self.normal_fields(keyword),
             ESheetType::Localize => self.localize_fields(keyword),
@@ -327,12 +333,13 @@ impl TreeData {
      * @param keyword 关键字，用于筛选包含该关键字的数据
      * @return 返回字段信息列表
      */
-    fn normal_fields(&self, keyword: &str) -> Vec<FieldInfo> {
+    fn normal_fields(&self, keyword: &str) -> Option<FieldInfo> {
         let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
         if valids_main.is_empty() || valids.is_empty() {
-            return vec![];
+            return None;
         };
-        let mut fields: Vec<FieldInfo> = Vec::new();
+        let mut main_fields: Vec<MainFieldItem> = Vec::new();
+        let mut fields: Vec<FieldItem> = Vec::new();
         let mut field_index: i32 = 1;
         let mut row_valid: bool = true;
         for (_, head_data) in valids_main.iter() {
@@ -372,9 +379,13 @@ impl TreeData {
             } else {
                 String::new()
             };
+            let main_field: MainFieldItem = MainFieldItem {
+                field_type: data_type.clone(),
+                field_name: field_value.clone(),
+            };
+            main_fields.push(main_field);
 
-            let field_info: FieldInfo = FieldInfo {
-                is_key: true,
+            let field_info: FieldItem = FieldItem {
                 field_name: field_value,
                 field_type: data_type,
                 field_desc: desc_value,
@@ -386,7 +397,7 @@ impl TreeData {
         }
         // 列数据无效
         if !row_valid {
-            return Vec::new();
+            return None;
         }
 
         for (_, head_data) in valids.iter() {
@@ -421,8 +432,7 @@ impl TreeData {
             } else {
                 String::new()
             };
-            let field_info: FieldInfo = FieldInfo {
-                is_key: false,
+            let field_info: FieldItem = FieldItem {
                 field_name: field_cell.value.clone(),
                 field_type: data_type,
                 field_desc: desc_value,
@@ -432,7 +442,10 @@ impl TreeData {
             fields.push(field_info);
             field_index += 1;
         }
-        return fields;
+        return Some(FieldInfo {
+            main_fields,
+            fields,
+        });
     }
 
     /**
@@ -440,12 +453,13 @@ impl TreeData {
      * @param keyword 关键字，用于筛选包含该关键字的数据
      * @return 返回字段信息列表
      */
-    fn localize_fields(&self, keyword: &str) -> Vec<FieldInfo> {
+    fn localize_fields(&self, keyword: &str) -> Option<FieldInfo> {
         let (valids_main, valids) = self.content.get_valid_normal_heads(keyword);
         if valids_main.is_empty() || valids.is_empty() {
-            return vec![];
+            return None;
         };
-        let mut fields: Vec<FieldInfo> = Vec::new();
+        let mut main_fields: Vec<MainFieldItem> = Vec::new();
+        let mut fields: Vec<FieldItem> = Vec::new();
         let mut field_index: i32 = 1;
         let mut row_valid: bool = true;
         for (_, head_data) in valids_main.iter() {
@@ -478,8 +492,13 @@ impl TreeData {
             } else {
                 String::new()
             };
-            let field_info: FieldInfo = FieldInfo {
-                is_key: true,
+            let main_field: MainFieldItem = MainFieldItem {
+                field_type: EDataType::String,
+                field_name: field_value.clone(),
+            };
+            main_fields.push(main_field);
+
+            let field_info: FieldItem = FieldItem {
                 field_name: field_value,
                 field_type: EDataType::String,
                 field_desc: desc_value,
@@ -491,7 +510,7 @@ impl TreeData {
         }
         // 列数据无效
         if !row_valid {
-            return Vec::new();
+            return None;
         }
 
         for (_, head_data) in valids.iter() {
@@ -519,8 +538,7 @@ impl TreeData {
             } else {
                 String::new()
             };
-            let field_info: FieldInfo = FieldInfo {
-                is_key: false,
+            let field_info: FieldItem = FieldItem {
                 field_name: field_cell.value.clone(),
                 field_type: EDataType::String,
                 field_desc: desc_value,
@@ -530,7 +548,10 @@ impl TreeData {
             fields.push(field_info);
             field_index += 1;
         }
-        return fields;
+        return Some(FieldInfo {
+            main_fields,
+            fields,
+        });
     }
 
     /**
@@ -538,8 +559,8 @@ impl TreeData {
      * @param keyword 关键字，用于筛选包含该关键字的数据
      * @return 返回字段信息列表
      */
-    fn kv_fields(&self, keyword: &str) -> Vec<FieldInfo> {
-        let mut fields: Vec<FieldInfo> = Vec::new();
+    fn kv_fields(&self, keyword: &str) -> Option<FieldInfo> {
+        let mut fields: Vec<FieldItem> = Vec::new();
         let mut field_index: i32 = 1;
         for head_data in self.content.cells.iter() {
             let field_cell: &CellData =
@@ -590,8 +611,7 @@ impl TreeData {
                 String::new()
             };
             let field_value: String = field_cell.value.replace("*", "");
-            let field_info: FieldInfo = FieldInfo {
-                is_key: false,
+            let field_info: FieldItem = FieldItem {
                 field_name: field_value,
                 field_type: data_type,
                 field_desc: desc_value,
@@ -602,15 +622,18 @@ impl TreeData {
             field_index += 1;
         }
 
-        return fields;
+        return Some(FieldInfo {
+            main_fields: Vec::new(),
+            fields,
+        });
     }
 
     /**
      * 获取枚举表字段信息
      * @return 返回字段信息列表
      */
-    fn enum_fields(&self) -> Vec<FieldInfo> {
-        let mut fields: Vec<FieldInfo> = Vec::new();
+    fn enum_fields(&self) -> Option<FieldInfo> {
+        let mut fields: Vec<FieldItem> = Vec::new();
         for row_data in self.content.cells.iter() {
             let field_cell: &CellData =
                 if let Some(field_cell) = row_data.get(constant::TABLE_ENUM_COL_FIELD) {
@@ -639,8 +662,7 @@ impl TreeData {
             } else {
                 String::new()
             };
-            let field_info: FieldInfo = FieldInfo {
-                is_key: false,
+            let field_info: FieldItem = FieldItem {
                 field_name: field_cell.value.clone(),
                 field_type: EDataType::String,
                 field_desc: desc_value,
@@ -649,6 +671,9 @@ impl TreeData {
             };
             fields.push(field_info);
         }
-        return fields;
+        return Some(FieldInfo {
+            main_fields: Vec::new(),
+            fields,
+        });
     }
 }

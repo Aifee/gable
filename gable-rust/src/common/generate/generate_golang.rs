@@ -1,5 +1,9 @@
 use crate::{
-    common::{generate::generate, setting::BuildSetting, utils},
+    common::{
+        generate::generate::{self, GenerateFieldInfo, GenerateFieldItem, GenerateMainFieldItem},
+        setting::BuildSetting,
+        utils,
+    },
     gui::datas::{
         edata_type::EDataType,
         esheet_type::ESheetType,
@@ -10,30 +14,17 @@ use std::{fs, io::Error, path::PathBuf};
 use tera::{Context, Tera};
 
 /**
- * golang语言字段信息
-*/
-#[derive(serde::Serialize)]
-struct GolangFieldInfo {
-    // 是否是主键
-    pub is_key: bool,
-    // 字段名称
-    pub field_name: String,
-    // 字段类型
-    pub field_type: String,
-    // 字段描述
-    pub field_desc: String,
-    // 字段序号
-    pub field_index: i32,
-}
-
-/**
  * golang语言生成
  * @param build_setting 构建设置
  * @param tree_data 树数据
 */
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
-    let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
-    let go_fields: Vec<GolangFieldInfo> = transition_fields(&fields);
+    let field_info: FieldInfo = if let Some(info) = tree_data.to_fields(&build_setting.keyword) {
+        info
+    } else {
+        return;
+    };
+    let go_fields: GenerateFieldInfo = transition_fields(&field_info);
     let mut tera: Tera = Tera::default();
     let template_key = "templates/golang/template.tpl";
     if let Some(content) = generate::get_template(template_key) {
@@ -88,9 +79,24 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
  * @param fields 字段列表
  * @return Golang字段列表
 */
-fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<GolangFieldInfo> {
-    let mut go_fields: Vec<GolangFieldInfo> = Vec::new();
-    for field in fields {
+fn transition_fields(info: &FieldInfo) -> GenerateFieldInfo {
+    let mut main_fields: Vec<GenerateMainFieldItem> = Vec::new();
+    for field in info.main_fields.iter() {
+        let field_type = match field.field_type {
+            EDataType::Int => "int",
+            EDataType::Long => "int64",
+            EDataType::Float => "float64",
+            _ => "string",
+        };
+        let main_field: GenerateMainFieldItem = GenerateMainFieldItem {
+            field_type: field_type.to_string(),
+            field_name: field.field_name.clone(),
+        };
+        main_fields.push(main_field);
+    }
+
+    let mut fields: Vec<GenerateFieldItem> = Vec::new();
+    for field in info.fields.iter() {
         // Go语言字段名需要首字母大写以保证可导出
         let field_name: String = generate::capitalize_first_letter(&field.field_name);
 
@@ -127,17 +133,20 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<GolangFieldInfo> {
                 &enum_name.clone()
             }
         };
-
-        let go_field: GolangFieldInfo = GolangFieldInfo {
-            is_key: field.is_key,
+        let go_field: GenerateFieldItem = GenerateFieldItem {
             field_name: field_name,
             field_type: go_type.to_string(),
             field_desc: field.field_desc.clone(),
             field_index: field.field_index,
+            field_extend: String::new(),
+            data_type: String::new(),
         };
-        go_fields.push(go_field);
+        fields.push(go_field);
     }
-    return go_fields;
+    return GenerateFieldInfo {
+        main_fields,
+        fields,
+    };
 }
 
 /**
@@ -145,10 +154,10 @@ fn transition_fields(fields: &Vec<FieldInfo>) -> Vec<GolangFieldInfo> {
  * @param fields 字段列表
  * @return 导入的模块列表
 */
-fn collect_imports(fields: &Vec<GolangFieldInfo>) -> Vec<String> {
+fn collect_imports(info: &GenerateFieldInfo) -> Vec<String> {
     let mut imports: Vec<String> = Vec::new();
 
-    for field in fields {
+    for field in info.fields.iter() {
         // 检查是否有需要导入的自定义类型
         if field.field_type != "int"
             && field.field_type != "int64"

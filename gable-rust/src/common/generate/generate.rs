@@ -20,6 +20,32 @@ use std::{process::Command, sync::LazyLock};
 static TEMPLATES: LazyLock<Mutex<HashMap<String, String>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
+#[derive(serde::Serialize)]
+pub struct GenerateMainFieldItem {
+    pub field_type: String,
+    pub field_name: String,
+}
+#[derive(serde::Serialize)]
+pub struct GenerateFieldItem {
+    // 字段名称
+    pub field_name: String,
+    // 字段类型
+    pub field_type: String,
+    // 字段描述
+    pub field_desc: String,
+    // 字段序号
+    pub field_index: i32,
+    // 扩展信息：枚举需要默认值
+    pub field_extend: String,
+    // 数据类型
+    pub data_type: String,
+}
+#[derive(serde::Serialize)]
+pub struct GenerateFieldInfo {
+    pub main_fields: Vec<GenerateMainFieldItem>,
+    pub fields: Vec<GenerateFieldItem>,
+}
+
 /**
  * 批量生成代码（所有平台 & 所有表单）
 */

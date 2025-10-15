@@ -1,7 +1,38 @@
+using Gable;
+using System.Collections.Generic;
 using UnityEngine;
+
+public partial class TableManager
+{
+    private Dictionary<int, Player> _players;
+
+    private void Load_Player()
+    {
+        _players = new Dictionary<int, Player>();
+        TextAsset asset = Resources.Load<TextAsset>("Tables/Player");
+        Player[] array = LitJson.JsonMapper.ToObject<Player[]>(asset.text);
+        foreach (var item in array)
+        {
+            if (!_players.ContainsKey(item.id))
+            {
+                _players.Add(item.id, item);
+            }
+        }
+    }
+
+    public Player GetPlayer(int id)
+    {
+        if (_players.ContainsKey(id))
+        {
+            return _players[id];
+        }
+        return null;
+    }
+}
 
 namespace Gable
 {
+    // 这是一个测试
     public class Player 
     {
         /// <summary>

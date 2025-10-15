@@ -4,7 +4,7 @@ namespace Gable
 {
     public class {{CLASS_NAME}} 
     {
-        {%- for field in fields %}
+        {%- for field in info.fields %}
         /// <summary>
         /// {{field.field_desc}}
         /// </summary>

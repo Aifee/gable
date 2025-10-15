@@ -1,5 +1,10 @@
 use crate::{
-    common::{generate::proto_field_info::ProtoFieldInfo, res, setting::BuildSetting, utils},
+    common::{
+        generate::{generate::GenerateFieldItem, proto_field_info},
+        res,
+        setting::BuildSetting,
+        utils,
+    },
     gui::datas::{
         edata_type::EDataType,
         esheet_type::ESheetType,
@@ -15,9 +20,13 @@ use tera::{Context, Tera};
  * @param tree_data 树数据
 */
 pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
-    let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
+    let field_info: FieldInfo = if let Some(info) = tree_data.to_fields(&build_setting.keyword) {
+        info
+    } else {
+        return;
+    };
     let (imports, proto_fields, common_protos) =
-        ProtoFieldInfo::transition_fields(&fields, build_setting.is_proto_2);
+        proto_field_info::transition_fields(&field_info, build_setting.is_proto_2);
 
     let tera: &Tera = get_tera_instance();
     if common_protos.len() > 0 {
@@ -116,13 +125,12 @@ fn get_tera_instance() -> &'static Tera {
 fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, build_setting: &BuildSetting) {
     for data_type in common_protos.iter() {
         let class_name;
-        let common_fields: Vec<ProtoFieldInfo>;
+        let common_fields: Vec<GenerateFieldItem>;
         match data_type {
             EDataType::Vector2 => {
                 class_name = "Vector2";
                 common_fields = vec![
-                    ProtoFieldInfo {
-                        is_key: false,
+                    GenerateFieldItem {
                         field_name: "x".to_string(),
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
@@ -130,8 +138,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, build_setti
                         field_extend: String::new(),
                         data_type: String::new(),
                     },
-                    ProtoFieldInfo {
-                        is_key: false,
+                    GenerateFieldItem {
                         field_name: "y".to_string(),
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
@@ -144,8 +151,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, build_setti
             EDataType::Vector3 => {
                 class_name = "Vector3";
                 common_fields = vec![
-                    ProtoFieldInfo {
-                        is_key: false,
+                    GenerateFieldItem {
                         field_name: "x".to_string(),
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
@@ -153,8 +159,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, build_setti
                         field_extend: String::new(),
                         data_type: String::new(),
                     },
-                    ProtoFieldInfo {
-                        is_key: false,
+                    GenerateFieldItem {
                         field_name: "y".to_string(),
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
@@ -162,8 +167,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, build_setti
                         field_extend: String::new(),
                         data_type: String::new(),
                     },
-                    ProtoFieldInfo {
-                        is_key: false,
+                    GenerateFieldItem {
                         field_name: "z".to_string(),
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
@@ -176,8 +180,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, build_setti
             EDataType::Vector4 => {
                 class_name = "Vector4";
                 common_fields = vec![
-                    ProtoFieldInfo {
-                        is_key: false,
+                    GenerateFieldItem {
                         field_name: "x".to_string(),
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
@@ -185,8 +188,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, build_setti
                         field_extend: String::new(),
                         data_type: String::new(),
                     },
-                    ProtoFieldInfo {
-                        is_key: false,
+                    GenerateFieldItem {
                         field_name: "y".to_string(),
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
@@ -194,8 +196,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, build_setti
                         field_extend: String::new(),
                         data_type: String::new(),
                     },
-                    ProtoFieldInfo {
-                        is_key: false,
+                    GenerateFieldItem {
                         field_name: "z".to_string(),
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),
@@ -203,8 +204,7 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, build_setti
                         field_extend: String::new(),
                         data_type: String::new(),
                     },
-                    ProtoFieldInfo {
-                        is_key: false,
+                    GenerateFieldItem {
                         field_name: "w".to_string(),
                         field_type: "float".to_string(),
                         field_desc: "".to_string(),

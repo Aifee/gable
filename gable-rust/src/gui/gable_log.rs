@@ -2,7 +2,7 @@ use crate::{
     common::locales,
     gui::{component, datas::log::LogTrace},
 };
-use eframe::egui::{Context, Frame, ScrollArea, TopBottomPanel, Ui};
+use eframe::egui::{Context, Frame, ScrollArea, Sense, TopBottomPanel, Ui};
 use egui_extras::{Column, TableBody, TableBuilder};
 
 pub(crate) struct GableLog {
@@ -124,6 +124,14 @@ impl GableLog {
                                 ui.label("");
                             });
                         });
+                    }
+                });
+
+            ui.allocate_rect(ui.available_rect_before_wrap(), Sense::click_and_drag())
+                .context_menu(|ui| {
+                    if ui.button(locales::t("clear_log")).clicked() {
+                        LogTrace::clear_log_records();
+                        ui.close();
                     }
                 });
         });

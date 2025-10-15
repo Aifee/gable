@@ -278,5 +278,10 @@
     "key": "selected_tab",
     "zh": "请选择要浏览的页签",
     "en": "Please select the tab for browsing"
+  },
+  {
+    "key": "clear_log",
+    "zh": "清空",
+    "en": "Clear"
   }
 ]

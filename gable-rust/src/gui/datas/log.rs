@@ -84,9 +84,22 @@ impl LogTrace {
         }
     }
 
-    // 获取全局日志记录列表的方法
+    /**
+     * 获取全局日志记录列表的方法
+     */
     pub fn get_log_records() -> Option<&'static Arc<Mutex<Vec<LogRecord>>>> {
         GLOBAL_LOG_RECORDS.get()
+    }
+
+    /**
+     * 清空全局日志记录列表的方法
+     */
+    pub fn clear_log_records() {
+        if let Some(global_records) = LogTrace::get_log_records() {
+            if let Ok(mut records) = global_records.lock() {
+                records.clear();
+            }
+        }
     }
 }
 

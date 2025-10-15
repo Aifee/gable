@@ -6,7 +6,7 @@ use crate::{
         tree_data::{FieldInfo, TreeData},
     },
 };
-use std::{io::Error, path::PathBuf};
+use std::{io::Error, path::PathBuf, sync::OnceLock};
 use tera::{Context, Tera};
 
 /**
@@ -18,51 +18,43 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let fields: Vec<FieldInfo> = tree_data.to_fields(&build_setting.keyword);
     let (imports, proto_fields, common_protos) =
         ProtoFieldInfo::transition_fields(&fields, build_setting.is_proto_2);
-    let mut tera: Tera = Tera::default();
-    if build_setting.is_proto_2 {
-        if let Some(file) = res::load_template("templates/proto2/template.tpl") {
-            let template_content = file
-                .contents_utf8()
-                .expect("Failed to read template content");
-            tera.add_raw_template("template.tpl", template_content)
-                .expect("Failed to add template");
-        }
-        if let Some(file) = res::load_template("templates/proto2/enums.tpl") {
-            let enum_content = file
-                .contents_utf8()
-                .expect("Failed to read template content");
-            tera.add_raw_template("enums.tpl", enum_content)
-                .expect("Failed to add template");
-        }
-    } else {
-        if let Some(file) = res::load_template("templates/proto3/template.tpl") {
-            let template_content = file
-                .contents_utf8()
-                .expect("Failed to read template content");
-            tera.add_raw_template("template.tpl", template_content)
-                .expect("Failed to add template");
-        }
-        if let Some(file) = res::load_template("templates/proto3/enums.tpl") {
-            let enum_content = file
-                .contents_utf8()
-                .expect("Failed to read template content");
-            tera.add_raw_template("enums.tpl", enum_content)
-                .expect("Failed to add template");
-        }
-    }
+
+    // 使用全局缓存的Tera实例，避免重复创建
+    let tera: &Tera = get_tera_instance();
+
+    // 为当前操作创建一个新的Tera实例，但复用已解析的模板
+    // let mut local_tera = Tera::default();
+    // for (name, template) in &tera.templates {
+    //     local_tera.add_raw_template(name, &template.raw).unwrap();
+    // }
+
     if common_protos.len() > 0 {
-        create_common_proto(&tera, &common_protos, &build_setting.script_path)
+        create_common_proto(&tera, &common_protos, build_setting)
     }
+
     let mut context: Context = Context::new();
     context.insert("CLASS_NAME", &tree_data.file_name);
     context.insert("fields", &proto_fields);
     context.insert("imports", &imports);
     let rendered_result: Result<String, tera::Error> = match tree_data.gable_type {
-        ESheetType::Normal | ESheetType::Localize | ESheetType::KV => {
-            tera.render("template.tpl", &context)
-        }
-        ESheetType::Enum => tera.render("enums.tpl", &context),
+        ESheetType::Normal | ESheetType::Localize | ESheetType::KV => tera.render(
+            if build_setting.is_proto_2 {
+                "proto2/template.tpl"
+            } else {
+                "proto3/template.tpl"
+            },
+            &context,
+        ),
+        ESheetType::Enum => tera.render(
+            if build_setting.is_proto_2 {
+                "proto2/enums.tpl"
+            } else {
+                "proto3/enums.tpl"
+            },
+            &context,
+        ),
     };
+
     if rendered_result.is_err() {
         log::error!("Template error: {}", rendered_result.unwrap_err());
         return;
@@ -90,12 +82,46 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
 }
 
 /**
+ * 使用OnceLock创建全局静态Tera实例，避免重复初始化
+*/
+fn get_tera_instance() -> &'static Tera {
+    static INSTANCE: OnceLock<Tera> = OnceLock::new();
+    INSTANCE.get_or_init(|| {
+        let mut tera: Tera = Tera::default();
+
+        // 预加载所有可能用到的模板
+        if let Some(file) = res::load_template("templates/proto2/template.tpl") {
+            if let Some(content) = file.contents_utf8() {
+                let _ = tera.add_raw_template("proto2/template.tpl", content);
+            }
+        }
+        if let Some(file) = res::load_template("templates/proto2/enums.tpl") {
+            if let Some(content) = file.contents_utf8() {
+                let _ = tera.add_raw_template("proto2/enums.tpl", content);
+            }
+        }
+        if let Some(file) = res::load_template("templates/proto3/template.tpl") {
+            if let Some(content) = file.contents_utf8() {
+                let _ = tera.add_raw_template("proto3/template.tpl", content);
+            }
+        }
+        if let Some(file) = res::load_template("templates/proto3/enums.tpl") {
+            if let Some(content) = file.contents_utf8() {
+                let _ = tera.add_raw_template("proto3/enums.tpl", content);
+            }
+        }
+
+        tera
+    })
+}
+
+/**
  * 生成公共的proto文件
  * @param tera 模板
  * @param common_protos 公共字段信息
  * @param target_path 生成目录
 */
-fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path: &PathBuf) {
+fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, build_setting: &BuildSetting) {
     for data_type in common_protos.iter() {
         let class_name;
         let common_fields: Vec<ProtoFieldInfo>;
@@ -205,8 +231,12 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
         common_context.insert("fields", &common_fields);
         common_context.insert("imports", &Vec::<String>::new());
 
-        let rendered_result: Result<String, tera::Error> =
-            tera.render("template.tpl", &common_context);
+        let rendered_result: Result<String, tera::Error> = if build_setting.is_proto_2 {
+            tera.render("proto2/template.tpl", &common_context)
+        } else {
+            tera.render("proto3/template.tpl", &common_context)
+        };
+
         if rendered_result.is_err() {
             log::error!("Template error: {}", rendered_result.unwrap_err());
             continue;
@@ -214,8 +244,8 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, target_path
         let rendered: String = rendered_result.unwrap();
 
         // 写入文件
-        let target_path: PathBuf =
-            utils::get_absolute_path(&target_path).join(format!("{}.proto", class_name));
+        let target_path: PathBuf = utils::get_absolute_path(&build_setting.script_path)
+            .join(format!("{}.proto", class_name));
 
         let result: Result<(), Error> = std::fs::write(&target_path, rendered);
         if result.is_err() {

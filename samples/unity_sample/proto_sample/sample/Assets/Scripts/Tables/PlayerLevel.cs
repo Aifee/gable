@@ -20,12 +20,15 @@ namespace Gable
         public int id { get; set; }
 
         [global::ProtoBuf.ProtoMember(2)]
-        public int attack { get; set; }
+        public int level { get; set; }
 
         [global::ProtoBuf.ProtoMember(3)]
-        public int defense { get; set; }
+        public int attack { get; set; }
 
         [global::ProtoBuf.ProtoMember(4)]
+        public int defense { get; set; }
+
+        [global::ProtoBuf.ProtoMember(5)]
         public long hp { get; set; }
 
     }

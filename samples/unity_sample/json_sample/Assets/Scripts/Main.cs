@@ -32,7 +32,7 @@ public class Main : MonoBehaviour
                 break;
 
             case "PlayerLevel":
-                PlayerLevel leveConf = TableManager.Instance.GetPlayerLevel(1);
+                PlayerLevel leveConf = TableManager.Instance.GetPlayerLevel(1001,1);
                 Debug.Log($"id:{leveConf.id}, attack:{leveConf.attack}, defense:{leveConf.defense}, hp:{leveConf.hp}");
                 break;
         }

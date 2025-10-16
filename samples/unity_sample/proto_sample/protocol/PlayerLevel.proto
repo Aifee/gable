@@ -2,7 +2,8 @@ syntax = "proto3";
 package Gable;
 message PlayerLevel {
     int32 id = 1;// ID
-    int32 attack = 2;// 攻击
-    int32 defense = 3;// 防御
-    int64 hp = 4;// 血量
+    int32 level = 2;// 等级
+    int32 attack = 3;// 攻击
+    int32 defense = 4;// 防御
+    int64 hp = 5;// 血量
 }

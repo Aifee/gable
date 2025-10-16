@@ -129,14 +129,32 @@ pub fn clear_templates() {
 pub fn preload_templates(build_setting: &BuildSetting) {
     let mut templates = TEMPLATES.lock().unwrap();
     if build_setting.target_type == ETargetType::Protobuff {
+        let template_path = if build_setting.is_proto_2 {
+            "templates/proto2/class.tpl".to_string()
+        } else {
+            "templates/proto3/class.tpl".to_string()
+        };
+        templates.insert(
+            "templates/proto/class.tpl".to_string(),
+            load_template(build_setting, &template_path, "class.tpl"),
+        );
+        let enum_path = if build_setting.is_proto_2 {
+            "templates/proto2/enums.tpl".to_string()
+        } else {
+            "templates/proto3/enums.tpl".to_string()
+        };
+        templates.insert(
+            "templates/proto/enums.tpl".to_string(),
+            load_template(build_setting, &enum_path, "enums.tpl"),
+        );
     } else {
         let path_keyword = build_setting.dev.path_keyword();
-        let template_path = format!("templates/{}/class.tpl", path_keyword);
+        let template_path: String = format!("templates/{}/class.tpl", path_keyword);
         templates.insert(
             template_path.clone(),
             load_template(build_setting, &template_path, "class.tpl"),
         );
-        let enum_path = format!("templates/{}/enums.tpl", path_keyword);
+        let enum_path: String = format!("templates/{}/enums.tpl", path_keyword);
         templates.insert(
             enum_path.clone(),
             load_template(build_setting, &enum_path, "enums.tpl"),

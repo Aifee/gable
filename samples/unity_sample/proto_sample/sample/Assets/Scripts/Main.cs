@@ -28,13 +28,13 @@ public class Main : MonoBehaviour
                 break;
 
             case "Player":
-                Player player = TableManager.Instance.GetPlayer(1001);
+                Player player = TableManager.Instance.GetPlayer(1002);
                 Debug.Log($"id:{player.id}, type:{player.type}, name:{player.name}, cd:{player.cd}");
                 break;
 
             case "PlayerLevel":
-                PlayerLevel leveConf = TableManager.Instance.GetPlayerLevel(1);
-                Debug.Log($"id:{leveConf.id}, attack:{leveConf.attack}, defense:{leveConf.defense}, hp:{leveConf.hp}");
+                PlayerLevel leveConf = TableManager.Instance.GetPlayerLevel(1001,1);
+                Debug.Log($"id:{leveConf.id}, level:{leveConf.level}, attack:{leveConf.attack}, defense:{leveConf.defense}, hp:{leveConf.hp}");
                 break;
         }
     }

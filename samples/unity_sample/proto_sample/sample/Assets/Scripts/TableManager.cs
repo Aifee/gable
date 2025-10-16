@@ -75,30 +75,41 @@ public class TableManager
     #endregion Table Player
 
     #region PlayerLevel
-    private Dictionary<int, PlayerLevel> _playerLevel;
+    private Dictionary<int, Dictionary<int, PlayerLevel>> _playerLevel;
 
     private void Load_PlayerLevel()
     {
-        _playerLevel = new Dictionary<int, PlayerLevel>();
+        _playerLevel = new Dictionary<int, Dictionary<int, PlayerLevel>>();
         TextAsset asset = Resources.Load<TextAsset>("Tables/PlayerLevel");
         using (MemoryStream msg = new MemoryStream(asset.bytes))
         {
             PlayerLevel[] array = ProtoBuf.Serializer.Deserialize<PlayerLevel[]>(msg);
             foreach (PlayerLevel level in array)
             {
-                if (!_playerLevel.ContainsKey(level.id))
+                Dictionary<int, PlayerLevel> subItem;
+                if(!_playerLevel.TryGetValue(level.id, out subItem))
                 {
-                    _playerLevel.Add(level.id, level);
+                    subItem = new Dictionary<int, PlayerLevel>();
+                    _playerLevel.Add(level.id, subItem);
+                }
+                if (!subItem.ContainsKey(level.level))
+                {
+                    subItem.Add(level.level, level);
                 }
             }
         }
     }
 
-    public PlayerLevel GetPlayerLevel(int id)
+    public PlayerLevel GetPlayerLevel(int id, int level)
     {
-        if (_playerLevel.ContainsKey(id))
+        Dictionary<int, PlayerLevel> subItem;
+        if (!_playerLevel.TryGetValue(id, out subItem))
         {
-            return _playerLevel[id];
+            return null;
+        }
+        if (subItem.ContainsKey(level))
+        {
+            return subItem[level];
         }
         return null;
     }

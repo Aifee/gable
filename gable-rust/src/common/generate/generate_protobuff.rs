@@ -1,7 +1,9 @@
 use crate::{
     common::{
-        generate::{generate::GenerateFieldItem, proto_field_info},
-        res,
+        generate::{
+            generate::{self, GenerateFieldInfo, GenerateFieldItem},
+            proto_field_info,
+        },
         setting::BuildSetting,
         utils,
     },
@@ -11,7 +13,7 @@ use crate::{
         tree_data::{FieldInfo, TreeData},
     },
 };
-use std::{io::Error, path::PathBuf, sync::OnceLock};
+use std::{io::Error, path::PathBuf};
 use tera::{Context, Tera};
 
 /**
@@ -28,7 +30,18 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let (imports, proto_fields, common_protos) =
         proto_field_info::transition_fields(&field_info, build_setting.is_proto_2);
 
-    let tera: &Tera = get_tera_instance();
+    let mut tera: Tera = Tera::default();
+    let class_key = "templates/proto/class.tpl";
+    if let Some(content) = generate::get_template(class_key) {
+        tera.add_raw_template(class_key, &content)
+            .expect("Proto Failed to add class template");
+    }
+    let enum_key = "templates/proto/enums.tpl";
+    if let Some(content) = generate::get_template(enum_key) {
+        tera.add_raw_template(enum_key, &content)
+            .expect("Proto Failed to add enum template");
+    }
+
     if common_protos.len() > 0 {
         create_common_proto(&tera, &common_protos, build_setting)
     }
@@ -38,22 +51,10 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     context.insert("info", &proto_fields);
     context.insert("imports", &imports);
     let rendered_result: Result<String, tera::Error> = match tree_data.gable_type {
-        ESheetType::Normal | ESheetType::Localize | ESheetType::KV => tera.render(
-            if build_setting.is_proto_2 {
-                "proto2/class.tpl"
-            } else {
-                "proto3/class.tpl"
-            },
-            &context,
-        ),
-        ESheetType::Enum => tera.render(
-            if build_setting.is_proto_2 {
-                "proto2/enums.tpl"
-            } else {
-                "proto3/enums.tpl"
-            },
-            &context,
-        ),
+        ESheetType::Normal | ESheetType::Localize | ESheetType::KV => {
+            tera.render(class_key, &context)
+        }
+        ESheetType::Enum => tera.render(enum_key, &context),
     };
 
     if rendered_result.is_err() {
@@ -80,38 +81,6 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
             proto_path.to_str().unwrap()
         );
     }
-}
-
-/**
- * 使用OnceLock创建全局静态Tera实例，避免重复初始化
-*/
-fn get_tera_instance() -> &'static Tera {
-    static INSTANCE: OnceLock<Tera> = OnceLock::new();
-    INSTANCE.get_or_init(|| {
-        let mut tera: Tera = Tera::default();
-        if let Some(file) = res::load_template("templates/proto2/class.tpl") {
-            if let Some(content) = file.contents_utf8() {
-                let _ = tera.add_raw_template("proto2/class.tpl", content);
-            }
-        }
-        if let Some(file) = res::load_template("templates/proto2/enums.tpl") {
-            if let Some(content) = file.contents_utf8() {
-                let _ = tera.add_raw_template("proto2/enums.tpl", content);
-            }
-        }
-        if let Some(file) = res::load_template("templates/proto3/class.tpl") {
-            if let Some(content) = file.contents_utf8() {
-                let _ = tera.add_raw_template("proto3/class.tpl", content);
-            }
-        }
-        if let Some(file) = res::load_template("templates/proto3/enums.tpl") {
-            if let Some(content) = file.contents_utf8() {
-                let _ = tera.add_raw_template("proto3/enums.tpl", content);
-            }
-        }
-
-        tera
-    })
 }
 
 /**
@@ -216,16 +185,18 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, build_setti
                 continue;
             }
         }
+        let content_info: GenerateFieldInfo = GenerateFieldInfo {
+            primary_num: 0,
+            main_fields: vec![],
+            fields: common_fields,
+        };
         let mut common_context: Context = Context::new();
         common_context.insert("CLASS_NAME", class_name);
-        common_context.insert("fields", &common_fields);
+        common_context.insert("info", &content_info);
         common_context.insert("imports", &Vec::<String>::new());
 
-        let rendered_result: Result<String, tera::Error> = if build_setting.is_proto_2 {
-            tera.render("proto2/class.tpl", &common_context)
-        } else {
-            tera.render("proto3/class.tpl", &common_context)
-        };
+        let rendered_result: Result<String, tera::Error> =
+            tera.render("templates/proto/class.tpl", &common_context);
 
         if rendered_result.is_err() {
             log::error!("Template error: {}", rendered_result.unwrap_err());

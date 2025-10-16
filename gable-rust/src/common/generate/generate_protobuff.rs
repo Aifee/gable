@@ -40,9 +40,9 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     let rendered_result: Result<String, tera::Error> = match tree_data.gable_type {
         ESheetType::Normal | ESheetType::Localize | ESheetType::KV => tera.render(
             if build_setting.is_proto_2 {
-                "proto2/template.tpl"
+                "proto2/class.tpl"
             } else {
-                "proto3/template.tpl"
+                "proto3/class.tpl"
             },
             &context,
         ),
@@ -89,11 +89,9 @@ fn get_tera_instance() -> &'static Tera {
     static INSTANCE: OnceLock<Tera> = OnceLock::new();
     INSTANCE.get_or_init(|| {
         let mut tera: Tera = Tera::default();
-
-        // 预加载所有可能用到的模板
-        if let Some(file) = res::load_template("templates/proto2/template.tpl") {
+        if let Some(file) = res::load_template("templates/proto2/class.tpl") {
             if let Some(content) = file.contents_utf8() {
-                let _ = tera.add_raw_template("proto2/template.tpl", content);
+                let _ = tera.add_raw_template("proto2/class.tpl", content);
             }
         }
         if let Some(file) = res::load_template("templates/proto2/enums.tpl") {
@@ -101,9 +99,9 @@ fn get_tera_instance() -> &'static Tera {
                 let _ = tera.add_raw_template("proto2/enums.tpl", content);
             }
         }
-        if let Some(file) = res::load_template("templates/proto3/template.tpl") {
+        if let Some(file) = res::load_template("templates/proto3/class.tpl") {
             if let Some(content) = file.contents_utf8() {
-                let _ = tera.add_raw_template("proto3/template.tpl", content);
+                let _ = tera.add_raw_template("proto3/class.tpl", content);
             }
         }
         if let Some(file) = res::load_template("templates/proto3/enums.tpl") {
@@ -224,9 +222,9 @@ fn create_common_proto(tera: &Tera, common_protos: &Vec<&EDataType>, build_setti
         common_context.insert("imports", &Vec::<String>::new());
 
         let rendered_result: Result<String, tera::Error> = if build_setting.is_proto_2 {
-            tera.render("proto2/template.tpl", &common_context)
+            tera.render("proto2/class.tpl", &common_context)
         } else {
-            tera.render("proto3/template.tpl", &common_context)
+            tera.render("proto3/class.tpl", &common_context)
         };
 
         if rendered_result.is_err() {

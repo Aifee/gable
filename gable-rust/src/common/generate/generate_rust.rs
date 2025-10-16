@@ -26,15 +26,15 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     };
     let rust_fields: GenerateFieldInfo = transition_fields(&field_info);
     let mut tera: Tera = Tera::default();
-    let template_key = "templates/rust/template.tpl";
-    if let Some(content) = generate::get_template(template_key) {
-        tera.add_raw_template(template_key, &content)
-            .expect("Rust Failed to add template");
+    let class_key = "templates/rust/class.tpl";
+    if let Some(content) = generate::get_template(class_key) {
+        tera.add_raw_template(class_key, &content)
+            .expect("Rust Failed to add class template");
     }
     let enum_key = "templates/rust/enums.tpl";
     if let Some(content) = generate::get_template(enum_key) {
         tera.add_raw_template(enum_key, &content)
-            .expect("Rust Failed to add template");
+            .expect("Rust Failed to add enum template");
     }
     let mut context: Context = Context::new();
     let struct_name = generate::capitalize_first_letter(&tree_data.file_name);
@@ -42,7 +42,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     context.insert("info", &rust_fields);
     let rendered_result: Result<String, tera::Error> = match tree_data.gable_type {
         ESheetType::Normal | ESheetType::Localize | ESheetType::KV => {
-            tera.render(template_key, &context)
+            tera.render(class_key, &context)
         }
         ESheetType::Enum => tera.render(enum_key, &context),
     };

@@ -131,10 +131,10 @@ pub fn preload_templates(build_setting: &BuildSetting) {
     if build_setting.target_type == ETargetType::Protobuff {
     } else {
         let path_keyword = build_setting.dev.path_keyword();
-        let template_path = format!("templates/{}/template.tpl", path_keyword);
+        let template_path = format!("templates/{}/class.tpl", path_keyword);
         templates.insert(
             template_path.clone(),
-            load_template(build_setting, &template_path, "template.tpl"),
+            load_template(build_setting, &template_path, "class.tpl"),
         );
         let enum_path = format!("templates/{}/enums.tpl", path_keyword);
         templates.insert(

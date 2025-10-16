@@ -26,15 +26,15 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     };
     let lua_fields: GenerateFieldInfo = transition_fields(&field_info);
     let mut tera: Tera = Tera::default();
-    let template_key = "templates/lua/template.tpl";
-    if let Some(content) = generate::get_template(template_key) {
-        tera.add_raw_template(template_key, &content)
-            .expect("Lua Failed to add template");
+    let class_key = "templates/lua/class.tpl";
+    if let Some(content) = generate::get_template(class_key) {
+        tera.add_raw_template(class_key, &content)
+            .expect("Lua Failed to add class template");
     }
     let enum_key = "templates/lua/enums.tpl";
     if let Some(content) = generate::get_template(enum_key) {
         tera.add_raw_template(enum_key, &content)
-            .expect("Lua Failed to add template");
+            .expect("Lua Failed to add enum template");
     }
     let mut context: Context = Context::new();
     context.insert("CLASS_NAME", &tree_data.file_name);
@@ -45,7 +45,7 @@ pub fn to(build_setting: &BuildSetting, tree_data: &TreeData) {
     context.insert("imports", &imports);
     let rendered_result: Result<String, tera::Error> = match tree_data.gable_type {
         ESheetType::Normal | ESheetType::Localize | ESheetType::KV => {
-            tera.render(template_key, &context)
+            tera.render(class_key, &context)
         }
         ESheetType::Enum => tera.render(enum_key, &context),
     };

@@ -476,12 +476,10 @@ pub fn get_item_display_name(names: &[String]) -> Vec<TreeItem> {
     if names.is_empty() {
         return tree_items.clone();
     }
-    // 递归查找匹配display_name的项
     fn find_items_by_names(items: &[TreeItem], names: &[String]) -> Vec<TreeItem> {
         let mut result: Vec<TreeItem> = Vec::new();
         for item in items {
-            // 检查当前项是否匹配任何名称
-            if names.contains(&item.display_name) {
+            if item.item_type == EItemType::Sheet && names.contains(&item.display_name) {
                 result.push(item.clone());
             }
 

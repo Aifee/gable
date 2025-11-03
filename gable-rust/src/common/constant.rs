@@ -4,7 +4,7 @@ use std::path::PathBuf;
 /**
  * 版本号
  */
-pub const GABLE_VERSION: &str = "1.0.0";
+pub const GABLE_VERSION: &str = "1.0.1";
 
 /**
  * 数据文件类型

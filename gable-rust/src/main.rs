@@ -12,18 +12,30 @@ fn main() -> Result<(), eframe::Error> {
     let _ =
         gui::datas::log::LogTrace::init(Some(common::constant::DIR_LOG), log::LevelFilter::Info);
     let args: Vec<String> = env::args().collect();
+    print!("Starting Gable with args: {:?}\n", args.len());
+    // 如果有参数，则处理为CLI模式
     if args.len() > 1 {
+        // 在Windows上，附加到父进程的控制台
+        #[cfg(windows)]
+        attach_parent_console();
+
+        print!("Args: {:?}\n", args);
         return run_cli(args);
     }
     run_gui()
 }
 
-#[cfg(target_arch = "wasm32")]
-fn main() -> Result<(), eframe::Error> {
-    let _ =
-        gui::datas::log::LogTrace::init(Some(common::constant::DIR_LOG), log::LevelFilter::Info);
-    // WebAssembly平台只支持GUI模式
-    run_gui()
+#[cfg(windows)]
+fn attach_parent_console() {
+    #[link(name = "kernel32")]
+    unsafe extern "system" {
+        fn AttachConsole(dw_process_id: u32) -> i32;
+    }
+    const ATTACH_PARENT_PROCESS: u32 = 0xFFFFFFFF;
+    unsafe {
+        // 尝试附加到父进程的控制台
+        AttachConsole(ATTACH_PARENT_PROCESS);
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]

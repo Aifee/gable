@@ -29,6 +29,8 @@ pub enum ECommandType {
     Delete,
     // 刷新工程
     Refresh,
+    // 设置工作空间
+    SetWorkspace,
 }
 
 /**

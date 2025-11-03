@@ -792,7 +792,12 @@ pub fn write_gable(
     target_path: &str,
     sheet_type: &ESheetType,
 ) -> Result<Vec<String>, Box<dyn Error>> {
-    let workbook: Spreadsheet = reader::xlsx::read(excel_file).unwrap();
+    let workbook: Spreadsheet = match reader::xlsx::read(excel_file) {
+        Ok(workbook) => workbook,
+        Err(e) => {
+            return Err(format!("无法读取Excel文件 '{}': {}", excel_file.display(), e).into());
+        }
+    };
     let sheet_counts: usize = workbook.get_sheet_count();
     let file_path: &Path = Path::new(excel_file);
     let file_stem: &str = file_path.file_stem().unwrap().to_str().unwrap();

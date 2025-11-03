@@ -135,7 +135,10 @@ impl GableApp {
 
     // 初始化文件监控器
     fn init_watcher(&mut self) {
-        // 初始化文件监控器
+        if let Some(ref mut old_watcher) = self.file_watcher {
+            old_watcher.end_watching();
+        }
+
         match FileWatcher::new() {
             Ok(mut file_watcher) => {
                 let temp_path: PathBuf = setting::get_temp_path();
@@ -144,7 +147,6 @@ impl GableApp {
                 } else {
                     file_watcher.start_watching();
                     log::info!("The file monitor has been activated.");
-                    // 保存文件监控器实例，确保它不会被提前释放
                     self.file_watcher = Some(file_watcher);
                 }
             }
@@ -267,6 +269,16 @@ impl GableApp {
         let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
         commands.push_back(ActionCommand::new(ECommandType::Refresh, None, None));
     }
+
+    pub fn set_workspace_command(path: String) {
+        let mut commands: MutexGuard<'_, VecDeque<ActionCommand>> = COMMANDS.lock().unwrap();
+        commands.push_back(ActionCommand::new(
+            ECommandType::SetWorkspace,
+            Some(path),
+            None,
+        ));
+    }
+
     /**
      * 更新指令
      */
@@ -347,6 +359,16 @@ impl GableApp {
                     if let Some(full_path) = command.param1 {
                         if gables::remove_item_file(&full_path) {
                             gables::remove_tree_item(&full_path);
+                        }
+                    }
+                }
+                ECommandType::SetWorkspace => {
+                    if let Some(full_path) = command.param1 {
+                        if let Err(e) = setting::set_workspace(full_path) {
+                            log::error!("Failed to set workspace: {}", e.to_string());
+                        } else {
+                            gables::refresh_gables();
+                            self.init_watcher();
                         }
                     }
                 }

@@ -1,57 +1,78 @@
+use crate::{common::utils, gui::datas::gables};
 use eframe::egui::TextBuffer;
-use notify::{Config, Error, Event, EventKind, RecommendedWatcher, RecursiveMode, Result, Watcher};
+use notify::{
+    Config, Error, Event, EventKind, ReadDirectoryChangesWatcher, RecommendedWatcher,
+    RecursiveMode, Result, Watcher,
+};
 use std::{
     path::{Path, PathBuf},
     sync::{
         Arc, Mutex,
-        mpsc::{Receiver, channel},
+        mpsc::{Receiver, Sender, channel},
     },
     thread,
     time::Duration,
 };
 
-use crate::{common::utils, gui::datas::gables};
-
 pub struct FileWatcher {
     watcher: RecommendedWatcher,
     rx: Arc<Mutex<Receiver<Result<Event>>>>,
+    watched_path: Option<PathBuf>,
+    shutdown_sender: Option<Sender<()>>,
+    worker_thread: Option<thread::JoinHandle<()>>,
 }
 
 impl FileWatcher {
     pub fn new() -> Result<Self> {
         let (tx, rx) = channel();
-
-        // 创建推荐的文件监控器
-        let watcher = RecommendedWatcher::new(tx, Config::default())?;
+        let watcher: ReadDirectoryChangesWatcher = RecommendedWatcher::new(tx, Config::default())?;
         Ok(FileWatcher {
             watcher,
             rx: Arc::new(Mutex::new(rx)),
+            watched_path: None,
+            shutdown_sender: None,
+            worker_thread: None,
         })
     }
 
     pub fn watch_temp_directory(&mut self, path: PathBuf) -> Result<()> {
+        if let Some(old_path) = &self.watched_path {
+            log::info!(
+                "Stop monitoring old directory: {}",
+                &old_path.to_string_lossy().to_string()
+            );
+            self.watcher.unwatch(old_path)?;
+        }
+
         log::info!(
             "Start monitoring directory: {}",
             &path.to_string_lossy().to_string()
         );
-        // 监控临时目录，非递归模式
         self.watcher.watch(&path, RecursiveMode::NonRecursive)?;
-
+        self.watched_path = Some(path);
         Ok(())
     }
 
-    pub fn start_watching(&self) {
+    pub fn start_watching(&mut self) {
         let rx: Arc<Mutex<Receiver<std::result::Result<Event, Error>>>> = self.rx.clone();
-        thread::spawn(move || {
-            // 持有rx的克隆，确保在线程运行期间通道不会被关闭
+        let (shutdown_tx, shutdown_rx) = channel::<()>();
+        self.shutdown_sender = Some(shutdown_tx);
+
+        let handle = thread::spawn(move || {
             let _rx_holder: Arc<Mutex<Receiver<std::result::Result<Event, Error>>>> = rx.clone();
 
             loop {
-                // 使用简单的接收方式
+                if shutdown_rx.try_recv().is_ok() {
+                    log::info!("Received shutdown signal, exiting file watcher thread");
+                    break;
+                }
+
+                // 使用简单的接收方式，带有超时以允许定期检查关闭信号
                 let event_result: Option<std::result::Result<Event, Error>> = {
                     match rx.lock() {
-                        Ok(receiver) => match receiver.recv() {
+                        Ok(receiver) => match receiver.recv_timeout(Duration::from_millis(100)) {
                             Ok(event) => Some(event),
+                            Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
                             Err(e) => {
                                 log::error!("Receiving event error: {:?}", e);
                                 None
@@ -137,16 +158,33 @@ impl FileWatcher {
                         }
                     }
                     None => {
-                        // 接收失败，退出循环
                         break;
                     }
                 }
-
-                // 添加小延迟以避免过度占用CPU
-                thread::sleep(Duration::from_millis(10));
             }
 
             log::info!("The file monitoring thread has exited.");
         });
+
+        self.worker_thread = Some(handle);
+    }
+
+    pub fn end_watching(&mut self) {
+        if let Some(sender) = self.shutdown_sender.take() {
+            let _ = sender.send(());
+        }
+
+        if let Some(handle) = self.worker_thread.take() {
+            let _ = handle.join();
+        }
+
+        if let Some(path) = &self.watched_path {
+            log::info!(
+                "Stop monitoring directory: {}",
+                &path.to_string_lossy().to_string()
+            );
+            let _ = self.watcher.unwatch(path);
+        }
+        self.watched_path = None;
     }
 }

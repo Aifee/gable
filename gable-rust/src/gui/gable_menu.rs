@@ -1,8 +1,8 @@
 use crate::common::convert::convert;
 use crate::common::generate::generate;
 use crate::common::locales;
-use crate::gui::datas::gables;
-use crate::{common::setting, gui::gable_popup};
+use crate::gui::gable_app::GableApp;
+use crate::gui::gable_popup;
 use eframe::egui::{Color32, Context, MenuBar, TopBottomPanel, ViewportCommand, Visuals};
 
 pub(crate) struct GableMenu {}
@@ -72,11 +72,7 @@ impl GableMenu {
                             .pick_folder()
                         {
                             let path_str: String = path.to_string_lossy().to_string();
-                            if let Err(e) = setting::set_workspace(path_str) {
-                                log::error!("Failed to set workspace: {}", e.to_string());
-                            } else {
-                                gables::refresh_gables();
-                            }
+                            GableApp::set_workspace_command(path_str);
                         }
                     }
                     ui.separator();

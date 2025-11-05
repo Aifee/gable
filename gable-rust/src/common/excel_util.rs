@@ -315,6 +315,9 @@ fn write_excel_normal(worksheet: &mut Worksheet, gable_data: &GableData) {
         if let Some(row_data) = gable_data.cells.get(row_index) {
             for col_index in 0..row_data.len() {
                 if let Some(cell_data) = row_data.get(col_index) {
+                    if cell_data.value.is_empty() {
+                        continue;
+                    }
                     let sheet_row: u32 = (row_index + 1 + constant::TABLE_NORMAL_ROW_TOTAL) as u32;
                     let sheet_col: u32 = (col_index + 1) as u32;
                     let cell: &mut Cell = worksheet.get_cell_mut((sheet_col, sheet_row));

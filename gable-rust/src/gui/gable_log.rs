@@ -2,7 +2,7 @@ use crate::{
     common::locales,
     gui::{component, datas::log::LogTrace},
 };
-use eframe::egui::{Context, Frame, ScrollArea, Sense, TopBottomPanel, Ui};
+use eframe::egui::{Context, Frame, Rect, ScrollArea, Sense, TopBottomPanel, Ui};
 use egui_extras::{Column, TableBody, TableBuilder};
 
 pub(crate) struct GableLog {
@@ -33,6 +33,7 @@ impl GableLog {
 
     fn ongui_table(&mut self, ui: &mut Ui) {
         ScrollArea::vertical().auto_shrink(false).show(ui, |ui| {
+            let table_area: Rect = ui.available_rect_before_wrap();
             TableBuilder::new(ui)
                 .striped(true)
                 .resizable(true)
@@ -95,7 +96,7 @@ impl GableLog {
                             } else {
                                 body.row(self.row_height, |mut row| {
                                     row.col(|ui| {
-                                        ui.label(locales::t("temporary_log"));
+                                        ui.label("");
                                     });
                                     row.col(|ui| {
                                         ui.label("");
@@ -127,7 +128,7 @@ impl GableLog {
                     }
                 });
 
-            ui.allocate_rect(ui.available_rect_before_wrap(), Sense::click_and_drag())
+            ui.allocate_rect(table_area, Sense::click_and_drag())
                 .context_menu(|ui| {
                     if ui.button(locales::t("clear_log")).clicked() {
                         LogTrace::clear_log_records();

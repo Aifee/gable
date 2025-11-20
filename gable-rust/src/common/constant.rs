@@ -119,13 +119,9 @@ pub const TABLE_LOCALIZE_ROW_TYPE: usize = 2;
 */
 // pub const TABLE_LOCALIZE_ROW_KEYWORD: usize = 3;
 /**
- * [本地化表单]关联信息行
-*/
-// pub const TABLE_LOCALIZE_ROW_LINK: usize = 4;
-/**
  * [本地化表单]有效数据起始行数
 */
-pub const TABLE_LOCALIZE_ROW_TOTAL: usize = 5;
+pub const TABLE_LOCALIZE_ROW_TOTAL: usize = 4;
 
 /**
  * [KV表单]字段行
